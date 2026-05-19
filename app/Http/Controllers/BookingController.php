@@ -45,7 +45,7 @@ class BookingController extends Controller
             'from_date'    => 'required|date',
             'to_date'      => 'required|date|after_or_equal:from_date',
             'total_amount' => 'nullable|numeric|min:0',
-            'status'       => 'required|in:pending,confirmed,completed,cancelled',
+            'status'       => 'required|in:pending,confirmed,on_hold,cancelled',
             'notes'        => 'nullable|string',
         ]);
 
@@ -90,7 +90,7 @@ class BookingController extends Controller
             'from_date' => 'required|date',
             'to_date' => 'required|date|after_or_equal:from_date',
             'total_amount' => 'nullable|numeric|min:0',
-            'status' => 'required|in:pending,confirmed,completed,cancelled',
+            'status' => 'required|in:pending,confirmed,on_hold,cancelled',
             'notes' => 'nullable|string',
         ]);
 
@@ -196,7 +196,7 @@ class BookingController extends Controller
         $badges = [
             'pending' => '<span class="badge badge-warning">Pending</span>',
             'confirmed' => '<span class="badge badge-primary">Confirmed</span>',
-            'completed' => '<span class="badge badge-success">Completed</span>',
+            'on_hold' => '<span class="badge badge-info">On Hold</span>',
             'cancelled' => '<span class="badge badge-danger">Cancelled</span>',
         ];
 

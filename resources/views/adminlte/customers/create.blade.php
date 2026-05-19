@@ -179,6 +179,7 @@
         }, 5000);
 
         $(document).ready(function() {
+        
             function toggleFields() {
                 var type = $('input[name="customer_type"]:checked').val();
                 if (type === 'company') {

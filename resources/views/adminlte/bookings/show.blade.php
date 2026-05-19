@@ -35,8 +35,8 @@
                             <span class="badge badge-warning">Pending</span>
                         @elseif($booking->status == 'confirmed')
                             <span class="badge badge-primary">Confirmed</span>
-                        @elseif($booking->status == 'completed')
-                            <span class="badge badge-success">Completed</span>
+                        @elseif($booking->status == 'on_hold')
+                            <span class="badge badge-info">On Hold</span>
                         @else
                             <span class="badge badge-danger">Cancelled</span>
                         @endif
@@ -51,11 +51,7 @@
                     <h3 class="card-title">Financial & Additional Details</h3>
                 </div>
                 <div class="card-body">
-                    <strong><i class="fas fa-money-bill-wave mr-1"></i> Total Amount</strong>
-                    <p class="text-muted">
-                        {{ number_format($booking->total_amount, 2) }}
-                    </p>
-                    <hr>
+
                     <strong><i class="fas fa-sticky-note mr-1"></i> Notes</strong>
                     <p class="text-muted">
                         {{ $booking->notes ?: 'No additional notes' }}

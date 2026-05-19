@@ -65,7 +65,7 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label for="vehicle_id">Vehicle</label>
                                 <select class="form-control @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required>
                                     <option value="">Select Vehicle</option>
@@ -77,7 +77,7 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label for="customer_id">Customer</label>
                                 <select class="form-control @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required>
                                     <option value="">Select Customer</option>
@@ -89,53 +89,42 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label for="from_date">From Date</label>
-                                <input type="date" class="form-control @error('from_date') is-invalid @enderror" id="from_date" name="from_date" value="{{ old('from_date') }}" required>
+                                <input type="text" class="form-control datepicker @error('from_date') is-invalid @enderror" id="from_date" name="from_date" value="{{ old('from_date') }}" required>
                                 @error('from_date')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
                                 <label for="to_date">To Date</label>
-                                <input type="date" class="form-control @error('to_date') is-invalid @enderror" id="to_date" name="to_date" value="{{ old('to_date') }}" required>
+                                <input type="text" class="form-control datepicker @error('to_date') is-invalid @enderror" id="to_date" name="to_date" value="{{ old('to_date') }}" required>
                                 @error('to_date')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="total_amount">Total Amount</label>
-                                <input type="number" step="0.01" class="form-control @error('total_amount') is-invalid @enderror" id="total_amount" name="total_amount" value="{{ old('total_amount') }}">
-                                @error('total_amount')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label for="status">Status</label>
                                 <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
                                     <option value="pending">Pending</option>
                                     <option value="confirmed">Confirmed</option>
-                                    <option value="completed">Completed</option>
+                                    <option value="on_hold">On Hold</option>
                                     <option value="cancelled">Cancelled</option>
                                 </select>
                                 @error('status')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="notes">Notes</label>
-                            <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
-                            @error('notes')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
+                            <div class="form-group col-md-4">
+                                <label for="notes">Notes</label>
+                                <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="1">{{ old('notes') }}</textarea>
+                                @error('notes')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -149,16 +138,22 @@
 @stop
 
 @section('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .modal label:not(.form-check-label):not(.custom-file-label) {
             color: #6c757d;
             font-size: 16px;
             font-weight: 600 !important;
         }
+        .datepicker[readonly] {
+            background-color: #ffffff;
+            opacity: 1;
+        }
     </style>
 @stop
 
 @section('js')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     @if($errors->any())
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -174,6 +169,11 @@
 
         // Initialize DataTable with AJAX
         $(document).ready(function() {
+            flatpickr(".datepicker", {
+                dateFormat: "Y-m-d",
+                allowInput: false
+            });
+
             $('#bookings-table').DataTable({
                 "processing": true,
                 "serverSide": true,
