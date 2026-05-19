@@ -3,7 +3,6 @@
 use App\Models\Brand;
 use App\Models\FuelType;
 use App\Models\User;
-use App\Models\Vehicle;
 use App\Models\VehicleType;
 
 test('vehicle index screen can be rendered with database-driven brand and type list', function () {
@@ -30,7 +29,7 @@ test('vehicle create screen can be rendered with database-driven brand and type 
 
 test('vehicle can be stored with valid brand and type', function () {
     $user = User::factory()->create();
-    
+
     // Grab seeded records from database
     $brand = Brand::first();
     $type = VehicleType::first();
@@ -40,7 +39,7 @@ test('vehicle can be stored with valid brand and type', function () {
         ->actingAs($user)
         ->post(route('vehicles.store'), [
             'name' => 'Model S Plaid',
-            'model' => 'Plaid',
+            'model' => 2024,
             'brand' => $brand->name,
             'type' => $type->name,
             'registration_number' => 'TS-100-AB',
@@ -55,7 +54,7 @@ test('vehicle can be stored with valid brand and type', function () {
 
     $this->assertDatabaseHas('vehicles', [
         'name' => 'Model S Plaid',
-        'model' => 'Plaid',
+        'model' => 2024,
         'brand' => $brand->name,
         'type' => $type->name,
         'registration_number' => 'TS-100-AB',
@@ -71,7 +70,7 @@ test('vehicle store fails with invalid brand or type', function () {
         ->actingAs($user)
         ->post(route('vehicles.store'), [
             'name' => 'Model S Plaid',
-            'model' => 'Plaid',
+            'model' => 2024,
             'brand' => 'NonExistentBrand',
             'type' => 'NonExistentType',
             'registration_number' => 'TS-100-AB',

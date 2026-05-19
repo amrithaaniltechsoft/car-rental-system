@@ -44,7 +44,7 @@ class VehicleController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
+            'model' => 'required|integer|between:2000,2100',
             'brand' => 'required|exists:brands,name',
             'type' => 'required|exists:vehicle_types,name',
             'registration_number' => 'required|string|max:255|unique:vehicles',
@@ -87,10 +87,10 @@ class VehicleController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
+            'model' => 'required|integer|between:2000,2100',
             'brand' => 'required|exists:brands,name',
             'type' => 'required|exists:vehicle_types,name',
-            'registration_number' => 'required|string|max:255|unique:vehicles,registration_number,' . $vehicle->id,
+            'registration_number' => 'required|string|max:255|unique:vehicles,registration_number,'.$vehicle->id,
             'fuel_type' => 'required|exists:fuel_types,name',
             'seating_capacity' => 'required|integer|min:1',
             'rc_book_details' => 'nullable|string',
@@ -205,9 +205,9 @@ class VehicleController extends Controller
             <a href="javascript:void(0)" class="btn btn-warning btn-sm">
                 <i class="fas fa-edit"></i>
             </a>
-            <form action="' . route('vehicles.destroy', $vehicle) . '" method="POST" style="display: inline;">
-                ' . csrf_field() . '
-                ' . method_field('DELETE') . '
+            <form action="'.route('vehicles.destroy', $vehicle).'" method="POST" style="display: inline;">
+                '.csrf_field().'
+                '.method_field('DELETE').'
                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure?\')">
                     <i class="fas fa-trash"></i>
                 </button>

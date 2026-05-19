@@ -66,16 +66,30 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-12">
-                                <label for="modal_customer_type">Customer Type</label>
-                                <select class="form-control @error('customer_type') is-invalid @enderror"
-                                        id="modal_customer_type" name="customer_type" required>
-                                    <option value="" disabled {{ old('customer_type') ? '' : 'selected' }}>Select Customer Type</option>
-                                    <option value="individual" {{ old('customer_type') == 'individual' ? 'selected' : '' }}>Individual</option>
-                                    <option value="company" {{ old('customer_type') == 'company' ? 'selected' : '' }}>Company</option>
-                                </select>
+                            <div class="form-group col-md-12 text-center">
+                                <label class="d-block">Customer Type</label>
+                                <div class="form-check form-check-inline mr-4">
+                                    <input class="form-check-input @error('customer_type') is-invalid @enderror" 
+                                           type="radio" 
+                                           name="customer_type" 
+                                           id="customer_type_individual" 
+                                           value="individual" 
+                                           {{ old('customer_type', 'individual') == 'individual' ? 'checked' : '' }} 
+                                           required>
+                                    <label class="form-check-label font-weight-normal text-secondary" style="font-size: 16px;" for="customer_type_individual">Individual</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input @error('customer_type') is-invalid @enderror" 
+                                           type="radio" 
+                                           name="customer_type" 
+                                           id="customer_type_company" 
+                                           value="company" 
+                                           {{ old('customer_type') == 'company' ? 'checked' : '' }} 
+                                           required>
+                                    <label class="form-check-label font-weight-normal text-secondary" style="font-size: 16px;" for="customer_type_company">Company</label>
+                                </div>
                                 @error('customer_type')
-                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback d-block">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>
@@ -83,23 +97,21 @@
                         <!-- Individual Fields -->
                         <div id="modal-individual-fields" style="display: none;">
                             <div class="form-row">
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label for="modal_name">Full Name</label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror" id="modal_name" name="name" value="{{ old('name') }}">
                                     @error('name')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label for="modal_indiv_phone_number">Phone Number</label>
                                     <input type="text" class="form-control @error('phone_number') is-invalid @enderror" id="modal_indiv_phone_number" name="phone_number" value="{{ old('phone_number') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     @error('phone_number')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-12">
+                                <div class="form-group col-md-4">
                                     <label for="modal_id_card_number">ID Card Number</label>
                                     <input type="text" class="form-control @error('id_card_number') is-invalid @enderror" id="modal_id_card_number" name="id_card_number" value="{{ old('id_card_number') }}">
                                     @error('id_card_number')
@@ -119,23 +131,21 @@
                         <!-- Company Fields -->
                         <div id="modal-company-fields" style="display: none;">
                             <div class="form-row">
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label for="modal_company_name">Company Name</label>
                                     <input type="text" class="form-control @error('company_name') is-invalid @enderror" id="modal_company_name" name="company_name" value="{{ old('company_name') }}">
                                     @error('company_name')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label for="modal_comp_phone_number">Phone Number</label>
                                     <input type="text" class="form-control @error('phone_number') is-invalid @enderror" id="modal_comp_phone_number" name="phone_number" value="{{ old('phone_number') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     @error('phone_number')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-12">
+                                <div class="form-group col-md-4">
                                     <label for="modal_company_registration_id">Company Registration ID</label>
                                     <input type="text" class="form-control @error('company_registration_id') is-invalid @enderror" id="modal_company_registration_id" name="company_registration_id" value="{{ old('company_registration_id') }}">
                                     @error('company_registration_id')
@@ -221,7 +231,7 @@
             });
 
             function toggleModalFields() {
-                var type = $('#modal_customer_type').val();
+                var type = $('input[name="customer_type"]:checked').val();
                 if (type === 'company') {
                     $('#modal-individual-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
                     $('#modal-company-fields').show().find('input, textarea').prop('disabled', false).prop('required', true);
@@ -234,7 +244,7 @@
                 }
             }
 
-            $('#modal_customer_type').change(function() {
+            $('input[name="customer_type"]').change(function() {
                 toggleModalFields();
             });
 

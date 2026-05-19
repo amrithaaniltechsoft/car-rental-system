@@ -68,24 +68,14 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-3">
                                 <label for="name">Vehicle Name</label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
                                 @error('name')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="model">Model</label>
-                                <input type="text" class="form-control @error('model') is-invalid @enderror" id="model" name="model" value="{{ old('model') }}" required>
-                                @error('model')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-3">
                                 <label for="brand">Brand</label>
                                 <select class="form-control @error('brand') is-invalid @enderror" id="brand" name="brand" required>
                                     <option value="" disabled selected>Select Brand</option>
@@ -97,7 +87,19 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-3">
+                                <label for="model">Model (Year)</label>
+                                <select class="form-control @error('model') is-invalid @enderror" id="model" name="model" required>
+                                    <option value="" disabled selected>Select Year</option>
+                                    @for($year = 2000; $year <= 2100; $year++)
+                                        <option value="{{ $year }}" {{ old('model') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                    @endfor
+                                </select>
+                                @error('model')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="type">Vehicle Type</label>
                                 <select class="form-control @error('type') is-invalid @enderror" id="type" name="type" required>
                                     <option value="" disabled selected>Select Type</option>
@@ -112,14 +114,14 @@
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label for="registration_number">Registration Number</label>
                                 <input type="text" class="form-control @error('registration_number') is-invalid @enderror" id="registration_number" name="registration_number" value="{{ old('registration_number') }}" required>
                                 @error('registration_number')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label for="fuel_type">Fuel Type</label>
                                 <select class="form-control @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type" required>
                                     <option value="">Select Fuel Type</option>
@@ -131,10 +133,7 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-12">
+                            <div class="form-group col-md-4">
                                 <label for="seating_capacity">Seating Capacity</label>
                                 <input type="number" class="form-control @error('seating_capacity') is-invalid @enderror" id="seating_capacity" name="seating_capacity" value="{{ old('seating_capacity') }}" min="1" required>
                                 @error('seating_capacity')

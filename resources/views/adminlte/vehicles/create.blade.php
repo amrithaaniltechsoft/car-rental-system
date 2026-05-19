@@ -31,7 +31,7 @@
                     @csrf
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="name">Vehicle Name</label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror"
@@ -41,20 +41,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="model">Model</label>
-                                    <input type="text" class="form-control @error('model') is-invalid @enderror"
-                                           id="model" name="model" value="{{ old('model') }}" required>
-                                    @error('model')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="brand">Brand</label>
                                     <select class="form-control @error('brand') is-invalid @enderror"
@@ -69,7 +56,22 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="model">Model (Year)</label>
+                                    <select class="form-control @error('model') is-invalid @enderror"
+                                            id="model" name="model" required>
+                                        <option value="" disabled selected>Select Year</option>
+                                        @for($year = 2000; $year <= 2100; $year++)
+                                            <option value="{{ $year }}" {{ old('model') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                        @endfor
+                                    </select>
+                                    @error('model')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="type">Vehicle Type</label>
                                     <select class="form-control @error('type') is-invalid @enderror"
@@ -87,7 +89,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="registration_number">Registration Number</label>
                                     <input type="text" class="form-control @error('registration_number') is-invalid @enderror"
@@ -97,7 +99,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="fuel_type">Fuel Type</label>
                                     <select class="form-control @error('fuel_type') is-invalid @enderror"
@@ -112,10 +114,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="seating_capacity">Seating Capacity</label>
                                     <input type="number" class="form-control @error('seating_capacity') is-invalid @enderror"

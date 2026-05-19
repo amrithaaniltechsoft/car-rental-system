@@ -30,9 +30,14 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="model">Model</label>
-                                    <input type="text" class="form-control @error('model') is-invalid @enderror"
-                                           id="model" name="model" value="{{ old('model', $vehicle->model) }}" required>
+                                    <label for="model">Model (Year)</label>
+                                    <select class="form-control @error('model') is-invalid @enderror"
+                                            id="model" name="model" required>
+                                        <option value="" disabled {{ old('model', $vehicle->model) ? '' : 'selected' }}>Select Year</option>
+                                        @for($year = 2000; $year <= 2100; $year++)
+                                            <option value="{{ $year }}" {{ old('model', $vehicle->model) == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                        @endfor
+                                    </select>
                                     @error('model')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
