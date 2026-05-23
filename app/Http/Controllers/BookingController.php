@@ -309,7 +309,7 @@ class BookingController extends Controller
     private function getActionButtons(Booking $booking): string
     {
         return '
-            <button type="button" class="btn btn-info view-booking-btn" data-url="'.route('bookings.show', $booking).'">
+            <button type="button" class="btn btn-info btn-sm view-booking-btn" data-url="'.route('bookings.show', $booking).'">
                 <i class="fas fa-eye"></i>
             </button>
             <button type="button" class="btn btn-warning btn-sm edit-booking-btn" data-id="'.$booking->id.'">
