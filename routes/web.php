@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     // Vehicle Bookings
     Route::resource('bookings', BookingController::class);
     Route::get('/bookings-data', [BookingController::class, 'getData'])->name('bookings.data');
+    Route::post('/bookings/check-availability', [BookingController::class, 'checkAvailability'])->name('bookings.check-availability');
+    Route::get('/bookings/{booking}/data', [BookingController::class, 'getBookingData'])->name('bookings.get-data');
 
     // Invoices
     Route::resource('invoices', InvoiceController::class);

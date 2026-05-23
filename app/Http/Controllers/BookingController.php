@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Vehicle;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +18,8 @@ class BookingController extends Controller
      */
     public function index(): View
     {
-        $vehicles  = Vehicle::where('status', 'available')->get();
-        $customers = Customer::all();
+        $vehicles  = $this->vehiclesForSelect();
+        $customers = $this->customersForSelect();
 
         return view('adminlte.bookings.index', compact('vehicles', 'customers'));
     }
@@ -28,8 +29,8 @@ class BookingController extends Controller
      */
     public function create(): View
     {
-        $vehicles = Vehicle::where('status', 'available')->get();
-        $customers = Customer::all();
+        $vehicles  = $this->vehiclesForSelect();
+        $customers = $this->customersForSelect();
 
         return view('adminlte.bookings.create', compact('vehicles', 'customers'));
     }
@@ -37,9 +38,9 @@ class BookingController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'vehicle_id'   => 'required|exists:vehicles,id',
             'customer_id'  => 'required|exists:customers,id',
             'from_date'    => 'required|date',
@@ -49,11 +50,56 @@ class BookingController extends Controller
             'notes'        => 'nullable|string',
         ]);
 
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()->toArray(),
+                ], 422);
+            }
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Check vehicle availability for the requested dates
+        $vehicle = Vehicle::findOrFail($request->vehicle_id);
+        $fromDate = $request->from_date;
+        $toDate = $request->to_date;
+
+        $hasConflict = Booking::where('vehicle_id', $vehicle->id)
+            ->where('status', 'confirmed')
+            ->where(function ($query) use ($fromDate, $toDate) {
+                $query->whereBetween('from_date', [$fromDate, $toDate])
+                    ->orWhereBetween('to_date', [$fromDate, $toDate])
+                    ->orWhere(function ($q) use ($fromDate, $toDate) {
+                        $q->where('from_date', '<=', $fromDate)
+                            ->where('to_date', '>=', $toDate);
+                    });
+            })
+            ->exists();
+
+        if ($hasConflict) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.',
+                    'available' => false,
+                ], 422);
+            }
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.');
+        }
+
         $booking = Booking::create($request->all());
 
-        // Update vehicle status if booking is confirmed
-        if ($request->status === 'confirmed') {
-            $booking->vehicle->update(['status' => 'booked']);
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking created successfully.',
+            ]);
         }
 
         return redirect()->route('bookings.index')
@@ -65,6 +111,9 @@ class BookingController extends Controller
      */
     public function show(Booking $booking): View
     {
+        if (request()->ajax()) {
+            return view('adminlte.bookings.show_modal', compact('booking'));
+        }
         return view('adminlte.bookings.show', compact('booking'));
     }
 
@@ -73,8 +122,8 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking): View
     {
-        $vehicles = Vehicle::all();
-        $customers = Customer::all();
+        $vehicles  = $this->vehiclesForSelect();
+        $customers = $this->customersForSelect();
 
         return view('adminlte.bookings.edit', compact('booking', 'vehicles', 'customers'));
     }
@@ -82,9 +131,9 @@ class BookingController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Booking $booking): RedirectResponse
+    public function update(Request $request, Booking $booking): RedirectResponse|JsonResponse
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'vehicle_id' => 'required|exists:vehicles,id',
             'customer_id' => 'required|exists:customers,id',
             'from_date' => 'required|date',
@@ -94,14 +143,62 @@ class BookingController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $oldStatus = $booking->status;
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()->toArray(),
+                ], 422);
+            }
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Check vehicle availability for the requested dates if vehicle or dates changed
+        if ($request->vehicle_id != $booking->vehicle_id || 
+            $request->from_date != $booking->from_date || 
+            $request->to_date != $booking->to_date) {
+            
+            $vehicle = Vehicle::findOrFail($request->vehicle_id);
+            $fromDate = $request->from_date;
+            $toDate = $request->to_date;
+
+            $hasConflict = Booking::where('vehicle_id', $vehicle->id)
+                ->where('status', 'confirmed')
+                ->where('id', '!=', $booking->id)
+                ->where(function ($query) use ($fromDate, $toDate) {
+                    $query->whereBetween('from_date', [$fromDate, $toDate])
+                        ->orWhereBetween('to_date', [$fromDate, $toDate])
+                        ->orWhere(function ($q) use ($fromDate, $toDate) {
+                            $q->where('from_date', '<=', $fromDate)
+                                ->where('to_date', '>=', $toDate);
+                        });
+                })
+                ->exists();
+
+            if ($hasConflict) {
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.',
+                        'available' => false,
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.');
+            }
+        }
+
         $booking->update($request->all());
 
-        // Update vehicle status based on booking status change
-        if ($oldStatus !== 'confirmed' && $request->status === 'confirmed') {
-            $booking->vehicle->update(['status' => 'booked']);
-        } elseif ($oldStatus === 'confirmed' && $request->status !== 'confirmed') {
-            $booking->vehicle->update(['status' => 'available']);
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking updated successfully.',
+            ]);
         }
 
         return redirect()->route('bookings.index')
@@ -111,13 +208,16 @@ class BookingController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Booking $booking): RedirectResponse
+    public function destroy(Booking $booking): RedirectResponse|JsonResponse
     {
-        if ($booking->status === 'confirmed') {
-            $booking->vehicle->update(['status' => 'available']);
-        }
-
         $booking->delete();
+
+        if (request()->ajax() || request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking deleted successfully.',
+            ]);
+        }
 
         return redirect()->route('bookings.index')
             ->with('success', 'Booking deleted successfully.');
@@ -209,19 +309,88 @@ class BookingController extends Controller
     private function getActionButtons(Booking $booking): string
     {
         return '
-            <a href="javascript:void(0)" class="btn btn-info btn-sm">
+            <button type="button" class="btn btn-info view-booking-btn" data-url="'.route('bookings.show', $booking).'">
                 <i class="fas fa-eye"></i>
-            </a>
-            <a href="javascript:void(0)" class="btn btn-warning btn-sm">
+            </button>
+            <button type="button" class="btn btn-warning btn-sm edit-booking-btn" data-id="'.$booking->id.'">
                 <i class="fas fa-edit"></i>
-            </a>
-            <form action="' . route('bookings.destroy', $booking) . '" method="POST" style="display: inline;">
-                ' . csrf_field() . '
-                ' . method_field('DELETE') . '
-                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure?\')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm delete-booking-btn" data-id="'.$booking->id.'" data-url="'.route('bookings.destroy', $booking).'">
+                <i class="fas fa-trash"></i>
+            </button>
         ';
+    }
+
+    /**
+     * Check vehicle availability for given date range
+     */
+    public function checkAvailability(Request $request): JsonResponse
+    {
+        $request->validate([
+            'vehicle_id' => 'required|exists:vehicles,id',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($request->vehicle_id);
+        $fromDate = $request->from_date;
+        $toDate = $request->to_date;
+
+        // Check if vehicle has any confirmed bookings that overlap with the requested dates
+        $hasConflict = Booking::where('vehicle_id', $vehicle->id)
+            ->where('status', 'confirmed')
+            ->where(function ($query) use ($fromDate, $toDate) {
+                $query->whereBetween('from_date', [$fromDate, $toDate])
+                    ->orWhereBetween('to_date', [$fromDate, $toDate])
+                    ->orWhere(function ($q) use ($fromDate, $toDate) {
+                        $q->where('from_date', '<=', $fromDate)
+                            ->where('to_date', '>=', $toDate);
+                    });
+            })
+            ->exists();
+
+        $isAvailable = ! $hasConflict;
+
+        return response()->json([
+            'available' => $isAvailable,
+            'message' => $isAvailable
+                ? 'Vehicle is available for the selected dates.'
+                : 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.',
+        ]);
+    }
+
+    /**
+     * Get booking data for edit modal
+     */
+    public function getBookingData(Booking $booking): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'booking' => [
+                'id' => $booking->id,
+                'vehicle_id' => $booking->vehicle_id,
+                'customer_id' => $booking->customer_id,
+                'from_date' => $booking->from_date->format('Y-m-d'),
+                'to_date' => $booking->to_date->format('Y-m-d'),
+                'status' => $booking->status,
+                'notes' => $booking->notes,
+            ],
+        ]);
+    }
+
+    private function vehiclesForSelect(): Collection
+    {
+        return Vehicle::query()
+            ->select('id', 'name', 'registration_number')
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function customersForSelect(): Collection
+    {
+        return Customer::query()
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
     }
 }

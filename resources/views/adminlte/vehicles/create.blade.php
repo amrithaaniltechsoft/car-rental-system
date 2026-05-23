@@ -1,5 +1,7 @@
 @extends('adminlte::page')
 
+@section('plugins.Select2', true)
+
 @section('title', 'Add Vehicle')
 
 @section('content_header')
@@ -59,8 +61,8 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="model">Model (Year)</label>
-                                    <select class="form-control @error('model') is-invalid @enderror"
-                                            id="model" name="model" required>
+                                    <select class="form-control select2 @error('model') is-invalid @enderror"
+                                            id="model" name="model" required style="width: 100%;">
                                         <option value="" disabled selected>Select Year</option>
                                         @for($year = 2000; $year <= 2100; $year++)
                                             <option value="{{ $year }}" {{ old('model') == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -175,5 +177,15 @@
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
+
+        // Initialize Select2 for Model (Year)
+        $(document).ready(function() {
+            $('#model').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Year',
+                allowClear: true,
+                width: '100%'
+            });
+        });
     </script>
 @stop

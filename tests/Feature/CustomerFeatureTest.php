@@ -1,7 +1,11 @@
 <?php
 
+use App\Models\Booking;
+use App\Models\Brand;
 use App\Models\Customer;
+use App\Models\FuelType;
 use App\Models\User;
+use App\Models\VehicleType;
 
 test('customer index screen can be rendered', function () {
     $user = User::factory()->create();
@@ -100,4 +104,110 @@ test('customer update changes values successfully', function () {
         'address' => 'Enterprise Plaza',
         'id_card_number' => null,
     ]);
+});
+
+test('customer can be deleted when they have no bookings', function () {
+    $user = User::factory()->create();
+    $customer = Customer::create([
+        'customer_type' => 'individual',
+        'name' => 'To Be Deleted',
+        'phone_number' => '1111111',
+        'id_card_number' => 'ID-DEL',
+        'address' => 'Delete Street',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->delete(route('customers.destroy', $customer));
+
+    $response->assertRedirect(route('customers.index'));
+    $response->assertSessionHas('success');
+    $this->assertDatabaseMissing('customers', ['id' => $customer->id]);
+});
+
+test('customer cannot be deleted when they have bookings', function () {
+    $user = User::factory()->create();
+    $brand = Brand::first();
+    $type = VehicleType::first();
+    $fuelType = FuelType::first();
+
+    $customer = Customer::create([
+        'customer_type' => 'individual',
+        'name' => 'Booked Customer',
+        'phone_number' => '2222222',
+        'id_card_number' => 'ID-BOOKED',
+        'address' => 'Booking Street',
+    ]);
+
+    $vehicle = \App\Models\Vehicle::create([
+        'name' => 'Customer Delete Test Vehicle',
+        'model' => 2024,
+        'brand' => $brand->name,
+        'type' => $type->name,
+        'registration_number' => 'TS-CUST-DEL',
+        'fuel_type' => $fuelType->name,
+        'seating_capacity' => 5,
+    ]);
+
+    Booking::create([
+        'vehicle_id' => $vehicle->id,
+        'customer_id' => $customer->id,
+        'from_date' => now()->toDateString(),
+        'to_date' => now()->addDays(2)->toDateString(),
+        'total_amount' => 300.00,
+        'status' => 'pending',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->delete(route('customers.destroy', $customer));
+
+    $response->assertRedirect(route('customers.index'));
+    $response->assertSessionHas('error');
+    $this->assertDatabaseHas('customers', ['id' => $customer->id]);
+});
+
+test('customer cannot be deleted via AJAX when they have bookings', function () {
+    $user = User::factory()->create();
+    $brand = Brand::first();
+    $type = VehicleType::first();
+    $fuelType = FuelType::first();
+
+    $customer = Customer::create([
+        'customer_type' => 'individual',
+        'name' => 'Booked Customer AJAX',
+        'phone_number' => '3333333',
+        'id_card_number' => 'ID-AJAX',
+        'address' => 'Ajax Street',
+    ]);
+
+    $vehicle = \App\Models\Vehicle::create([
+        'name' => 'Customer Delete AJAX Vehicle',
+        'model' => 2024,
+        'brand' => $brand->name,
+        'type' => $type->name,
+        'registration_number' => 'TS-CUST-AJX',
+        'fuel_type' => $fuelType->name,
+        'seating_capacity' => 5,
+    ]);
+
+    Booking::create([
+        'vehicle_id' => $vehicle->id,
+        'customer_id' => $customer->id,
+        'from_date' => now()->toDateString(),
+        'to_date' => now()->addDays(2)->toDateString(),
+        'total_amount' => 300.00,
+        'status' => 'confirmed',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->deleteJson(route('customers.destroy', $customer));
+
+    $response->assertStatus(422);
+    $response->assertJson([
+        'success' => false,
+        'message' => 'Cannot delete this customer because they are in use by existing bookings.',
+    ]);
+    $this->assertDatabaseHas('customers', ['id' => $customer->id]);
 });

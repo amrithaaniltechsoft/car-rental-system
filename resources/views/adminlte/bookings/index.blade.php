@@ -61,7 +61,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('bookings.store') }}" method="POST">
+                <form id="addBookingForm" action="{{ route('bookings.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
@@ -135,6 +135,88 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editBookingModal" tabindex="-1" role="dialog" aria-labelledby="editBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="editBookingModalLabel">Edit Booking</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="editBookingForm" action="" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="edit_vehicle_id">Vehicle</label>
+                                <select class="form-control" id="edit_vehicle_id" name="vehicle_id" required>
+                                    <option value="">Select Vehicle</option>
+                                    @foreach($vehicles as $vehicle)
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_customer_id">Customer</label>
+                                <select class="form-control" id="edit_customer_id" name="customer_id" required>
+                                    <option value="">Select Customer</option>
+                                    @foreach($customers as $customer)
+                                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_from_date">From Date</label>
+                                <input type="text" class="form-control datepicker" id="edit_from_date" name="from_date" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="edit_to_date">To Date</label>
+                                <input type="text" class="form-control datepicker" id="edit_to_date" name="to_date" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_status">Status</label>
+                                <select class="form-control" id="edit_status" name="status" required>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="on_hold">On Hold</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_notes">Notes</label>
+                                <textarea class="form-control" id="edit_notes" name="notes" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Update Booking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewBookingModal" tabindex="-1" role="dialog" aria-labelledby="viewBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #17a2b8;">
+                <div class="modal-header justify-content-center" style="background-color: #17a2b8; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="viewBookingModalLabel">View Booking Details</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="viewBookingContent">
+                    <!-- Booking details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 @stop
 
 @section('css')
@@ -169,10 +251,43 @@
 
         // Initialize DataTable with AJAX
         $(document).ready(function() {
-            flatpickr(".datepicker", {
-                dateFormat: "Y-m-d",
-                allowInput: false
-            });
+            var bookingToday = new Date();
+            bookingToday.setHours(0, 0, 0, 0);
+
+            function destroyFlatpickr(selector) {
+                var el = document.querySelector(selector);
+                if (el && el._flatpickr) {
+                    el._flatpickr.destroy();
+                }
+            }
+
+            function initBookingDatePickers(fromSelector, toSelector, fromDate, toDate) {
+                destroyFlatpickr(fromSelector);
+                destroyFlatpickr(toSelector);
+
+                var toPicker = flatpickr(toSelector, {
+                    dateFormat: "Y-m-d",
+                    allowInput: false,
+                    minDate: bookingToday,
+                    defaultDate: toDate || null
+                });
+
+                flatpickr(fromSelector, {
+                    dateFormat: "Y-m-d",
+                    allowInput: false,
+                    minDate: bookingToday,
+                    defaultDate: fromDate || null,
+                    onChange: function(selectedDates) {
+                        var minToDate = selectedDates[0] || bookingToday;
+                        toPicker.set('minDate', minToDate);
+                        if (toPicker.selectedDates[0] && toPicker.selectedDates[0] < minToDate) {
+                            toPicker.setDate(minToDate);
+                        }
+                    }
+                });
+            }
+
+            initBookingDatePickers('#from_date', '#to_date');
 
             $('#bookings-table').DataTable({
                 "processing": true,
@@ -203,6 +318,326 @@
                     "zeroRecords": "No matching bookings found"
                 },
                 "order": [[0, "desc"]] // Default sort by ID descending
+            });
+
+            // AJAX form submission for add booking modal
+            $('#addBookingForm').on('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var form = $(this);
+                var url = form.attr('action');
+                var method = form.attr('method');
+                var formData = new FormData(form[0]);
+                var submitBtn = form.find('button[type="submit"]');
+                var originalBtnHtml = submitBtn.html();
+
+                // Clear previous validation styling and errors
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+
+                // Set loading state on submit button
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                        if (response.success) {
+                            $('#addBookingModal').modal('hide');
+                            form[0].reset();
+                            $('#bookings-table').DataTable().ajax.reload();
+
+                            // Display dynamic success alert at the top of the content
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                response.message +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            // Auto dismiss after 5 seconds
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    },
+                    error: function(xhr) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                        if (xhr.status === 422) {
+                            var response = xhr.responseJSON;
+                            // Show inline validation errors
+                            if (response.errors) {
+                                $.each(response.errors, function(field, messages) {
+                                    var input = form.find('[name="' + field + '"]');
+                                    if (input.length) {
+                                        input.addClass('is-invalid');
+                                        var errorSpan = $('<span class="invalid-feedback d-block"></span>').text(messages[0]);
+                                        input.after(errorSpan);
+                                    }
+                                });
+                            } else if (response.message) {
+                                // Show alert if no field-specific errors
+                                $('.alert').remove();
+                                var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                                    '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                    '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                                    response.message +
+                                    '</div>';
+                                $('.row').first().before(alertHtml);
+
+                                setTimeout(function() {
+                                    $('.alert-danger').fadeOut('slow', function() {
+                                        $(this).remove();
+                                    });
+                                }, 5000);
+                            }
+                        } else {
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                                'An error occurred. Please try again.' +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            setTimeout(function() {
+                                $('.alert-danger').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    }
+                });
+                return false;
+            });
+
+            // AJAX form submission for edit booking modal
+            $('#editBookingForm').on('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var form = $(this);
+                var url = form.attr('action');
+                var method = form.attr('method');
+                var formData = new FormData(form[0]);
+                var submitBtn = form.find('button[type="submit"]');
+                var originalBtnHtml = submitBtn.html();
+
+                // Clear previous validation styling and errors
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+
+                // Set loading state on submit button
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                        if (response.success) {
+                            $('#editBookingModal').modal('hide');
+                            form[0].reset();
+                            $('#bookings-table').DataTable().ajax.reload();
+
+                            // Display dynamic success alert at the top of the content
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                response.message +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            // Auto dismiss after 5 seconds
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    },
+                    error: function(xhr) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                        if (xhr.status === 422) {
+                            var response = xhr.responseJSON;
+                            // Show inline validation errors
+                            if (response.errors) {
+                                $.each(response.errors, function(field, messages) {
+                                    var input = form.find('[name="' + field + '"]');
+                                    if (input.length) {
+                                        input.addClass('is-invalid');
+                                        var errorSpan = $('<span class="invalid-feedback d-block"></span>').text(messages[0]);
+                                        input.after(errorSpan);
+                                    }
+                                });
+                            } else if (response.message) {
+                                // Show alert if no field-specific errors
+                                $('.alert').remove();
+                                var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                                    '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                    '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                                    response.message +
+                                    '</div>';
+                                $('.row').first().before(alertHtml);
+
+                                setTimeout(function() {
+                                    $('.alert-danger').fadeOut('slow', function() {
+                                        $(this).remove();
+                                    });
+                                }, 5000);
+                            }
+                        } else {
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                                'An error occurred. Please try again.' +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            setTimeout(function() {
+                                $('.alert-danger').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    }
+                });
+                return false;
+            });
+
+            // Handle edit button click to load booking data
+            $(document).on('click', '.edit-booking-btn', function() {
+                var bookingId = $(this).data('id');
+                var url = "{{ route('bookings.get-data', ':id') }}".replace(':id', bookingId);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            var booking = response.booking;
+                            $('#editBookingForm').attr('action', "{{ route('bookings.update', ':id') }}".replace(':id', booking.id));
+                            $('#edit_vehicle_id').val(booking.vehicle_id);
+                            $('#edit_customer_id').val(booking.customer_id);
+                            $('#edit_status').val(booking.status);
+                            $('#edit_notes').val(booking.notes);
+
+                            initBookingDatePickers('#edit_from_date', '#edit_to_date', booking.from_date, booking.to_date);
+
+                            $('#editBookingModal').modal('show');
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to load booking data.');
+                    }
+                });
+            });
+
+            // Handle view button click to load booking details
+            $(document).on('click', '.view-booking-btn', function() {
+                var url = $(this).data('url');
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#viewBookingContent').html(response);
+                        $('#viewBookingModal').modal('show');
+                    },
+                    error: function() {
+                        $('.alert').remove();
+                        var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                            '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                            'Failed to load booking details.' +
+                            '</div>';
+                        $('.row').first().before(alertHtml);
+
+                        setTimeout(function() {
+                            $('.alert-danger').fadeOut('slow', function() {
+                                $(this).remove();
+                            });
+                        }, 5000);
+                    }
+                });
+            });
+
+            // Handle delete button click
+            $(document).on('click', '.delete-booking-btn', function() {
+                if (!confirm('Are you sure you want to delete this booking?')) {
+                    return;
+                }
+
+                var url = $(this).data('url');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#bookings-table').DataTable().ajax.reload();
+
+                            // Display dynamic success alert at the top of the content
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                response.message +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            // Auto dismiss after 5 seconds
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    },
+                    error: function() {
+                        $('.alert').remove();
+                        var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                            '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                            'Failed to delete booking.' +
+                            '</div>';
+                        $('.row').first().before(alertHtml);
+
+                        setTimeout(function() {
+                            $('.alert-danger').fadeOut('slow', function() {
+                                $(this).remove();
+                            });
+                        }, 5000);
+                    }
+                });
             });
         });
     </script>

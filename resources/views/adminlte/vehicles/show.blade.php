@@ -30,20 +30,6 @@
                         <li class="list-group-item">
                             <b>Seating Capacity</b> <a class="float-right">{{ $vehicle->seating_capacity }}</a>
                         </li>
-                        <li class="list-group-item">
-                            <b>Status</b> 
-                            <span class="float-right">
-                                @if($vehicle->status == 'available')
-                                    <span class="badge badge-success">Available</span>
-                                @elseif($vehicle->status == 'booked')
-                                    <span class="badge badge-warning">Booked</span>
-                                @elseif($vehicle->status == 'maintenance')
-                                    <span class="badge badge-danger">Maintenance</span>
-                                @else
-                                    <span class="badge badge-secondary">Inactive</span>
-                                @endif
-                            </span>
-                        </li>
                     </ul>
 
                     <a href="{{ route('vehicles.edit', $vehicle) }}" class="btn btn-primary btn-block"><b>Edit</b></a>

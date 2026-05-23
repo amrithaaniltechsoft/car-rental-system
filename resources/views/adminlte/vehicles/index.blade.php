@@ -1,5 +1,7 @@
 @extends('adminlte::page')
 
+@section('plugins.Select2', true)
+
 @section('title', 'Vehicles')
 
 @section('content_header')
@@ -43,7 +45,6 @@
                                 <th>Model</th>
                                 <th>Brand</th>
                                 <th>Capacity</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -89,7 +90,7 @@
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="model">Model (Year)</label>
-                                <select class="form-control @error('model') is-invalid @enderror" id="model" name="model" required>
+                                <select class="form-control select2 @error('model') is-invalid @enderror" id="model" name="model" required style="width: 100%;">
                                     <option value="" disabled selected>Select Year</option>
                                     @for($year = 2000; $year <= 2100; $year++)
                                         <option value="{{ $year }}" {{ old('model') == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -166,6 +167,45 @@
             </div>
         </div>
     </div>
+    <!-- View Vehicle Modal -->
+    <div class="modal fade" id="viewVehicleModal" tabindex="-1" role="dialog" aria-labelledby="viewVehicleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="viewVehicleModalLabel">Vehicle Details</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="viewVehicleModalBody">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p class="mt-2">Loading details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Vehicle Modal -->
+    <div class="modal fade" id="editVehicleModal" tabindex="-1" role="dialog" aria-labelledby="editVehicleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h5 class="modal-title text-center w-100 font-weight-bold" id="editVehicleModalLabel">Edit Vehicle</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="editVehicleModalContainer">
+                    <div class="modal-body text-center">
+                        <i class="fas fa-spinner fa-spin fa-3x text-success"></i>
+                        <p class="mt-2">Loading details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @stop
 
@@ -195,6 +235,15 @@
 
         // Initialize DataTable with AJAX
         $(document).ready(function() {
+            // Initialize Select2 for Model (Year) inside the Add Vehicle Modal
+            $('#addVehicleModal #model').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Year',
+                allowClear: true,
+                dropdownParent: $('#addVehicleModal'),
+                width: '100%'
+            });
+
             $('#vehicles-table').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -210,7 +259,6 @@
                     { "data": "model", "orderable": true },
                     { "data": "brand", "orderable": true },
                     { "data": "seating_capacity", "orderable": true },
-                    { "data": "status", "orderable": false },
                     { "data": "actions", "orderable": false, "searchable": false }
                 ],
                 "responsive": true,
@@ -227,6 +275,150 @@
                     "zeroRecords": "No matching vehicles found"
                 },
                 "order": [[0, "desc"]] // Default sort by ID descending
+            });
+
+            // Handle View Vehicle button click
+            $(document).on('click', '.view-vehicle-btn', function() {
+                var url = $(this).data('url');
+                
+                // Show modal and loading state
+                $('#viewVehicleModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x text-success"></i><p class="mt-2">Loading details...</p></div>');
+                $('#viewVehicleModal').modal('show');
+                
+                // Fetch data
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#viewVehicleModalBody').html(response);
+                    },
+                    error: function() {
+                        $('#viewVehicleModalBody').html('<div class="alert alert-danger">Error loading vehicle details. Please try again.</div>');
+                    }
+                });
+            });
+
+            // Handle Edit Vehicle button click
+            $(document).on('click', '.edit-vehicle-btn', function() {
+                var url = $(this).data('url');
+                
+                // Show modal and loading state
+                $('#editVehicleModalContainer').html('<div class="modal-body text-center"><i class="fas fa-spinner fa-spin fa-3x text-success"></i><p class="mt-2">Loading details...</p></div>');
+                $('#editVehicleModal').modal('show');
+                
+                // Fetch data
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#editVehicleModalContainer').html(response);
+                        // Initialize Select2 on the dynamically loaded #model input
+                        $('#editVehicleModalContainer #model').select2({
+                            theme: 'bootstrap4',
+                            placeholder: 'Select Year',
+                            allowClear: true,
+                            dropdownParent: $('#editVehicleModal'),
+                            width: '100%'
+                        });
+                    },
+                    error: function() {
+                        $('#editVehicleModalContainer').html('<div class="modal-body"><div class="alert alert-danger">Error loading vehicle details. Please try again.</div></div>');
+                    }
+                });
+            });
+
+            // Handle AJAX form submission for both Add and Edit modals
+            $(document).on('submit', '#addVehicleModal form, #editVehicleModal form', function(e) {
+                e.preventDefault();
+                
+                var form = $(this);
+                var modal = form.closest('.modal');
+                var submitBtn = form.find('button[type="submit"]');
+                var originalBtnHtml = submitBtn.html();
+                
+                // Clear previous validation styling and errors
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+                
+                // Set loading state on submit button
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+                
+                var actionUrl = form.attr('action');
+                var method = form.find('input[name="_method"]').val() || 'POST';
+                
+                $.ajax({
+                    url: actionUrl,
+                    type: method,
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+                        
+                        if (response.success) {
+                            // Hide the modal
+                            modal.modal('hide');
+                            
+                            // Reset the form if it was the add modal
+                            if (modal.attr('id') === 'addVehicleModal') {
+                                form[0].reset();
+                                form.find('.select2').val(null).trigger('change');
+                            }
+                            
+                            // Reload DataTable without losing pagination/position
+                            $('#vehicles-table').DataTable().ajax.reload(null, false);
+                            
+                            // Display dynamic success alert at the top of the content
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                response.message +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+                            
+                            // Auto dismiss after 5 seconds
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    },
+                    error: function(xhr) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+                        
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+                            $.each(errors, function(field, messages) {
+                                var input = form.find('[name="' + field + '"]');
+                                if (input.length) {
+                                    input.addClass('is-invalid');
+                                    var errorSpan = $('<span class="invalid-feedback d-block"></span>').text(messages[0]);
+                                    
+                                    // Custom error positioning for Select2 containers
+                                    if (input.hasClass('select2-hidden-accessible')) {
+                                        input.next('.select2-container').after(errorSpan);
+                                    } else {
+                                        input.after(errorSpan);
+                                    }
+                                }
+                            });
+                        } else {
+                            alert('An error occurred. Please try again.');
+                        }
+                    }
+                });
+            });
+
+            // Reset Add Vehicle form when modal is closed (X button or backdrop click)
+            $('#addVehicleModal').on('hidden.bs.modal', function() {
+                var form = $(this).find('form');
+                form[0].reset();
+                // Reset Select2 dropdown
+                form.find('#model').val(null).trigger('change');
+                // Clear any validation errors
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
             });
         });
     </script>

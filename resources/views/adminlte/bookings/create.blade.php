@@ -119,9 +119,56 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         $(document).ready(function() {
-            flatpickr(".datepicker", {
-                dateFormat: "Y-m-d",
-                allowInput: false
+            var bookingToday = new Date();
+            bookingToday.setHours(0, 0, 0, 0);
+
+            var toPicker = flatpickr('#to_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                minDate: bookingToday
+            });
+
+            flatpickr('#from_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                minDate: bookingToday,
+                onChange: function(selectedDates) {
+                    var minToDate = selectedDates[0] || bookingToday;
+                    toPicker.set('minDate', minToDate);
+                    if (toPicker.selectedDates[0] && toPicker.selectedDates[0] < minToDate) {
+                        toPicker.setDate(minToDate);
+                    }
+                }
+            });
+
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                var method = form.attr('method');
+                var formData = new FormData(form[0]);
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            window.location.href = "{{ route('bookings.index') }}";
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            var response = xhr.responseJSON;
+                            alert(response.message);
+                        } else {
+                            alert('An error occurred. Please try again.');
+                        }
+                    }
+                });
             });
         });
     </script>

@@ -1,5 +1,7 @@
 @extends('adminlte::page')
 
+@section('plugins.Select2', true)
+
 @section('title', 'Edit Vehicle')
 
 @section('content_header')
@@ -31,8 +33,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="model">Model (Year)</label>
-                                    <select class="form-control @error('model') is-invalid @enderror"
-                                            id="model" name="model" required>
+                                    <select class="form-control select2 @error('model') is-invalid @enderror"
+                                            id="model" name="model" required style="width: 100%;">
                                         <option value="" disabled {{ old('model', $vehicle->model) ? '' : 'selected' }}>Select Year</option>
                                         @for($year = 2000; $year <= 2100; $year++)
                                             <option value="{{ $year }}" {{ old('model', $vehicle->model) == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -117,21 +119,6 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="status">Status</label>
-                                    <select class="form-control @error('status') is-invalid @enderror"
-                                            id="status" name="status" required>
-                                        <option value="available" {{ old('status', $vehicle->status) == 'available' ? 'selected' : '' }}>Available</option>
-                                        <option value="booked" {{ old('status', $vehicle->status) == 'booked' ? 'selected' : '' }}>Booked</option>
-                                        <option value="maintenance" {{ old('status', $vehicle->status) == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                        <option value="inactive" {{ old('status', $vehicle->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                    </select>
-                                    @error('status')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
 
                         <div class="row">
@@ -176,3 +163,18 @@
         }
     </style>
 @stop
+
+@section('js')
+    <script>
+        // Initialize Select2 for Model (Year)
+        $(document).ready(function() {
+            $('#model').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Year',
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+@stop
+

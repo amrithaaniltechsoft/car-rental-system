@@ -40,10 +40,10 @@ class VehicleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:vehicles,name',
             'model' => 'required|integer|between:2000,2100',
             'brand' => 'required|exists:brands,name',
             'type' => 'required|exists:vehicle_types,name',
@@ -56,6 +56,13 @@ class VehicleController extends Controller
 
         Vehicle::create($request->all());
 
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehicle created successfully.',
+            ]);
+        }
+
         return redirect()->route('vehicles.index')
             ->with('success', 'Vehicle created successfully.');
     }
@@ -65,6 +72,9 @@ class VehicleController extends Controller
      */
     public function show(Vehicle $vehicle): View
     {
+        if (request()->ajax()) {
+            return view('adminlte.vehicles.show_modal', compact('vehicle'));
+        }
         return view('adminlte.vehicles.show', compact('vehicle'));
     }
 
@@ -77,16 +87,19 @@ class VehicleController extends Controller
         $brands = Brand::orderBy('name')->get();
         $types = VehicleType::orderBy('name')->get();
 
+        if (request()->ajax()) {
+            return view('adminlte.vehicles.edit_modal', compact('vehicle', 'fuelTypes', 'brands', 'types'));
+        }
         return view('adminlte.vehicles.edit', compact('vehicle', 'fuelTypes', 'brands', 'types'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Vehicle $vehicle): RedirectResponse
+    public function update(Request $request, Vehicle $vehicle): RedirectResponse|JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:vehicles,name,'.$vehicle->id,
             'model' => 'required|integer|between:2000,2100',
             'brand' => 'required|exists:brands,name',
             'type' => 'required|exists:vehicle_types,name',
@@ -95,10 +108,16 @@ class VehicleController extends Controller
             'seating_capacity' => 'required|integer|min:1',
             'rc_book_details' => 'nullable|string',
             'insurance_details' => 'nullable|string',
-            'status' => 'required|in:available,booked,maintenance,inactive',
         ]);
 
         $vehicle->update($request->all());
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehicle updated successfully.',
+            ]);
+        }
 
         return redirect()->route('vehicles.index')
             ->with('success', 'Vehicle updated successfully.');
@@ -118,7 +137,6 @@ class VehicleController extends Controller
             'registration_number',
             'fuel_type',
             'seating_capacity',
-            'status',
         ];
 
         $draw = (int) $request->input('draw', 0);
@@ -165,7 +183,6 @@ class VehicleController extends Controller
                 'registration_number' => $vehicle->registration_number,
                 'fuel_type' => ucfirst($vehicle->fuel_type),
                 'seating_capacity' => $vehicle->seating_capacity,
-                'status' => $this->getStatusBadge($vehicle->status),
                 'actions' => $this->getActionButtons($vehicle),
             ];
         }
@@ -179,18 +196,35 @@ class VehicleController extends Controller
     }
 
     /**
-     * Get status badge HTML
+     * Remove the specified resource from storage.
      */
-    private function getStatusBadge(string $status): string
+    public function destroy(Vehicle $vehicle): RedirectResponse|JsonResponse
     {
-        $badges = [
-            'available' => '<span class="badge badge-success">Available</span>',
-            'booked' => '<span class="badge badge-warning">Booked</span>',
-            'maintenance' => '<span class="badge badge-danger">Maintenance</span>',
-            'inactive' => '<span class="badge badge-secondary">Inactive</span>',
-        ];
+        if ($vehicle->bookings()->exists()) {
+            $message = 'Cannot delete this vehicle because it is in use by existing bookings.';
 
-        return $badges[$status] ?? '<span class="badge badge-secondary">Unknown</span>';
+            if (request()->ajax() || request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->route('vehicles.index')
+                ->with('error', $message);
+        }
+
+        $vehicle->delete();
+
+        if (request()->ajax() || request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehicle deleted successfully.',
+            ]);
+        }
+
+        return redirect()->route('vehicles.index')
+            ->with('success', 'Vehicle deleted successfully.');
     }
 
     /**
@@ -199,12 +233,12 @@ class VehicleController extends Controller
     private function getActionButtons(Vehicle $vehicle): string
     {
         return '
-            <a href="javascript:void(0)" class="btn btn-info btn-sm">
+            <button type="button" class="btn btn-info btn-sm view-vehicle-btn" data-url="'.route('vehicles.show', $vehicle).'">
                 <i class="fas fa-eye"></i>
-            </a>
-            <a href="javascript:void(0)" class="btn btn-warning btn-sm">
+            </button>
+            <button type="button" class="btn btn-warning btn-sm edit-vehicle-btn" data-url="'.route('vehicles.edit', $vehicle).'">
                 <i class="fas fa-edit"></i>
-            </a>
+            </button>
             <form action="'.route('vehicles.destroy', $vehicle).'" method="POST" style="display: inline;">
                 '.csrf_field().'
                 '.method_field('DELETE').'

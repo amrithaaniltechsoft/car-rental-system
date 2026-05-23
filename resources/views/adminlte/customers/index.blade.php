@@ -170,6 +170,47 @@
         </div>
     </div>
 
+    <!-- View Customer Modal -->
+    <div class="modal fade" id="viewCustomerModal" tabindex="-1" role="dialog" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="viewCustomerModalLabel">Customer Details</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="viewCustomerModalBody">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p class="mt-2">Loading details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit Customer Modal -->
+    <div class="modal fade" id="editCustomerModal" tabindex="-1" role="dialog" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h5 class="modal-title text-center w-100 font-weight-bold" id="editCustomerModalLabel">Edit Customer</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="editCustomerModalContainer">
+                    <div class="modal-body text-center">
+                        <i class="fas fa-spinner fa-spin fa-3x text-success"></i>
+                        <p class="mt-2">Loading details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @stop
 
 @section('css')
@@ -250,6 +291,53 @@
 
             // Set correct initial state on page load
             toggleModalFields();
+
+            // Handle View Customer button click
+            $(document).on('click', '.view-customer-btn', function() {
+                var url = $(this).data('url');
+
+                // Show modal with loading state
+                $('#viewCustomerModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x text-success"></i><p class="mt-2">Loading details...</p></div>');
+                $('#viewCustomerModal').modal('show');
+
+                // Fetch customer details via AJAX
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#viewCustomerModalBody').html(response);
+                    },
+                    error: function() {
+                        $('#viewCustomerModalBody').html('<div class="alert alert-danger">Error loading customer details. Please try again.</div>');
+                    }
+                });
+            });
         });
+
+        // Handle Edit Vehicle button click
+        $(document).on('click', '.edit-customer-btn', function() {
+            var url = $(this).data('url');
+            
+            // Show modal and loading state
+            $('#editCustomerModalContainer').html('<div class="modal-body text-center"><i class="fas fa-spinner fa-spin fa-3x text-success"></i><p class="mt-2">Loading details...</p></div>');
+            $('#editCustomerModal').modal('show');
+            
+            // Fetch data
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    $('#editCustomerModalContainer').html(response);
+                    
+                },
+                error: function() {
+                    $('#editCustomertModalContainer').html('<div class="modal-body"><div class="alert alert-danger">Error loading vehicle details. Please try again.</div></div>');
+                }
+            });
+        });
+
+       
     </script>
+
+    
 @stop

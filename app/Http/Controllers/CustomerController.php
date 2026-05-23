@@ -61,6 +61,10 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer): View
     {
+        if (request()->ajax()) {
+            return view('adminlte.customers.show_modal', compact('customer'));
+        }
+
         return view('adminlte.customers.show', compact('customer'));
     }
 
@@ -69,6 +73,11 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer): View
     {
+        //return view('adminlte.customers.edit', compact('customer'));
+
+        if (request()->ajax()) {
+            return view('adminlte.customers.edit_modal', compact('customer'));
+        }
         return view('adminlte.customers.edit', compact('customer'));
     }
 
@@ -88,6 +97,7 @@ class CustomerController extends Controller
         ]);
 
         $data = $request->all();
+       
         if ($request->customer_type === 'company') {
             $data['name'] = $request->company_name;
             $data['id_card_number'] = null;
@@ -105,9 +115,30 @@ class CustomerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Customer $customer): RedirectResponse
+    public function destroy(Customer $customer): RedirectResponse|JsonResponse
     {
+        if ($customer->bookings()->exists()) {
+            $message = 'Cannot delete this customer because they are in use by existing bookings.';
+
+            if (request()->ajax() || request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->route('customers.index')
+                ->with('error', $message);
+        }
+
         $customer->delete();
+
+        if (request()->ajax() || request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer deleted successfully.',
+            ]);
+        }
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer deleted successfully.');
@@ -198,12 +229,12 @@ class CustomerController extends Controller
     private function getActionButtons(Customer $customer): string
     {
         return '
-            <a href="javascript:void(0)" class="btn btn-info btn-sm">
+            <button type="button" class="btn btn-info btn-sm view-customer-btn" data-url="'.route('customers.show', $customer).'">
                 <i class="fas fa-eye"></i>
-            </a>
-            <a href="javascript:void(0)" class="btn btn-warning btn-sm">
+            </button>
+            <button type="button" class="btn btn-warning btn-sm edit-customer-btn" data-url="'.route('customers.edit', $customer).'">
                 <i class="fas fa-edit"></i>
-            </a>
+            </button>
             <form action="'.route('customers.destroy', $customer).'" method="POST" style="display: inline;">
                 '.csrf_field().'
                 '.method_field('DELETE').'

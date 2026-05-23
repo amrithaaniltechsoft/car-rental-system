@@ -17,7 +17,6 @@ class Vehicle extends Model
         'rc_book_details',
         'insurance_details',
         'seating_capacity',
-        'status',
     ];
 
     protected $casts = [
