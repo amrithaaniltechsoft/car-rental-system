@@ -36,7 +36,7 @@
                     <table id="bookings-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>SI</th>
                                 <th>Vehicle</th>
                                 <th>Customer</th>
                                 <th>Dates</th>
@@ -317,7 +317,7 @@
                     "infoFiltered": "(filtered from _MAX_ total bookings)",
                     "zeroRecords": "No matching bookings found"
                 },
-                "order": [[0, "desc"]] // Default sort by ID descending
+                "order": [[0, "desc"]] // Default sort by SI descending
             });
 
             // AJAX form submission for add booking modal

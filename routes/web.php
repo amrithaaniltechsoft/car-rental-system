@@ -34,10 +34,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookings/{booking}/data', [BookingController::class, 'getBookingData'])->name('bookings.get-data');
 
     // Invoices
-    Route::resource('invoices', InvoiceController::class);
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'store']);
+    Route::get('/invoices-data', [InvoiceController::class, 'getData'])->name('invoices.data');
 
     // Bills
-    Route::resource('bills', BillController::class);
+    Route::resource('bills', BillController::class)->only(['index', 'store']);
+    Route::get('/bills-data', [BillController::class, 'getData'])->name('bills.data');
 
     // Expenses
     Route::resource('expenses', ExpenseController::class);
