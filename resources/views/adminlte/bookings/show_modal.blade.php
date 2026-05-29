@@ -8,16 +8,13 @@
 
         <ul class="list-group list-group-unbordered mb-3">
             <li class="list-group-item">
+                <b>Booking ID</b> <span class="float-right text-dark">{{ $booking->booking_id ?: 'N/A' }}</span>
+            </li>
+            <li class="list-group-item">
                 <b>Vehicle</b> <span class="float-right text-dark">{{ $booking->vehicle->name }} ({{ $booking->vehicle->registration_number }})</span>
             </li>
             <li class="list-group-item">
                 <b>Customer</b> <span class="float-right text-dark">{{ $booking->customer->name }}</span>
-            </li>
-            <li class="list-group-item">
-                <b>From Date</b> <span class="float-right text-dark">{{ $booking->from_date->format('d M Y') }}</span>
-            </li>
-            <li class="list-group-item">
-                <b>To Date</b> <span class="float-right text-dark">{{ $booking->to_date->format('d M Y') }}</span>
             </li>
             <li class="list-group-item">
                 <b>Status</b> 
@@ -35,6 +32,21 @@
                     @endif
                 </span>
             </li>
+            <li class="list-group-item">
+                <b>Remark</b> <span class="float-right text-muted">{{ $booking->notes ?: 'No remarks' }}</span>
+            </li>
+            <li class="list-group-item">
+                <b>Payment Type</b> <span class="float-right text-muted">
+                    @if($booking->payment_type)
+                        {{ ucwords(str_replace('_', ' ', $booking->payment_type)) }}
+                    @else
+                        Not specified
+                    @endif
+                </span>
+            </li>
+            <li class="list-group-item">
+                <b>Booking Created</b> <span class="float-right text-muted">{{ $booking->created_at->format('d M Y') }}</span>
+            </li>
         </ul>
     </div>
     <div class="col-md-7">
@@ -48,21 +60,26 @@
         <hr>
         <strong><i class="fas fa-user mr-1"></i> Customer Details</strong>
         <p class="text-muted">
-            {{ $booking->customer->name }}<br>
-            @if($booking->customer->phone)
-                Phone: {{ $booking->customer->phone }}<br>
+            {{ $booking->customer->name }}
+            @if($booking->customer->customer_type)
+                ({{ ucfirst(str_replace('_', ' ', $booking->customer->customer_type)) }})
             @endif
-            @if($booking->customer->email)
-                Email: {{ $booking->customer->email }}
+            <br>
+            @if($booking->customer->phone_number)
+                Phone: {{ $booking->customer->phone_number }}<br>
+            @endif
+            @if($booking->customer->address)
+                Address: {{ $booking->customer->address }}<br>
+            @endif
+            @if($booking->customer->id_card_number)
+                ID Card: {{ $booking->customer->id_card_number }}<br>
+            @endif
+            @if($booking->customer->company_name)
+                Company: {{ $booking->customer->company_name }}<br>
+            @endif
+            @if($booking->customer->company_registration_id)
+                Reg No: {{ $booking->customer->company_registration_id }}
             @endif
         </p>
-        <hr>
-        <strong><i class="fas fa-sticky-note mr-1"></i> Notes</strong>
-        <p class="text-muted">
-            {{ $booking->notes ?: 'No notes provided.' }}
-        </p>
-        <hr>
-        <strong><i class="fas fa-calendar-alt mr-1"></i> Booking Created</strong>
-        <p class="text-muted">{{ $booking->created_at->format('d M Y, h:i A') }}</p>
     </div>
 </div>

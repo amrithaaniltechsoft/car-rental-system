@@ -18,6 +18,10 @@
 
         <ul class="list-group list-group-unbordered mb-3 text-left">
             <li class="list-group-item">
+                <b><i class="fas fa-id-badge mr-1"></i> Customer ID</b>
+                <span class="float-right text-dark">{{ $customer->customer_id ?: 'N/A' }}</span>
+            </li>
+            <li class="list-group-item">
                 <b><i class="fas fa-phone mr-1"></i> Phone</b>
                 <span class="float-right text-dark">{{ $customer->phone_number }}</span>
             </li>
@@ -44,6 +48,6 @@
         <hr>
         
         <strong><i class="fas fa-clock mr-1"></i> Added At</strong>
-        <p class="text-muted mt-1">{{ $customer->created_at->format('d M Y, h:i A') }}</p>
+        <p class="text-muted mt-1">{{ $customer->created_at->format('d M Y') }}</p>
     </div>
 </div>

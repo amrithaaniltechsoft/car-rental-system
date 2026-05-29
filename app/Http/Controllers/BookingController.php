@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +49,7 @@ class BookingController extends Controller
             'total_amount' => 'nullable|numeric|min:0',
             'status'       => 'required|in:pending,confirmed,on_hold,cancelled',
             'notes'        => 'nullable|string',
+            'payment_type' => 'nullable|in:card,email_credit,lpo,cash',
         ]);
 
         if ($validator->fails()) {
@@ -93,7 +95,28 @@ class BookingController extends Controller
                 ->with('error', 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.');
         }
 
-        $booking = Booking::create($request->all());
+        $data = $request->all();
+
+        // Generate custom booking ID: BKYearMonthDaySequence
+        $today = now()->format('Ymd');
+        $prefix = 'BK' . $today;
+
+        // Get the last booking created today with this prefix
+        $lastBooking = Booking::where('booking_id', 'like', $prefix . '%')
+            ->orderBy('booking_id', 'desc')
+            ->first();
+
+        if ($lastBooking) {
+            // Extract sequence number and increment
+            $lastSequence = (int) substr($lastBooking->booking_id, -3);
+            $newSequence = $lastSequence + 1;
+        } else {
+            $newSequence = 1;
+        }
+
+        $data['booking_id'] = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+
+        $booking = Booking::create($data);
 
         if ($request->ajax() || $request->expectsJson()) {
             return response()->json([
@@ -141,6 +164,7 @@ class BookingController extends Controller
             'total_amount' => 'nullable|numeric|min:0',
             'status' => 'required|in:pending,confirmed,on_hold,cancelled',
             'notes' => 'nullable|string',
+            'payment_type' => 'nullable|in:card,email_credit,lpo,cash',
         ]);
 
         if ($validator->fails()) {
@@ -237,6 +261,7 @@ class BookingController extends Controller
 
         $columns = [
             'id',
+            'booking_id',
             'vehicle_id',
             'customer_id',
             'from_date',
@@ -249,12 +274,13 @@ class BookingController extends Controller
         $query = Booking::with(['vehicle', 'customer']);
 
         if (! empty($searchValue)) {
-            $query->whereHas('customer', function ($q) use ($searchValue) {
-                $q->where('name', 'like', "%{$searchValue}%");
-            })->orWhereHas('vehicle', function ($q) use ($searchValue) {
-                $q->where('name', 'like', "%{$searchValue}%")
-                  ->orWhere('registration_number', 'like', "%{$searchValue}%");
-            })->orWhere('status', 'like', "%{$searchValue}%");
+            $query->where('booking_id', 'like', "%{$searchValue}%")
+                ->orWhereHas('customer', function ($q) use ($searchValue) {
+                    $q->where('name', 'like', "%{$searchValue}%");
+                })->orWhereHas('vehicle', function ($q) use ($searchValue) {
+                    $q->where('name', 'like', "%{$searchValue}%")
+                      ->orWhere('registration_number', 'like', "%{$searchValue}%");
+                })->orWhere('status', 'like', "%{$searchValue}%");
         }
 
         $recordsTotal = Booking::count();
@@ -272,6 +298,7 @@ class BookingController extends Controller
         foreach ($bookings as $booking) {
             $data[] = [
                 'id' => $rowNum++,
+                'booking_id' => $booking->booking_id ?: 'N/A',
                 'vehicle' => $booking->vehicle->name . ' (' . $booking->vehicle->registration_number . ')',
                 'customer' => $booking->customer->name,
                 'dates' => $booking->from_date->format('d/m/Y') . ' - ' . $booking->to_date->format('d/m/Y'),
@@ -308,7 +335,7 @@ class BookingController extends Controller
      */
     private function getActionButtons(Booking $booking): string
     {
-        return '
+        $buttons = '
             <button type="button" class="btn btn-info btn-sm view-booking-btn" data-url="'.route('bookings.show', $booking).'">
                 <i class="fas fa-eye"></i>
             </button>
@@ -319,6 +346,74 @@ class BookingController extends Controller
                 <i class="fas fa-trash"></i>
             </button>
         ';
+
+        if (!$booking->invoice) {
+            $buttons .= '
+                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-id="'.$booking->id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'">
+                    <i class="fas fa-file-invoice"></i>
+                </button>
+            ';
+        }
+
+        return $buttons;
+    }
+
+    /**
+     * Create an invoice for a booking
+     */
+    public function createInvoice(Request $request, Booking $booking): RedirectResponse|JsonResponse
+    {
+        if ($booking->invoice) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking already has an invoice.',
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'This booking already has an invoice.');
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'rate' => 'nullable|numeric|min:0',
+            'invoice_date' => 'required|date',
+            'status' => 'required|in:pending,paid,overdue',
+            'description' => 'nullable|string',
+        ]);
+
+        $validated['customer_id'] = $booking->customer_id;
+        $validated['booking_id'] = $booking->id;
+        $validated['invoice_number'] = $this->generateInvoiceNumber();
+
+        Invoice::create($validated);
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice created successfully.',
+            ]);
+        }
+
+        return redirect()->route('bookings.index')->with('success', 'Invoice created successfully.');
+    }
+
+    /**
+     * Generate invoice number
+     */
+    private function generateInvoiceNumber(): string
+    {
+        $prefix = 'INV-'.now()->format('Ymd').'-';
+        $lastNumber = Invoice::query()
+            ->where('invoice_number', 'like', $prefix.'%')
+            ->orderByDesc('id')
+            ->value('invoice_number');
+
+        $sequence = 1;
+        if ($lastNumber) {
+            $sequence = (int) substr($lastNumber, -4) + 1;
+        }
+
+        return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -374,6 +469,27 @@ class BookingController extends Controller
                 'to_date' => $booking->to_date->format('Y-m-d'),
                 'status' => $booking->status,
                 'notes' => $booking->notes,
+                'payment_type' => $booking->payment_type,
+            ],
+        ]);
+    }
+
+    /**
+     * Get customer details for booking form
+     */
+    public function getCustomerDetails(Customer $customer): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'customer' => [
+                'id'                      => $customer->id,
+                'name'                    => $customer->name,
+                'customer_type'           => $customer->customer_type,
+                'phone_number'            => $customer->phone_number,
+                'address'                 => $customer->address,
+                'id_card_number'          => $customer->id_card_number,
+                'company_name'            => $customer->company_name,
+                'company_registration_id' => $customer->company_registration_id,
             ],
         ]);
     }

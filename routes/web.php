@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookings-data', [BookingController::class, 'getData'])->name('bookings.data');
     Route::post('/bookings/check-availability', [BookingController::class, 'checkAvailability'])->name('bookings.check-availability');
     Route::get('/bookings/{booking}/data', [BookingController::class, 'getBookingData'])->name('bookings.get-data');
+    Route::get('/customers/{customer}/details', [BookingController::class, 'getCustomerDetails'])->name('customers.details');
+    Route::post('/bookings/{booking}/invoice', [BookingController::class, 'createInvoice'])->name('bookings.create-invoice');
 
     // Invoices
     Route::resource('invoices', InvoiceController::class)->only(['index', 'store']);

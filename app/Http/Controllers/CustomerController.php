@@ -50,6 +50,25 @@ class CustomerController extends Controller
             $data['company_registration_id'] = null;
         }
 
+        // Generate custom customer ID: CUYearMonthDaySequence
+        $today = now()->format('Ymd');
+        $prefix = 'CU' . $today;
+
+        // Get the last customer created today with this prefix
+        $lastCustomer = Customer::where('customer_id', 'like', $prefix . '%')
+            ->orderBy('customer_id', 'desc')
+            ->first();
+
+        if ($lastCustomer) {
+            // Extract sequence number and increment
+            $lastSequence = (int) substr($lastCustomer->customer_id, -3);
+            $newSequence = $lastSequence + 1;
+        } else {
+            $newSequence = 1;
+        }
+
+        $data['customer_id'] = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+
         Customer::create($data);
 
         return redirect()->route('customers.index')
@@ -151,6 +170,7 @@ class CustomerController extends Controller
     {
         $columns = [
             'id',
+            'customer_id',
             'customer_type',
             'name',
             'company_name',
@@ -206,6 +226,7 @@ class CustomerController extends Controller
         foreach ($customers as $customer) {
             $data[] = [
                 'id' => $rowNum++,
+                'customer_id' => $customer->customer_id ?: 'N/A',
                 'customer_type' => ucfirst($customer->customer_type),
                 'name' => $customer->customer_type === 'company' ? $customer->company_name : $customer->name,
                 'address' => $customer->address,

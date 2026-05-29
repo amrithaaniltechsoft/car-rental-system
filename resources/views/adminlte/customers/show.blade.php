@@ -47,7 +47,7 @@
                             </p>
                             <hr>
                             <strong><i class="fas fa-calendar-alt mr-1"></i> Registered At</strong>
-                            <p class="text-muted">{{ $customer->created_at->format('d M Y, h:i A') }}</p>
+                            <p class="text-muted">{{ $customer->created_at->format('d M Y') }}</p>
                         </div>
                     </div>
                 </div>

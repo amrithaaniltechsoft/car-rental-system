@@ -14,6 +14,11 @@
                     <h3 class="card-title">General Information</h3>
                 </div>
                 <div class="card-body">
+                    <strong><i class="fas fa-hashtag mr-1"></i> Booking ID</strong>
+                    <p class="text-muted">
+                        {{ $booking->booking_id ?: 'N/A' }}
+                    </p>
+                    <hr>
                     <strong><i class="fas fa-car mr-1"></i> Vehicle</strong>
                     <p class="text-muted">
                         {{ $booking->vehicle->name }} ({{ $booking->vehicle->registration_number }})
@@ -41,6 +46,23 @@
                             <span class="badge badge-danger">Cancelled</span>
                         @endif
                     </p>
+                    <hr>
+                    <strong><i class="fas fa-sticky-note mr-1"></i> Remark</strong>
+                    <p class="text-muted">
+                        {{ $booking->notes ?: 'No additional remarks' }}
+                    </p>
+                    <hr>
+                    <strong><i class="fas fa-credit-card mr-1"></i> Payment Type</strong>
+                    <p class="text-muted">
+                        @if($booking->payment_type)
+                            {{ ucwords(str_replace('_', ' ', $booking->payment_type)) }}
+                        @else
+                            Not specified
+                        @endif
+                    </p>
+                    <hr>
+                    <strong><i class="fas fa-clock mr-1"></i> Created At</strong>
+                    <p class="text-muted">{{ $booking->created_at->format('d M Y') }}</p>
                 </div>
             </div>
         </div>
@@ -51,14 +73,7 @@
                     <h3 class="card-title">Financial & Additional Details</h3>
                 </div>
                 <div class="card-body">
-
-                    <strong><i class="fas fa-sticky-note mr-1"></i> Notes</strong>
-                    <p class="text-muted">
-                        {{ $booking->notes ?: 'No additional notes' }}
-                    </p>
-                    <hr>
-                    <strong><i class="fas fa-clock mr-1"></i> Created At</strong>
-                    <p class="text-muted">{{ $booking->created_at->format('d M Y, h:i A') }}</p>
+                    <p class="text-muted">Financial details can be added here.</p>
                 </div>
                 <div class="card-footer">
                     <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">Edit Booking</a>

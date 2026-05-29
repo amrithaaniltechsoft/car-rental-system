@@ -1,5 +1,6 @@
 @extends('adminlte::page')
 
+@section('plugins.Select2', true)
 @section('title', 'Edit Booking')
 
 @section('content_header')
@@ -36,7 +37,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="customer_id">Customer</label>
-                                    <select class="form-control @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required>
+                                    <select class="form-control select2 @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required style="width: 100%;">
+                                        <option value="">Select Customer</option>
                                         @foreach($customers as $customer)
                                             <option value="{{ $customer->id }}" {{ old('customer_id', $booking->customer_id) == $customer->id ? 'selected' : '' }}>
                                                 {{ $customer->name }}
@@ -85,9 +87,24 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="notes">Notes</label>
+                                    <label for="notes">Remark</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="1">{{ old('notes', $booking->notes) }}</textarea>
                                     @error('notes')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="payment_type">Payment Type</label>
+                                    <select class="form-control @error('payment_type') is-invalid @enderror" id="payment_type" name="payment_type">
+                                        <option value="">Select Payment Type</option>
+                                        <option value="card" {{ old('payment_type', $booking->payment_type) == 'card' ? 'selected' : '' }}>Card</option>
+                                        <option value="email_credit" {{ old('payment_type', $booking->payment_type) == 'email_credit' ? 'selected' : '' }}>Email Credit</option>
+                                        <option value="lpo" {{ old('payment_type', $booking->payment_type) == 'lpo' ? 'selected' : '' }}>LPO</option>
+                                        <option value="cash" {{ old('payment_type', $booking->payment_type) == 'cash' ? 'selected' : '' }}>Cash</option>
+                                    </select>
+                                    @error('payment_type')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -118,6 +135,23 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         $(document).ready(function() {
+            // Initialize Select2 for Customer dropdown with focus behavior
+            $('#customer_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Customer',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            // Open dropdown on focus
+            $('#customer_id').on('focus', function () {
+                $(this).select2('open');
+            });
+            // Focus the search field when dropdown opens
+            $('#customer_id').on('select2:open', function () {
+                $('.select2-search__field').focus();
+            });
+
             var bookingToday = new Date();
             bookingToday.setHours(0, 0, 0, 0);
 

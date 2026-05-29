@@ -166,15 +166,26 @@
 
 @section('js')
     <script>
-        // Initialize Select2 for Model (Year)
-        $(document).ready(function() {
-            $('#model').select2({
-                theme: 'bootstrap4',
-                placeholder: 'Select Year',
-                allowClear: true,
-                width: '100%'
-            });
-        });
+        // Initialize Select2 for Model (Year) with search focus
+$(document).ready(function() {
+    $('#model').select2({
+        theme: 'bootstrap4',
+        placeholder: 'Select Year',
+        allowClear: true,
+        width: '100%',
+        minimumResultsForSearch: 0
+    });
+
+    // Auto-focus Select2 search input when dropdown opens
+    $(document).on('select2:open', function(e) {
+        window.setTimeout(function () {
+            var searchField = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
+        }, 50);
+    });
+});
     </script>
 @stop
 

@@ -184,7 +184,18 @@
                 theme: 'bootstrap4',
                 placeholder: 'Select Year',
                 allowClear: true,
-                width: '100%'
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            // Auto-focus Select2 search input when dropdown opens
+            $(document).on('select2:open', function(e) {
+                window.setTimeout(function () {
+                    var searchField = document.querySelector('.select2-container--open .select2-search__field');
+                    if (searchField) {
+                        searchField.focus();
+                    }
+                }, 50);
             });
         });
     </script>

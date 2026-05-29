@@ -1,4 +1,5 @@
 @extends('adminlte::page')
+@section('plugins.Select2', true)
 
 @section('title', 'Bookings')
 
@@ -37,6 +38,7 @@
                         <thead>
                             <tr>
                                 <th>SI</th>
+                                <th>Booking ID</th>
                                 <th>Vehicle</th>
                                 <th>Customer</th>
                                 <th>Dates</th>
@@ -79,7 +81,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="customer_id">Customer</label>
-                                <select class="form-control @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required>
+                                <select class="form-control select2 @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required style="width: 100%;">
                                     <option value="">Select Customer</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}">{{ $customer->name }}</option>
@@ -119,11 +121,59 @@
                                 @enderror
                             </div>
                             <div class="form-group col-md-4">
-                                <label for="notes">Notes</label>
+                                <label for="notes">Remark</label>
                                 <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="1">{{ old('notes') }}</textarea>
                                 @error('notes')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="payment_type">Payment Type</label>
+                                <select class="form-control @error('payment_type') is-invalid @enderror" id="payment_type" name="payment_type">
+                                    <option value="">Select Payment Type</option>
+                                    <option value="card" {{ old('payment_type') == 'card' ? 'selected' : '' }}>Card</option>
+                                    <option value="email_credit" {{ old('payment_type') == 'email_credit' ? 'selected' : '' }}>Email Credit</option>
+                                    <option value="lpo" {{ old('payment_type') == 'lpo' ? 'selected' : '' }}>LPO</option>
+                                    <option value="cash" {{ old('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
+                                </select>
+                                @error('payment_type')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Customer Details Panel --}}
+                        <div class="form-row" id="add_customer_details_row" style="display:none;">
+                            <div class="col-md-12">
+                                <div class="customer-details-card">
+                                    <div class="customer-details-header">
+                                        <i class="fas fa-user-circle mr-1"></i>
+                                        <span id="add_cd_name"></span>
+                                        <span class="customer-type-badge" id="add_cd_type"></span>
+                                    </div>
+                                    <div class="customer-details-body">
+                                        <div class="cd-item" id="add_cd_phone_wrap">
+                                            <i class="fas fa-phone-alt"></i>
+                                            <span id="add_cd_phone"></span>
+                                        </div>
+                                        <div class="cd-item" id="add_cd_address_wrap">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span id="add_cd_address"></span>
+                                        </div>
+                                        <div class="cd-item" id="add_cd_idcard_wrap">
+                                            <i class="fas fa-id-card"></i>
+                                            <span id="add_cd_idcard"></span>
+                                        </div>
+                                        <div class="cd-item" id="add_cd_company_wrap">
+                                            <i class="fas fa-building"></i>
+                                            <span id="add_cd_company"></span>
+                                        </div>
+                                        <div class="cd-item" id="add_cd_regno_wrap">
+                                            <i class="fas fa-file-alt"></i>
+                                            <span id="add_cd_regno"></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -160,7 +210,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="edit_customer_id">Customer</label>
-                                <select class="form-control" id="edit_customer_id" name="customer_id" required>
+                                <select class="form-control select2" id="edit_customer_id" name="customer_id" required style="width: 100%;">
                                     <option value="">Select Customer</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}">{{ $customer->name }}</option>
@@ -188,8 +238,53 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-4">
-                                <label for="edit_notes">Notes</label>
+                                <label for="edit_notes">Remark</label>
                                 <textarea class="form-control" id="edit_notes" name="notes" rows="1"></textarea>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_payment_type">Payment Type</label>
+                                <select class="form-control" id="edit_payment_type" name="payment_type">
+                                    <option value="">Select Payment Type</option>
+                                    <option value="card">Card</option>
+                                    <option value="email_credit">Email Credit</option>
+                                    <option value="lpo">LPO</option>
+                                    <option value="cash">Cash</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Customer Details Panel (Edit Modal) --}}
+                        <div class="form-row" id="edit_customer_details_row" style="display:none;">
+                            <div class="col-md-12">
+                                <div class="customer-details-card">
+                                    <div class="customer-details-header">
+                                        <i class="fas fa-user-circle mr-1"></i>
+                                        <span id="edit_cd_name"></span>
+                                        <span class="customer-type-badge" id="edit_cd_type"></span>
+                                    </div>
+                                    <div class="customer-details-body">
+                                        <div class="cd-item" id="edit_cd_phone_wrap">
+                                            <i class="fas fa-phone-alt"></i>
+                                            <span id="edit_cd_phone"></span>
+                                        </div>
+                                        <div class="cd-item" id="edit_cd_address_wrap">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span id="edit_cd_address"></span>
+                                        </div>
+                                        <div class="cd-item" id="edit_cd_idcard_wrap">
+                                            <i class="fas fa-id-card"></i>
+                                            <span id="edit_cd_idcard"></span>
+                                        </div>
+                                        <div class="cd-item" id="edit_cd_company_wrap">
+                                            <i class="fas fa-building"></i>
+                                            <span id="edit_cd_company"></span>
+                                        </div>
+                                        <div class="cd-item" id="edit_cd_regno_wrap">
+                                            <i class="fas fa-file-alt"></i>
+                                            <span id="edit_cd_regno"></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -217,6 +312,86 @@
         </div>
     </div>
 
+    <div class="modal fade" id="createInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="createInvoiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="createInvoiceModalLabel">Create Invoice for Booking</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="createInvoiceForm" action="" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="invoice_vehicle">Vehicle</label>
+                                <input type="text" class="form-control" id="invoice_vehicle" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="invoice_customer">Customer</label>
+                                <input type="text" class="form-control" id="invoice_customer" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="invoice_date">Invoice Date</label>
+                                <input type="text" class="form-control datepicker @error('invoice_date') is-invalid @enderror"
+                                       id="invoice_date" name="invoice_date" value="{{ old('invoice_date', now()->format('Y-m-d')) }}" required>
+                                @error('invoice_date')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="invoice_amount">Amount (OMR)</label>
+                                <input type="number" step="0.01" min="0" class="form-control @error('amount') is-invalid @enderror"
+                                       id="invoice_amount" name="amount" required>
+                                @error('amount')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="invoice_rate">Rate</label>
+                                <input type="number" step="0.01" min="0" class="form-control @error('rate') is-invalid @enderror"
+                                       id="invoice_rate" name="rate">
+                                @error('rate')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="invoice_status">Status</label>
+                                <select class="form-control @error('status') is-invalid @enderror" id="invoice_status" name="status" required>
+                                    <option value="pending" {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="paid" {{ old('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                                    <option value="overdue" {{ old('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                                </select>
+                                @error('status')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="invoice_description">Description</label>
+                                <textarea class="form-control @error('description') is-invalid @enderror"
+                                          id="invoice_description" name="description" rows="2">{{ old('description') }}</textarea>
+                                @error('description')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save Invoice</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 @stop
 
 @section('css')
@@ -230,6 +405,52 @@
         .datepicker[readonly] {
             background-color: #ffffff;
             opacity: 1;
+        }
+
+        /* Customer Details Card */
+        .customer-details-card {
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .customer-details-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: #fff;
+            padding: 8px 14px;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .customer-type-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        .customer-details-body {
+            background: #f8fff9;
+            padding: 10px 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+        }
+        .cd-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #495057;
+        }
+        .cd-item i {
+            color: #28a745;
+            width: 14px;
+            text-align: center;
         }
     </style>
 @stop
@@ -289,6 +510,98 @@
 
             initBookingDatePickers('#from_date', '#to_date');
 
+            // Initialize Select2 for Customer inside the Add Booking Modal
+            $('#addBookingModal #customer_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Customer',
+                allowClear: true,
+                dropdownParent: $('#addBookingModal'),
+                width: '100%'
+            });
+
+            // Initialize Select2 for Customer inside the Edit Booking Modal
+            $('#editBookingModal #edit_customer_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Customer',
+                allowClear: true,
+                dropdownParent: $('#editBookingModal'),
+                width: '100%'
+            });
+
+            // Auto-focus Select2 search input when dropdown opens
+            $(document).on('select2:open', function(e) {
+                window.setTimeout(function () {
+                    var searchField = document.querySelector('.select2-container--open .select2-search__field');
+                    if (searchField) {
+                        searchField.focus();
+                    }
+                }, 50);
+            });
+
+            // Customer details URL template
+            var customerDetailsUrl = '{{ route("customers.details", ":id") }}';
+
+            function loadCustomerDetails(customerId, prefix) {
+                var detailsRow = $('#' + prefix + '_customer_details_row');
+                if (!customerId) {
+                    detailsRow.hide();
+                    return;
+                }
+                var url = customerDetailsUrl.replace(':id', customerId);
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            var c = response.customer;
+                            $('#' + prefix + '_cd_name').text(c.name || '');
+                            $('#' + prefix + '_cd_type').text(c.customer_type ? c.customer_type.replace('_', ' ') : '');
+
+                            if (c.phone_number) {
+                                $('#' + prefix + '_cd_phone').text(c.phone_number);
+                                $('#' + prefix + '_cd_phone_wrap').show();
+                            } else {
+                                $('#' + prefix + '_cd_phone_wrap').hide();
+                            }
+                            if (c.address) {
+                                $('#' + prefix + '_cd_address').text(c.address);
+                                $('#' + prefix + '_cd_address_wrap').show();
+                            } else {
+                                $('#' + prefix + '_cd_address_wrap').hide();
+                            }
+                            if (c.id_card_number) {
+                                $('#' + prefix + '_cd_idcard').text('ID: ' + c.id_card_number);
+                                $('#' + prefix + '_cd_idcard_wrap').show();
+                            } else {
+                                $('#' + prefix + '_cd_idcard_wrap').hide();
+                            }
+                            if (c.company_name) {
+                                $('#' + prefix + '_cd_company').text(c.company_name);
+                                $('#' + prefix + '_cd_company_wrap').show();
+                            } else {
+                                $('#' + prefix + '_cd_company_wrap').hide();
+                            }
+                            if (c.company_registration_id) {
+                                $('#' + prefix + '_cd_regno').text('Reg: ' + c.company_registration_id);
+                                $('#' + prefix + '_cd_regno_wrap').show();
+                            } else {
+                                $('#' + prefix + '_cd_regno_wrap').hide();
+                            }
+
+                            detailsRow.slideDown(200);
+                        }
+                    }
+                });
+            }
+
+            // Listen for customer selection changes
+            $('#addBookingModal #customer_id').on('change', function() {
+                loadCustomerDetails($(this).val(), 'add');
+            });
+            $('#editBookingModal #edit_customer_id').on('change', function() {
+                loadCustomerDetails($(this).val(), 'edit');
+            });
+
             $('#bookings-table').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -298,6 +611,7 @@
                 },
                 "columns": [
                     { "data": "id", "orderable": true },
+                    { "data": "booking_id", "orderable": true },
                     { "data": "vehicle", "orderable": false },
                     { "data": "customer", "orderable": false },
                     { "data": "dates", "orderable": false },
@@ -353,6 +667,7 @@
                         if (response.success) {
                             $('#addBookingModal').modal('hide');
                             form[0].reset();
+                            form.find('.select2').val(null).trigger('change');
                             $('#bookings-table').DataTable().ajax.reload();
 
                             // Display dynamic success alert at the top of the content
@@ -384,7 +699,11 @@
                                     if (input.length) {
                                         input.addClass('is-invalid');
                                         var errorSpan = $('<span class="invalid-feedback d-block"></span>').text(messages[0]);
-                                        input.after(errorSpan);
+                                        if (input.hasClass('select2-hidden-accessible')) {
+                                            input.next('.select2-container').after(errorSpan);
+                                        } else {
+                                            input.after(errorSpan);
+                                        }
                                     }
                                 });
                             } else if (response.message) {
@@ -487,7 +806,11 @@
                                     if (input.length) {
                                         input.addClass('is-invalid');
                                         var errorSpan = $('<span class="invalid-feedback d-block"></span>').text(messages[0]);
-                                        input.after(errorSpan);
+                                        if (input.hasClass('select2-hidden-accessible')) {
+                                            input.next('.select2-container').after(errorSpan);
+                                        } else {
+                                            input.after(errorSpan);
+                                        }
                                     }
                                 });
                             } else if (response.message) {
@@ -539,9 +862,10 @@
                             var booking = response.booking;
                             $('#editBookingForm').attr('action', "{{ route('bookings.update', ':id') }}".replace(':id', booking.id));
                             $('#edit_vehicle_id').val(booking.vehicle_id);
-                            $('#edit_customer_id').val(booking.customer_id);
+                            $('#edit_customer_id').val(booking.customer_id).trigger('change');
                             $('#edit_status').val(booking.status);
                             $('#edit_notes').val(booking.notes);
+                            $('#edit_payment_type').val(booking.payment_type);
 
                             initBookingDatePickers('#edit_from_date', '#edit_to_date', booking.from_date, booking.to_date);
 
@@ -638,6 +962,133 @@
                         }, 5000);
                     }
                 });
+            });
+
+            // Reset Add Booking form when modal is closed
+            $('#addBookingModal').on('hidden.bs.modal', function() {
+                var form = $(this).find('form');
+                form[0].reset();
+                form.find('.select2').val(null).trigger('change');
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+                $('#add_customer_details_row').hide();
+            });
+
+            // Reset Edit Booking form when modal is closed
+            $('#editBookingModal').on('hidden.bs.modal', function() {
+                var form = $(this).find('form');
+                form[0].reset();
+                form.find('.select2').val(null).trigger('change');
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+                $('#edit_customer_details_row').hide();
+            });
+
+            // Handle create invoice button click
+            $(document).on('click', '.create-invoice-btn', function() {
+                var bookingId = $(this).data('id');
+                var vehicle = $(this).data('vehicle');
+                var customer = $(this).data('customer');
+                var amount = $(this).data('amount');
+
+                var actionUrl = '{{ route("bookings.create-invoice", ":id") }}'.replace(':id', bookingId);
+                $('#createInvoiceForm').attr('action', actionUrl);
+
+                $('#invoice_vehicle').val(vehicle);
+                $('#invoice_customer').val(customer);
+                $('#invoice_amount').val(amount);
+
+                flatpickr('#invoice_date', {
+                    dateFormat: 'Y-m-d',
+                    allowInput: false,
+                    defaultDate: '{{ now()->format('Y-m-d') }}'
+                });
+
+                $('#createInvoiceModal').modal('show');
+            });
+
+            // AJAX form submission for create invoice modal
+            $('#createInvoiceForm').on('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var form = $(this);
+                var submitBtn = form.find('button[type="submit"]');
+                var originalBtnHtml = submitBtn.html();
+
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: new FormData(form[0]),
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                        if (response.success) {
+                            $('#createInvoiceModal').modal('hide');
+                            form[0].reset();
+                            $('#bookings-table').DataTable().ajax.reload(null, false);
+
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                response.message +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    },
+                    error: function(xhr) {
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                        if (xhr.status === 422) {
+                            var response = xhr.responseJSON;
+                            if (response.errors) {
+                                $.each(response.errors, function(field, messages) {
+                                    var input = form.find('[name="' + field + '"]');
+                                    if (input.length) {
+                                        input.addClass('is-invalid');
+                                        input.after($('<span class="invalid-feedback d-block"></span>').text(messages[0]));
+                                    }
+                                });
+                            } else if (response.message) {
+                                $('.alert').remove();
+                                $('.row').first().before(
+                                    '<div class="alert alert-danger alert-dismissible fade show">' +
+                                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                                    '<h5><i class="icon fas fa-ban"></i> Error!</h5>' + response.message +
+                                    '</div>'
+                                );
+                            }
+                        }
+                    }
+                });
+
+                return false;
+            });
+
+            // Reset Create Invoice form when modal is closed
+            $('#createInvoiceModal').on('hidden.bs.modal', function() {
+                var form = $(this).find('form');
+                form[0].reset();
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+                $('#invoice_status').val('pending');
             });
         });
     </script>

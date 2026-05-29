@@ -37,6 +37,7 @@
                         <thead>
                             <tr>
                                 <th>SI</th>
+                                <th>Customer ID</th>
                                 <th>Type</th>
                                 <th>Name</th>
                                 <th>Address</th>
@@ -248,6 +249,7 @@
                 },
                 "columns": [
                     { "data": "id", "orderable": true },
+                    { "data": "customer_id", "orderable": true },
                     { "data": "customer_type", "orderable": true },
                     { "data": "name", "orderable": true },
                     { "data": "address", "orderable": true },

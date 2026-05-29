@@ -18,10 +18,7 @@ class InvoiceController extends Controller
      */
     public function index(): View
     {
-        $customers = $this->customersForSelect();
-        $bookings = $this->bookingsForSelect();
-
-        return view('adminlte.invoices.index', compact('customers', 'bookings'));
+        return view('adminlte.invoices.index');
     }
 
     /**
