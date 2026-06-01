@@ -168,11 +168,11 @@ class InvoiceController extends Controller
                 ? $invoice->customer->company_name
                 : $invoice->customer->name;
 
-            $bookingLabel = '—';
+            $vehicleLabel = '—';
             $bookingFromDate = '—';
             $bookingToDate = '—';
-            if ($invoice->booking) {
-                $bookingLabel = '#'.$invoice->booking->id.' — '.$invoice->booking->vehicle->name;
+            if ($invoice->booking && $invoice->booking->vehicle) {
+                $vehicleLabel = $invoice->booking->vehicle->name.' ('.$invoice->booking->vehicle->registration_number.')';
                 $bookingFromDate = $invoice->booking->from_date->format('d/m/Y');
                 $bookingToDate = $invoice->booking->to_date->format('d/m/Y');
             }
@@ -181,7 +181,7 @@ class InvoiceController extends Controller
                 'id' => $rowNum++,
                 'invoice_number' => $invoice->invoice_number,
                 'customer' => $customerName,
-                'booking' => $bookingLabel,
+                'vehicle' => $vehicleLabel,
                 'booking_from_date' => $bookingFromDate,
                 'booking_to_date' => $bookingToDate,
                 'amount' => number_format((float) $invoice->amount, 2),

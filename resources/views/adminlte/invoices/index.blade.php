@@ -38,10 +38,10 @@
                                 <th>SI</th>
                                 <th>Invoice #</th>
                                 <th>Customer</th>
-                                <th>Booking</th>
+                                <th>Vehicle</th>
                                 <th>Booking From</th>
                                 <th>Booking To</th>
-                                <th>Amount</th>
+                                <th class="text-left" style="text-align: left !important;">Amount</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -111,10 +111,17 @@
                     { "data": "id", "orderable": true },
                     { "data": "invoice_number", "orderable": true },
                     { "data": "customer", "orderable": false },
-                    { "data": "booking", "orderable": false },
+                    { "data": "vehicle", "orderable": false },
                     { "data": "booking_from_date", "orderable": true },
                     { "data": "booking_to_date", "orderable": true },
-                    { "data": "amount", "orderable": true, "className": "text-right" },
+                    { 
+                        "data": "amount", 
+                        "orderable": true, 
+                        "className": "text-right",
+                        "createdCell": function (cell, cellData, rowData, row, col) {
+                            $(cell).css('text-align', 'right');
+                        }
+                    },
                     { "data": "status", "orderable": true },
                     { "data": "actions", "orderable": false, "searchable": false }
                 ],
