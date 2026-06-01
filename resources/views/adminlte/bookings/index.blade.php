@@ -1036,6 +1036,63 @@
                     }
                 });
             });
+            
+            // Handle status badge click to confirm booking
+            $(document).on('click', '.change-status-btn', function() {
+                if (!confirm('Are you sure you want to change this booking status to confirmed?')) {
+                    return;
+                }
+
+                var bookingId = $(this).data('id');
+                var url = '{{ route("bookings.confirm", ":id") }}'.replace(':id', bookingId);
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#bookings-table').DataTable().ajax.reload();
+
+                            // Display dynamic success alert at the top of the content
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                response.message +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+
+                            // Auto dismiss after 5 seconds
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    },
+                    error: function() {
+                        $('.alert').remove();
+                        var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                            '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                            'Failed to update booking status.' +
+                            '</div>';
+                        $('.row').first().before(alertHtml);
+
+                        setTimeout(function() {
+                            $('.alert-danger').fadeOut('slow', function() {
+                                $(this).remove();
+                            });
+                        }, 5000);
+                    }
+                });
+            });
 
             // Reset Add Booking form when modal is closed
             $('#addBookingModal').on('hidden.bs.modal', function() {

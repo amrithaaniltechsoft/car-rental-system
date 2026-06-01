@@ -72,7 +72,6 @@ class BookingController extends Controller
         $toDate = $request->to_date;
 
         $hasConflict = Booking::where('vehicle_id', $vehicle->id)
-            ->where('status', 'confirmed')
             ->where(function ($query) use ($fromDate, $toDate) {
                 $query->whereBetween('from_date', [$fromDate, $toDate])
                     ->orWhereBetween('to_date', [$fromDate, $toDate])
@@ -87,14 +86,14 @@ class BookingController extends Controller
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.',
+                    'message' => 'Vehicle is not available for the selected dates. Try on other date.',
                     'available' => false,
                 ], 422);
             }
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.');
+                ->with('error', 'Vehicle is not available for the selected dates. Try on other date.');
         }
 
         $data = $request->all();
@@ -498,7 +497,6 @@ class BookingController extends Controller
 
         // Check if vehicle has any confirmed bookings that overlap with the requested dates
         $hasConflict = Booking::where('vehicle_id', $vehicle->id)
-            ->where('status', 'confirmed')
             ->where(function ($query) use ($fromDate, $toDate) {
                 $query->whereBetween('from_date', [$fromDate, $toDate])
                     ->orWhereBetween('to_date', [$fromDate, $toDate])
@@ -515,7 +513,7 @@ class BookingController extends Controller
             'available' => $isAvailable,
             'message' => $isAvailable
                 ? 'Vehicle is available for the selected dates.'
-                : 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.',
+                : 'Vehicle is not available for the selected dates. Try on other date.',
         ]);
     }
 
