@@ -374,7 +374,7 @@
                             <div class="col-md-12 text-right">
                                 <table class="table table-bordered table-sm" style="max-width: 320px; margin-left: auto; font-size: 14px;">
                                     <tr>
-                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">Total</strong></td>
+                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">Total</strong></td>
                                         <td class="text-right">
                                             <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('total') is-invalid @enderror"
                                                    id="invoice_total" name="total" required style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
@@ -384,7 +384,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">VAT (%)</strong></td>
+                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">VAT (%)</strong></td>
                                         <td class="text-right">
                                             <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('vat') is-invalid @enderror"
                                                    id="invoice_vat" name="vat" value="5" style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
@@ -394,7 +394,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">Sub Total</strong></td>
+                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">Sub Total</strong></td>
                                         <td class="text-right">
                                             <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('subtotal') is-invalid @enderror"
                                                    id="invoice_subtotal" name="subtotal" readonly style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
@@ -404,7 +404,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">VAT Amt</strong></td>
+                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">VAT Amt</strong></td>
                                         <td class="text-right">
                                             <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right"
                                                    id="invoice_vat_amount" readonly style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
@@ -431,6 +431,13 @@
             color: #6c757d;
             font-size: 16px;
             font-weight: 600 !important;
+        }
+        .invoice-label-cell {
+            padding-top: 10px;
+            font-size: 16px;
+        }
+        .table-sm td, .table-sm th {
+            padding: revert-rule;
         }
         .datepicker[readonly] {
             background-color: #ffffff;
