@@ -298,8 +298,8 @@
 
     <div class="modal fade" id="viewBookingModal" tabindex="-1" role="dialog" aria-labelledby="viewBookingModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content" style="border: 1px solid #17a2b8;">
-                <div class="modal-header justify-content-center" style="background-color: #17a2b8; color: #ffffff; padding: 10px 10px;">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
                     <h4 class="modal-title text-center w-100" id="viewBookingModalLabel">View Booking Details</h4>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -326,6 +326,10 @@
                     <div class="modal-body">
                         <div class="form-row">
                             <div class="form-group col-md-4">
+                                <label for="invoice_booking_id">Booking ID</label>
+                                <input type="text" class="form-control" id="invoice_booking_id" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label for="invoice_vehicle">Vehicle</label>
                                 <input type="text" class="form-control" id="invoice_vehicle" readonly>
                             </div>
@@ -333,41 +337,23 @@
                                 <label for="invoice_customer">Customer</label>
                                 <input type="text" class="form-control" id="invoice_customer" readonly>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="invoice_date">Invoice Date</label>
-                                <input type="text" class="form-control datepicker @error('invoice_date') is-invalid @enderror"
-                                       id="invoice_date" name="invoice_date" value="{{ old('invoice_date', now()->format('Y-m-d')) }}" required>
-                                @error('invoice_date')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group col-md-4">
-                                <label for="invoice_amount">Amount (OMR)</label>
-                                <input type="number" step="0.01" min="0" class="form-control @error('amount') is-invalid @enderror"
-                                       id="invoice_amount" name="amount" required>
-                                @error('amount')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
+                                <label for="booking_from_date">Booking From Date</label>
+                                <input type="text" class="form-control" id="booking_from_date" readonly>
                             </div>
                             <div class="form-group col-md-4">
-                                <label for="invoice_rate">Rate</label>
-                                <input type="number" step="0.01" min="0" class="form-control @error('rate') is-invalid @enderror"
-                                       id="invoice_rate" name="rate">
-                                @error('rate')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
+                                <label for="invoice_date_display">Invoice Date</label>
+                                <input type="text" class="form-control" id="invoice_date_display" value="{{ now()->format('d M Y') }}" readonly>
+                                <input type="hidden" id="invoice_date" name="invoice_date" value="{{ now()->format('Y-m-d') }}">
                             </div>
                             <div class="form-group col-md-4">
-                                <label for="invoice_status">Status</label>
-                                <select class="form-control @error('status') is-invalid @enderror" id="invoice_status" name="status" required>
-                                    <option value="pending" {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="paid" {{ old('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                                    <option value="overdue" {{ old('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                                </select>
-                                @error('status')
+                                <label for="invoice_due_date">Inv Due</label>
+                                <input type="text" class="form-control datepicker @error('due_date') is-invalid @enderror"
+                                       id="invoice_due_date" name="due_date" value="{{ old('due_date') }}">
+                                @error('due_date')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -381,6 +367,50 @@
                                 @error('description')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-12 text-right">
+                                <table class="table table-bordered table-sm" style="max-width: 320px; margin-left: auto; font-size: 14px;">
+                                    <tr>
+                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">Total</strong></td>
+                                        <td class="text-right">
+                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('total') is-invalid @enderror"
+                                                   id="invoice_total" name="total" required style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
+                                            @error('total')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">VAT (%)</strong></td>
+                                        <td class="text-right">
+                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('vat') is-invalid @enderror"
+                                                   id="invoice_vat" name="vat" value="5" style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
+                                            @error('vat')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">Sub Total</strong></td>
+                                        <td class="text-right">
+                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('subtotal') is-invalid @enderror"
+                                                   id="invoice_subtotal" name="subtotal" readonly style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
+                                            @error('subtotal')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 120px; text-align: center;"><strong style="color: #6c757d;">VAT Amt</strong></td>
+                                        <td class="text-right">
+                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right"
+                                                   id="invoice_vat_amount" readonly style="width: 100%; border: none; background: transparent; -moz-appearance: textfield;">
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -406,6 +436,13 @@
             background-color: #ffffff;
             opacity: 1;
         }
+        /* Hide number input spinner arrows */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {-moz-appearance: textfield;}
 
         /* Customer Details Card */
         .customer-details-card {
@@ -851,6 +888,24 @@
 
             // Handle edit button click to load booking data
             $(document).on('click', '.edit-booking-btn', function() {
+                var hasInvoice = $(this).attr('data-has-invoice');
+                if (hasInvoice === "true") {
+                    $('.alert').remove();
+                    var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                        '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                        'Booking cannot be edited as it has an invoice.' +
+                        '</div>';
+                    $('.row').first().before(alertHtml);
+
+                    setTimeout(function() {
+                        $('.alert-danger').fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 5000);
+                    return;
+                }
+
                 var bookingId = $(this).data('id');
                 var url = "{{ route('bookings.get-data', ':id') }}".replace(':id', bookingId);
 
@@ -909,6 +964,24 @@
 
             // Handle delete button click
             $(document).on('click', '.delete-booking-btn', function() {
+                var hasInvoice = $(this).attr('data-has-invoice');
+                if (hasInvoice === "true") {
+                    $('.alert').remove();
+                    var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                        '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                        'Booking cannot be deleted as it has an invoice.' +
+                        '</div>';
+                    $('.row').first().before(alertHtml);
+
+                    setTimeout(function() {
+                        $('.alert-danger').fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 5000);
+                    return;
+                }
+
                 if (!confirm('Are you sure you want to delete this booking?')) {
                     return;
                 }
@@ -984,24 +1057,78 @@
                 $('#edit_customer_details_row').hide();
             });
 
+            // Calculate invoice totals (VAT is calculated on Total, Subtotal = Total - VAT)
+            function calculateInvoiceTotals() {
+                var total = parseFloat($('#invoice_total').val()) || 0;
+                var vatPercent = parseFloat($('#invoice_vat').val()) || 0;
+                
+                // Calculate VAT amount as percentage of total
+                var vatAmount = total * (vatPercent / 100);
+                // Subtotal is total minus VAT amount
+                var subtotal = total - vatAmount;
+                
+                $('#invoice_subtotal').val(subtotal.toFixed(2));
+                $('#invoice_vat_amount').val(vatAmount.toFixed(2));
+            }
+
+            // Format total to 2 decimal places on blur and recalculate
+            $(document).on('blur', '#invoice_total', function() {
+                var val = parseFloat($(this).val());
+                if (!isNaN(val)) {
+                    $(this).val(val.toFixed(2));
+                }
+                calculateInvoiceTotals();
+            });
+
+            // Recalculate totals when total or VAT changes
+            $(document).on('input', '#invoice_total, #invoice_vat', calculateInvoiceTotals);
+
             // Handle create invoice button click
             $(document).on('click', '.create-invoice-btn', function() {
                 var bookingId = $(this).data('id');
+                var bookingIdDisplay = $(this).data('booking-id') || 'N/A';
                 var vehicle = $(this).data('vehicle');
                 var customer = $(this).data('customer');
-                var amount = $(this).data('amount');
+                var rate = $(this).data('amount');
+                var fromDate = $(this).data('from-date');
 
                 var actionUrl = '{{ route("bookings.create-invoice", ":id") }}'.replace(':id', bookingId);
                 $('#createInvoiceForm').attr('action', actionUrl);
 
+                $('#invoice_booking_id').val(bookingIdDisplay);
                 $('#invoice_vehicle').val(vehicle);
                 $('#invoice_customer').val(customer);
-                $('#invoice_amount').val(amount);
+                $('#invoice_total').val(parseFloat(rate).toFixed(2));
+                calculateInvoiceTotals();
 
-                flatpickr('#invoice_date', {
+                // Set booking from date
+                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                
+                if (fromDate) {
+                    var fDate = new Date(fromDate);
+                    var displayFromDate = fDate.getDate() + ' ' + months[fDate.getMonth()] + ' ' + fDate.getFullYear();
+                    $('#booking_from_date').val(displayFromDate);
+                }
+
+                // Invoice date is read-only, set display and hidden value
+                var today = new Date();
+                var displayDate = today.getDate() + ' ' + months[today.getMonth()] + ' ' + today.getFullYear();
+                var hiddenDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                // We don't need to set invoice date display since it's already set in the modal with {{ now()->format('d M Y') }}
+                $('#invoice_date').val(hiddenDate);
+
+                // Initialize Inv Due date picker (default: invoice date + 5 days)
+                var dueDate = new Date(today);
+                dueDate.setDate(dueDate.getDate() + 5);
+                var dueDateStr = dueDate.getFullYear() + '-' + String(dueDate.getMonth()+1).padStart(2,'0') + '-' + String(dueDate.getDate()).padStart(2,'0');
+
+                flatpickr('#invoice_due_date', {
                     dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'j M Y',
                     allowInput: false,
-                    defaultDate: '{{ now()->format('Y-m-d') }}'
+                    minDate: hiddenDate,
+                    defaultDate: dueDateStr
                 });
 
                 $('#createInvoiceModal').modal('show');
@@ -1089,6 +1216,63 @@
                 form.find('.is-invalid').removeClass('is-invalid');
                 form.find('.invalid-feedback').remove();
                 $('#invoice_status').val('pending');
+            });
+
+            // Handle status badge click to confirm booking
+            $(document).on('click', '.change-status-btn', function() {
+                var bookingId = $(this).data('id');
+                var currentStatus = $(this).text().trim();
+                
+                if (confirm('Do you want to confirm this booking?')) {
+                    var url = '{{ route("bookings.confirm", ":id") }}'.replace(':id', bookingId);
+                    
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Reload the DataTable to show updated status
+                                $('#bookings-table').DataTable().ajax.reload(null, false);
+                                
+                                // Show success message
+                                $('.alert').remove();
+                                var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                    '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                    '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                    response.message +
+                                    '</div>';
+                                $('.row').first().before(alertHtml);
+                                
+                                setTimeout(function() {
+                                    $('.alert-success').fadeOut('slow', function() {
+                                        $(this).remove();
+                                    });
+                                }, 5000);
+                            }
+                        },
+                        error: function(xhr) {
+                            $('.alert').remove();
+                            var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                '<h5><i class="icon fas fa-ban"></i> Error!</h5>' +
+                                'Failed to update booking status.' +
+                                '</div>';
+                            $('.row').first().before(alertHtml);
+                            
+                            setTimeout(function() {
+                                $('.alert-danger').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
+                        }
+                    });
+                }
             });
         });
     </script>

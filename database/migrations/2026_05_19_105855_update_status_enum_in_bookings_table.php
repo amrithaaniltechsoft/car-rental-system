@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -12,6 +10,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support ENUM or MODIFY COLUMN, skip
+            return;
+        }
+
         // Change completed to on_hold, default to pending
         DB::statement("ALTER TABLE bookings MODIFY COLUMN status ENUM('pending', 'confirmed', 'on_hold', 'cancelled') NOT NULL DEFAULT 'pending'");
     }
@@ -21,6 +24,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support ENUM or MODIFY COLUMN, skip
+            return;
+        }
+
         // Revert back
         DB::statement("ALTER TABLE bookings MODIFY COLUMN status ENUM('pending', 'confirmed', 'completed', 'cancelled') NOT NULL DEFAULT 'pending'");
     }

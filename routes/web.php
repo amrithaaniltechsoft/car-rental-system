@@ -34,10 +34,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookings/{booking}/data', [BookingController::class, 'getBookingData'])->name('bookings.get-data');
     Route::get('/customers/{customer}/details', [BookingController::class, 'getCustomerDetails'])->name('customers.details');
     Route::post('/bookings/{booking}/invoice', [BookingController::class, 'createInvoice'])->name('bookings.create-invoice');
+    Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirmBooking'])->name('bookings.confirm');
 
     // Invoices
-    Route::resource('invoices', InvoiceController::class)->only(['index', 'store']);
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'show', 'edit', 'update', 'destroy', 'store']);
     Route::get('/invoices-data', [InvoiceController::class, 'getData'])->name('invoices.data');
+    Route::get('/invoices/bookings-by-customer', [InvoiceController::class, 'getBookingsByCustomer'])->name('invoices.bookings-by-customer');
 
     // Bills
     Route::resource('bills', BillController::class)->only(['index', 'store']);

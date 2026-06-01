@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Booking extends Model
 {
     protected $fillable = [
-        'booking_id',
         'vehicle_id',
         'customer_id',
         'from_date',
@@ -17,6 +16,7 @@ class Booking extends Model
         'total_amount',
         'status',
         'notes',
+        'booking_id',
         'payment_type',
     ];
 

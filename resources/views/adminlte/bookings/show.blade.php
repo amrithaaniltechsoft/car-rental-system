@@ -73,7 +73,25 @@
                     <h3 class="card-title">Financial & Additional Details</h3>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Financial details can be added here.</p>
+                    @if($booking->invoice)
+                        <table class="table table-borderless">
+                            <tr>
+                                <td style="text-align: center; padding-top: 10px;">Subtotal</td>
+                                <td class="text-right">{{ number_format((float)$booking->invoice->subtotal, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center; padding-top: 10px;">VAT Amount</td>
+                                <td class="text-right">{{ number_format((float)$booking->invoice->vat, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td style="width: 120px; text-align: center; padding-top: 10px;"><strong style="color: #6c757d;">Total</strong></td>
+                                <td class="text-right"><strong>{{ number_format((float)$booking->invoice->total, 2) }}</strong></td>
+                            </tr>
+                        </table>
+                    @else
+                        <p class="text-muted">No invoice generated yet.</p>
+                        <p class="text-muted"><strong>Booking Total:</strong> <span class="text-right">{{ number_format((float)$booking->total_amount, 2) }}</span></p>
+                    @endif
                 </div>
                 <div class="card-footer">
                     <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">Edit Booking</a>

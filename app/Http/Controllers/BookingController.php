@@ -19,7 +19,7 @@ class BookingController extends Controller
      */
     public function index(): View
     {
-        $vehicles  = $this->vehiclesForSelect();
+        $vehicles = $this->vehiclesForSelect();
         $customers = $this->customersForSelect();
 
         return view('adminlte.bookings.index', compact('vehicles', 'customers'));
@@ -30,7 +30,7 @@ class BookingController extends Controller
      */
     public function create(): View
     {
-        $vehicles  = $this->vehiclesForSelect();
+        $vehicles = $this->vehiclesForSelect();
         $customers = $this->customersForSelect();
 
         return view('adminlte.bookings.create', compact('vehicles', 'customers'));
@@ -42,13 +42,13 @@ class BookingController extends Controller
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validator = \Validator::make($request->all(), [
-            'vehicle_id'   => 'required|exists:vehicles,id',
-            'customer_id'  => 'required|exists:customers,id',
-            'from_date'    => 'required|date',
-            'to_date'      => 'required|date|after_or_equal:from_date',
+            'vehicle_id' => 'required|exists:vehicles,id',
+            'customer_id' => 'required|exists:customers,id',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
             'total_amount' => 'nullable|numeric|min:0',
-            'status'       => 'required|in:pending,confirmed,on_hold,cancelled',
-            'notes'        => 'nullable|string',
+            'status' => 'required|in:pending,confirmed,on_hold,cancelled',
+            'notes' => 'nullable|string',
             'payment_type' => 'nullable|in:card,email_credit,lpo,cash',
         ]);
 
@@ -60,6 +60,7 @@ class BookingController extends Controller
                     'errors' => $validator->errors()->toArray(),
                 ], 422);
             }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -90,6 +91,7 @@ class BookingController extends Controller
                     'available' => false,
                 ], 422);
             }
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.');
@@ -99,10 +101,10 @@ class BookingController extends Controller
 
         // Generate custom booking ID: BKYearMonthDaySequence
         $today = now()->format('Ymd');
-        $prefix = 'BK' . $today;
+        $prefix = 'BK'.$today;
 
         // Get the last booking created today with this prefix
-        $lastBooking = Booking::where('booking_id', 'like', $prefix . '%')
+        $lastBooking = Booking::where('booking_id', 'like', $prefix.'%')
             ->orderBy('booking_id', 'desc')
             ->first();
 
@@ -114,7 +116,7 @@ class BookingController extends Controller
             $newSequence = 1;
         }
 
-        $data['booking_id'] = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+        $data['booking_id'] = $prefix.str_pad($newSequence, 3, '0', STR_PAD_LEFT);
 
         $booking = Booking::create($data);
 
@@ -137,6 +139,7 @@ class BookingController extends Controller
         if (request()->ajax()) {
             return view('adminlte.bookings.show_modal', compact('booking'));
         }
+
         return view('adminlte.bookings.show', compact('booking'));
     }
 
@@ -145,7 +148,7 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking): View
     {
-        $vehicles  = $this->vehiclesForSelect();
+        $vehicles = $this->vehiclesForSelect();
         $customers = $this->customersForSelect();
 
         return view('adminlte.bookings.edit', compact('booking', 'vehicles', 'customers'));
@@ -156,6 +159,18 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking): RedirectResponse|JsonResponse
     {
+        if ($booking->invoice()->exists()) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking cannot be edited as it has an invoice.',
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Booking cannot be edited as it has an invoice.');
+        }
+
         $validator = \Validator::make($request->all(), [
             'vehicle_id' => 'required|exists:vehicles,id',
             'customer_id' => 'required|exists:customers,id',
@@ -175,16 +190,17 @@ class BookingController extends Controller
                     'errors' => $validator->errors()->toArray(),
                 ], 422);
             }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
         // Check vehicle availability for the requested dates if vehicle or dates changed
-        if ($request->vehicle_id != $booking->vehicle_id || 
-            $request->from_date != $booking->from_date || 
+        if ($request->vehicle_id != $booking->vehicle_id ||
+            $request->from_date != $booking->from_date ||
             $request->to_date != $booking->to_date) {
-            
+
             $vehicle = Vehicle::findOrFail($request->vehicle_id);
             $fromDate = $request->from_date;
             $toDate = $request->to_date;
@@ -210,6 +226,7 @@ class BookingController extends Controller
                         'available' => false,
                     ], 422);
                 }
+
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Vehicle is not available for the selected dates. It has a confirmed booking during this period.');
@@ -234,6 +251,18 @@ class BookingController extends Controller
      */
     public function destroy(Booking $booking): RedirectResponse|JsonResponse
     {
+        if ($booking->invoice()->exists()) {
+            if (request()->ajax() || request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking cannot be deleted as it has an invoice.',
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Booking cannot be deleted as it has an invoice.');
+        }
+
         $booking->delete();
 
         if (request()->ajax() || request()->expectsJson()) {
@@ -271,7 +300,7 @@ class BookingController extends Controller
 
         $orderColumn = $columns[$orderColumnIndex] ?? 'id';
 
-        $query = Booking::with(['vehicle', 'customer']);
+        $query = Booking::with(['vehicle', 'customer', 'invoice']);
 
         if (! empty($searchValue)) {
             $query->where('booking_id', 'like', "%{$searchValue}%")
@@ -279,7 +308,7 @@ class BookingController extends Controller
                     $q->where('name', 'like', "%{$searchValue}%");
                 })->orWhereHas('vehicle', function ($q) use ($searchValue) {
                     $q->where('name', 'like', "%{$searchValue}%")
-                      ->orWhere('registration_number', 'like', "%{$searchValue}%");
+                        ->orWhere('registration_number', 'like', "%{$searchValue}%");
                 })->orWhere('status', 'like', "%{$searchValue}%");
         }
 
@@ -299,10 +328,10 @@ class BookingController extends Controller
             $data[] = [
                 'id' => $rowNum++,
                 'booking_id' => $booking->booking_id ?: 'N/A',
-                'vehicle' => $booking->vehicle->name . ' (' . $booking->vehicle->registration_number . ')',
+                'vehicle' => $booking->vehicle->name.' ('.$booking->vehicle->registration_number.')',
                 'customer' => $booking->customer->name,
-                'dates' => $booking->from_date->format('d/m/Y') . ' - ' . $booking->to_date->format('d/m/Y'),
-                'status' => $this->getStatusBadge($booking->status),
+                'dates' => $booking->from_date->format('d/m/Y').' - '.$booking->to_date->format('d/m/Y'),
+                'status' => $this->getStatusBadge($booking->status, $booking->id),
                 'actions' => $this->getActionButtons($booking),
             ];
         }
@@ -318,7 +347,7 @@ class BookingController extends Controller
     /**
      * Get status badge HTML
      */
-    private function getStatusBadge(string $status): string
+    private function getStatusBadge(string $status, ?int $bookingId = null): string
     {
         $badges = [
             'pending' => '<span class="badge badge-warning">Pending</span>',
@@ -327,7 +356,13 @@ class BookingController extends Controller
             'cancelled' => '<span class="badge badge-danger">Cancelled</span>',
         ];
 
-        return $badges[$status] ?? '<span class="badge badge-secondary">' . ucfirst($status) . '</span>';
+        $badge = $badges[$status] ?? '<span class="badge badge-secondary">'.ucfirst($status).'</span>';
+
+        if ($bookingId && $status !== 'confirmed') {
+            $badge = '<span class="badge badge-'.($status === 'pending' ? 'warning' : ($status === 'on_hold' ? 'info' : 'secondary')).' cursor-pointer change-status-btn" data-id="'.$bookingId.'" style="cursor: pointer;">'.ucfirst(str_replace('_', ' ', $status)).'</span>';
+        }
+
+        return $badge;
     }
 
     /**
@@ -335,21 +370,27 @@ class BookingController extends Controller
      */
     private function getActionButtons(Booking $booking): string
     {
+        $hasInvoice = $booking->invoice()->exists();
+        $isConfirmed = $booking->status === 'confirmed';
+        $editClass = $hasInvoice ? 'btn-default' : 'btn-warning';
+        $deleteClass = $hasInvoice ? 'btn-default' : 'btn-danger';
+        $disabledAttr = $hasInvoice ? 'disabled' : '';
+
         $buttons = '
             <button type="button" class="btn btn-info btn-sm view-booking-btn" data-url="'.route('bookings.show', $booking).'">
                 <i class="fas fa-eye"></i>
             </button>
-            <button type="button" class="btn btn-warning btn-sm edit-booking-btn" data-id="'.$booking->id.'">
+            <button type="button" class="btn '.$editClass.' btn-sm edit-booking-btn" data-id="'.$booking->id.'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
                 <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="btn btn-danger btn-sm delete-booking-btn" data-id="'.$booking->id.'" data-url="'.route('bookings.destroy', $booking).'">
+            <button type="button" class="btn '.$deleteClass.' btn-sm delete-booking-btn" data-id="'.$booking->id.'" data-url="'.route('bookings.destroy', $booking).'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
                 <i class="fas fa-trash"></i>
             </button>
         ';
 
-        if (!$booking->invoice) {
+        if (! $hasInvoice && $isConfirmed) {
             $buttons .= '
-                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-id="'.$booking->id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'">
+                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'">
                     <i class="fas fa-file-invoice"></i>
                 </button>
             ';
@@ -363,27 +404,51 @@ class BookingController extends Controller
      */
     public function createInvoice(Request $request, Booking $booking): RedirectResponse|JsonResponse
     {
-        if ($booking->invoice) {
+        if ($booking->status !== 'confirmed') {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice can only be created for confirmed bookings.',
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', 'Invoice can only be created for confirmed bookings.');
+        }
+
+        if ($booking->invoice()->exists()) {
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This booking already has an invoice.',
                 ], 422);
             }
+
             return redirect()->back()->with('error', 'This booking already has an invoice.');
         }
 
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0',
-            'rate' => 'nullable|numeric|min:0',
+            'total' => 'required|numeric|min:0',
+            'vat' => 'nullable|numeric|min:0',
+            'subtotal' => 'nullable|numeric|min:0',
             'invoice_date' => 'required|date',
-            'status' => 'required|in:pending,paid,overdue',
+            'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'description' => 'nullable|string',
         ]);
 
         $validated['customer_id'] = $booking->customer_id;
         $validated['booking_id'] = $booking->id;
         $validated['invoice_number'] = $this->generateInvoiceNumber();
+        $validated['amount'] = $validated['total'];
+        $validated['status'] = 'pending';
+
+        // Calculate subtotal and vat_amount from total and vat percentage
+        if (isset($validated['total']) && isset($validated['vat'])) {
+            $validated['vat_amount'] = ($validated['total'] * $validated['vat']) / 100;
+            $validated['subtotal'] = $validated['total'] - $validated['vat_amount'];
+        } else {
+            $validated['subtotal'] = $validated['total'];
+            $validated['vat_amount'] = 0;
+        }
 
         Invoice::create($validated);
 
@@ -402,7 +467,7 @@ class BookingController extends Controller
      */
     private function generateInvoiceNumber(): string
     {
-        $prefix = 'INV-'.now()->format('Ymd').'-';
+        $prefix = 'INV'.now()->format('Ymd');
         $lastNumber = Invoice::query()
             ->where('invoice_number', 'like', $prefix.'%')
             ->orderByDesc('id')
@@ -482,15 +547,30 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'customer' => [
-                'id'                      => $customer->id,
-                'name'                    => $customer->name,
-                'customer_type'           => $customer->customer_type,
-                'phone_number'            => $customer->phone_number,
-                'address'                 => $customer->address,
-                'id_card_number'          => $customer->id_card_number,
-                'company_name'            => $customer->company_name,
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'customer_type' => $customer->customer_type,
+                'phone_number' => $customer->phone_number,
+                'address' => $customer->address,
+                'id_card_number' => $customer->id_card_number,
+                'company_name' => $customer->company_name,
                 'company_registration_id' => $customer->company_registration_id,
             ],
+        ]);
+    }
+
+    /**
+     * Confirm booking status
+     */
+    public function confirmBooking(Request $request, Booking $booking): JsonResponse
+    {
+        $booking->update([
+            'status' => 'confirmed',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking status updated to confirmed successfully.',
         ]);
     }
 

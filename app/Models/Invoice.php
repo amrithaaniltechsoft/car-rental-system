@@ -14,7 +14,12 @@ class Invoice extends Model
         'booking_id',
         'amount',
         'rate',
+        'vat',
+        'vat_amount',
+        'subtotal',
+        'total',
         'invoice_date',
+        'due_date',
         'status',
         'description',
     ];
@@ -22,7 +27,12 @@ class Invoice extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'rate' => 'decimal:2',
+        'vat' => 'decimal:2',
+        'vat_amount' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'total' => 'decimal:2',
         'invoice_date' => 'date',
+        'due_date' => 'date',
     ];
 
     public function customer(): BelongsTo

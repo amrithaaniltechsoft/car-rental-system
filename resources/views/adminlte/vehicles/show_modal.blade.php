@@ -8,16 +8,16 @@
 
         <ul class="list-group list-group-unbordered mb-3">
             <li class="list-group-item">
-                <b>Registration</b> <span class="float-right text-dark">{{ $vehicle->registration_number }}</span>
+                <b><i class="fas fa-id-card mr-1"></i> Registration</b> <span class="float-right text-dark">{{ $vehicle->registration_number }}</span>
             </li>
             <li class="list-group-item">
-                <b>Vehicle Type</b> <span class="float-right text-dark">{{ ucfirst($vehicle->type) ?: 'N/A' }}</span>
+                <b><i class="fas fa-car-side mr-1"></i> Vehicle Type</b> <span class="float-right text-dark">{{ ucfirst($vehicle->type) ?: 'N/A' }}</span>
             </li>
             <li class="list-group-item">
-                <b>Fuel Type</b> <span class="float-right text-dark">{{ ucfirst($vehicle->fuel_type) }}</span>
+                <b><i class="fas fa-gas-pump mr-1"></i> Fuel Type</b> <span class="float-right text-dark">{{ ucfirst($vehicle->fuel_type) }}</span>
             </li>
             <li class="list-group-item">
-                <b>Seating Capacity</b> <span class="float-right text-dark">{{ $vehicle->seating_capacity }}</span>
+                <b><i class="fas fa-users mr-1"></i> Seating Capacity</b> <span class="float-right text-dark">{{ $vehicle->seating_capacity }}</span>
             </li>
         </ul>
     </div>

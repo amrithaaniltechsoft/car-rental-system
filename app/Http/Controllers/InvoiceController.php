@@ -22,6 +22,17 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show(Invoice $invoice): View
+    {
+        if (request()->ajax()) {
+            return view('adminlte.invoices.show_modal', compact('invoice'));
+        }
+        return view('adminlte.invoices.show', compact('invoice'));
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -29,9 +40,11 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'booking_id' => 'nullable|exists:bookings,id',
-            'amount' => 'required|numeric|min:0',
+            'total' => 'required|numeric|min:0',
             'rate' => 'nullable|numeric|min:0',
+            'vat' => 'required|numeric|min:0',
             'invoice_date' => 'required|date',
+            'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'status' => 'required|in:pending,paid,overdue',
             'description' => 'nullable|string',
         ]);
@@ -70,6 +83,11 @@ class InvoiceController extends Controller
 
         $validated['invoice_number'] = $this->generateInvoiceNumber();
 
+        // Calculate subtotal and vat_amount from total and vat percentage
+        $validated['vat_amount'] = ($validated['total'] * $validated['vat']) / 100;
+        $validated['subtotal'] = $validated['total'] - $validated['vat_amount'];
+        $validated['amount'] = $validated['total'];
+
         Invoice::create($validated);
 
         if ($request->ajax() || $request->expectsJson()) {
@@ -95,6 +113,7 @@ class InvoiceController extends Controller
             'booking_id',
             'amount',
             'invoice_date',
+            'due_date',
             'status',
         ];
 
@@ -111,8 +130,10 @@ class InvoiceController extends Controller
             2 => 'customer_id',
             3 => 'booking_id',
             4 => 'amount',
-            5 => 'invoice_date',
-            6 => 'status',
+            5 => 'amount',
+            6 => 'amount',
+            7 => 'status',
+            8 => 'id',
         ];
         $orderColumn = $tableColumnsMap[$orderColumnIndex] ?? 'id';
 
@@ -148,8 +169,12 @@ class InvoiceController extends Controller
                 : $invoice->customer->name;
 
             $bookingLabel = '—';
+            $bookingFromDate = '—';
+            $bookingToDate = '—';
             if ($invoice->booking) {
                 $bookingLabel = '#'.$invoice->booking->id.' — '.$invoice->booking->vehicle->name;
+                $bookingFromDate = $invoice->booking->from_date->format('d/m/Y');
+                $bookingToDate = $invoice->booking->to_date->format('d/m/Y');
             }
 
             $data[] = [
@@ -157,9 +182,11 @@ class InvoiceController extends Controller
                 'invoice_number' => $invoice->invoice_number,
                 'customer' => $customerName,
                 'booking' => $bookingLabel,
-                'amount' => number_format((float) $invoice->amount, 2).' OMR',
-                'invoice_date' => $invoice->invoice_date->format('d/m/Y'),
+                'booking_from_date' => $bookingFromDate,
+                'booking_to_date' => $bookingToDate,
+                'amount' => number_format((float) $invoice->amount, 2),
                 'status' => $this->getStatusBadge($invoice->status),
+                'actions' => $this->getActionButtons($invoice),
             ];
         }
 
@@ -214,5 +241,54 @@ class InvoiceController extends Controller
             ->select('id', 'customer_id', 'vehicle_id', 'from_date', 'to_date', 'total_amount')
             ->orderByDesc('id')
             ->get();
+    }
+
+    public function getBookingsByCustomer(Request $request): JsonResponse
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+        ]);
+
+        $bookings = Booking::query()
+            ->with(['vehicle:id,name,registration_number'])
+            ->where('customer_id', $request->customer_id)
+            ->whereDoesntHave('invoice')
+            ->select('id', 'customer_id', 'vehicle_id', 'from_date', 'to_date', 'total_amount')
+            ->orderByDesc('id')
+            ->get();
+
+        $bookingsData = $bookings->map(function ($booking) {
+            return [
+                'id' => $booking->id,
+                'label' => '#'.$booking->id.' — '.$booking->vehicle->name.' ('.$booking->vehicle->registration_number.') — '.$booking->from_date->format('d/m/Y').' to '.$booking->to_date->format('d/m/Y'),
+                'amount' => $booking->total_amount,
+                'from_date' => $booking->from_date->format('Y-m-d'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'bookings' => $bookingsData,
+        ]);
+    }
+
+    /**
+     * Get action buttons HTML
+     */
+    private function getActionButtons(Invoice $invoice): string
+    {
+        $buttons = '
+            <button type="button" class="btn btn-info btn-sm view-invoice-btn" data-id="'.$invoice->id.'" data-url="'.route('invoices.show', $invoice).'">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button type="button" class="btn btn-warning btn-sm edit-invoice-btn" data-id="'.$invoice->id.'" data-url="'.route('invoices.edit', $invoice).'">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm delete-invoice-btn" data-id="'.$invoice->id.'" data-url="'.route('invoices.destroy', $invoice).'">
+                <i class="fas fa-trash"></i>
+            </button>
+        ';
+
+        return $buttons;
     }
 }
