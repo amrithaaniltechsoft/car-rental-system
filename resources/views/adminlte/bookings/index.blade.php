@@ -433,7 +433,7 @@
             font-weight: 600 !important;
         }
         .invoice-label-cell {
-            padding-top: 10px;
+            padding-top: 10px !important;
             font-size: 16px;
         }
         .table-sm td, .table-sm th {
