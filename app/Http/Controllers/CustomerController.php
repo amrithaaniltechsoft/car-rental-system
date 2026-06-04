@@ -39,7 +39,7 @@ class CustomerController extends Controller
             'nationality' => 'nullable|string|max:255',
             'company_name' => 'required_if:customer_type,company|nullable|string|max:255',
             'address' => 'required_if:customer_type,company|nullable|string',
-            'residential_address' => 'required_if:customer_type,individual|nullable|string',
+            'residential_address' => 'nullable|string',
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'passport_number' => 'nullable|string|max:50',
@@ -63,7 +63,7 @@ class CustomerController extends Controller
         } else {
             $data['name'] = $request->first_name.' '.$request->last_name;
             $data['company_name'] = null;
-            $data['address'] = $request->residential_address;
+            $data['address'] = $request->residential_address ?? '';
         }
 
         // Generate custom customer ID: CUYearMonthDaySequence
@@ -130,7 +130,7 @@ class CustomerController extends Controller
             'nationality' => 'nullable|string|max:255',
             'company_name' => 'required_if:customer_type,company|nullable|string|max:255',
             'address' => 'required_if:customer_type,company|nullable|string',
-            'residential_address' => 'required_if:customer_type,individual|nullable|string',
+            'residential_address' => 'nullable|string',
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'passport_number' => 'nullable|string|max:50',
@@ -155,7 +155,7 @@ class CustomerController extends Controller
         } else {
             $data['name'] = $request->first_name.' '.$request->last_name;
             $data['company_name'] = null;
-            $data['address'] = $request->residential_address;
+            $data['address'] = $request->residential_address ?? '';
         }
 
         $customer->update($data);
