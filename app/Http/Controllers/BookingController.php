@@ -53,6 +53,7 @@ class BookingController extends Controller
         ]);
 
         if ($validator->fails()) {
+            
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,

@@ -39,7 +39,7 @@
                                     <td><strong>Status:</strong></td>
                                     <td>
                                         @if($invoice->status == 'pending')
-                                            <span class="badge badge-warning">Pending</span>
+                                            <span class="badge badge-warning"></span>
                                         @elseif($invoice->status == 'paid')
                                             <span class="badge badge-success">Paid</span>
                                         @else
@@ -89,7 +89,7 @@
                                         <td><strong>Status:</strong></td>
                                         <td>
                                             @if($invoice->booking->status == 'pending')
-                                                <span class="badge badge-warning">Pending</span>
+                                                <span class="badge badge-warning"></span>
                                             @elseif($invoice->booking->status == 'confirmed')
                                                 <span class="badge badge-primary">Confirmed</span>
                                             @elseif($invoice->booking->status == 'on_hold')

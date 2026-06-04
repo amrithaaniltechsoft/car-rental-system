@@ -437,7 +437,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="invoice_vat">VAT/Tax (%)</label>
-                                <input type="number" step="0.01" min="0" class="form-control pricing-input" id="invoice_vat" name="vat" value="5">
+                                <input type="number" step="0.01" min="0" class="form-control pricing-input text-right" id="invoice_vat" name="vat" value="5">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="invoice_discount_amount">Discount Amount</label>
