@@ -6,12 +6,6 @@
         <h4 class="font-weight-bold">
             {{ $invoice->invoice_number }}
         </h4>
-        <p class="text-muted">
-            <span class="badge badge-{{ $invoice->status === 'paid' ? 'success' : ($invoice->status === 'overdue' ? 'danger' : 'warning') }} px-2 py-1">
-                {{ ucfirst($invoice->status) }}
-            </span>
-        </p>
-
         <ul class="list-group list-group-unbordered mb-3 text-left">
             <li class="list-group-item">
                 <b><i class="fas fa-hashtag mr-1"></i> Invoice #</b>

@@ -35,18 +35,6 @@
                                     <td><strong>Due Date:</strong></td>
                                     <td>{{ $invoice->due_date ? $invoice->due_date->format('d M Y') : 'N/A' }}</td>
                                 </tr>
-                                <tr>
-                                    <td><strong>Status:</strong></td>
-                                    <td>
-                                        @if($invoice->status == 'pending')
-                                            <span class="badge badge-warning"></span>
-                                        @elseif($invoice->status == 'paid')
-                                            <span class="badge badge-success">Paid</span>
-                                        @else
-                                            <span class="badge badge-danger">Overdue</span>
-                                        @endif
-                                    </td>
-                                </tr>
                             </table>
                         </div>
 
