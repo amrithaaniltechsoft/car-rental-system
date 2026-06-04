@@ -42,7 +42,6 @@
                                 <th>Name</th>
                                 <th>Address</th>
                                 <th>Phone Number</th>
-                                <th>ID Card / Reg ID</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -98,32 +97,85 @@
                         <!-- Individual Fields -->
                         <div id="modal-individual-fields" style="display: none;">
                             <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label for="modal_name">Full Name</label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="modal_name" name="name" value="{{ old('name') }}">
-                                    @error('name')
+                                <div class="form-group col-md-3">
+                                    <label for="modal_first_name">First Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="modal_first_name" name="first_name" value="{{ old('first_name') }}">
+                                    @error('first_name')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
+                                <div class="form-group col-md-3">
+                                    <label for="modal_last_name">Last Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="modal_last_name" name="last_name" value="{{ old('last_name') }}">
+                                    @error('last_name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="modal_date_of_birth">Date of Birth</label>
+                                    <input type="text" class="form-control datepicker @error('date_of_birth') is-invalid @enderror" id="modal_date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}" placeholder="YYYY-MM-DD" readonly>
+                                    @error('date_of_birth')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="modal_nationality">Nationality</label>
+                                    <input type="text" class="form-control @error('nationality') is-invalid @enderror" id="modal_nationality" name="nationality" value="{{ old('nationality') }}">
+                                    @error('nationality')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group col-md-4">
-                                    <label for="modal_indiv_phone_number">Phone Number</label>
+                                    <label for="modal_indiv_phone_number">Mobile Number <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('phone_number') is-invalid @enderror" id="modal_indiv_phone_number" name="phone_number" value="{{ old('phone_number') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     @error('phone_number')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                                 <div class="form-group col-md-4">
-                                    <label for="modal_id_card_number">ID Card Number</label>
-                                    <input type="text" class="form-control @error('id_card_number') is-invalid @enderror" id="modal_id_card_number" name="id_card_number" value="{{ old('id_card_number') }}">
-                                    @error('id_card_number')
+                                    <label for="modal_email">Email Address</label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="modal_email" name="email" value="{{ old('email') }}">
+                                    @error('email')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="modal_passport_number">Passport Number</label>
+                                    <input type="text" class="form-control @error('passport_number') is-invalid @enderror" id="modal_passport_number" name="passport_number" value="{{ old('passport_number') }}">
+                                    @error('passport_number')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="modal_driving_license_number">Driving License Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('driving_license_number') is-invalid @enderror" id="modal_driving_license_number" name="driving_license_number" value="{{ old('driving_license_number') }}">
+                                    @error('driving_license_number')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="modal_license_expiry_date">License Expiry Date <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control datepicker @error('license_expiry_date') is-invalid @enderror" id="modal_license_expiry_date" name="license_expiry_date" value="{{ old('license_expiry_date') }}" placeholder="YYYY-MM-DD" readonly>
+                                    @error('license_expiry_date')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="modal_license_issue_country">License Issue Country <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('license_issue_country') is-invalid @enderror" id="modal_license_issue_country" name="license_issue_country" value="{{ old('license_issue_country') }}">
+                                    @error('license_issue_country')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="modal_indiv_address">Address</label>
-                                <textarea class="form-control @error('address') is-invalid @enderror" id="modal_indiv_address" name="address" rows="3">{{ old('address') }}</textarea>
-                                @error('address')
+                                <label for="modal_residential_address">Residential Address</label>
+                                <textarea class="form-control @error('residential_address') is-invalid @enderror" id="modal_residential_address" name="residential_address" rows="3">{{ old('residential_address') }}</textarea>
+                                @error('residential_address')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -133,29 +185,29 @@
                         <div id="modal-company-fields" style="display: none;">
                             <div class="form-row">
                                 <div class="form-group col-md-4">
-                                    <label for="modal_company_name">Company Name</label>
+                                    <label for="modal_company_name">Company Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('company_name') is-invalid @enderror" id="modal_company_name" name="company_name" value="{{ old('company_name') }}">
                                     @error('company_name')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                                 <div class="form-group col-md-4">
-                                    <label for="modal_comp_phone_number">Phone Number</label>
+                                    <label for="modal_comp_phone_number">Phone Number <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('phone_number') is-invalid @enderror" id="modal_comp_phone_number" name="phone_number" value="{{ old('phone_number') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     @error('phone_number')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                                 <div class="form-group col-md-4">
-                                    <label for="modal_company_registration_id">Company Registration ID</label>
-                                    <input type="text" class="form-control @error('company_registration_id') is-invalid @enderror" id="modal_company_registration_id" name="company_registration_id" value="{{ old('company_registration_id') }}">
-                                    @error('company_registration_id')
+                                    <label for="modal_email_company">Email Address</label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="modal_email_company" name="email" value="{{ old('email') }}">
+                                    @error('email')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="modal_comp_address">Address</label>
+                                <label for="modal_comp_address">Address <span class="text-danger">*</span></label>
                                 <textarea class="form-control @error('address') is-invalid @enderror" id="modal_comp_address" name="address" rows="3">{{ old('address') }}</textarea>
                                 @error('address')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -215,16 +267,22 @@
 @stop
 
 @section('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .modal label:not(.form-check-label):not(.custom-file-label) {
             color: #6c757d;
             font-size: 16px;
             font-weight: 600 !important;
         }
+        .datepicker[readonly] {
+            background-color: #ffffff;
+            opacity: 1;
+        }
     </style>
 @stop
 
 @section('js')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     @if($errors->any())
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -254,7 +312,6 @@
                     { "data": "name", "orderable": true },
                     { "data": "address", "orderable": true },
                     { "data": "phone_number", "orderable": true },
-                    { "data": "id_card_number", "orderable": true },
                     { "data": "actions", "orderable": false, "searchable": false }
                 ],
                 "responsive": true,
@@ -277,10 +334,14 @@
                 var type = $('input[name="customer_type"]:checked').val();
                 if (type === 'company') {
                     $('#modal-individual-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
-                    $('#modal-company-fields').show().find('input, textarea').prop('disabled', false).prop('required', true);
+                    $('#modal-company-fields').show().find('input, textarea').prop('disabled', false);
+                    // Set required fields for company
+                    $('#modal_company_name, #modal_comp_phone_number, #modal_comp_address').prop('required', true);
                 } else if (type === 'individual') {
                     $('#modal-company-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
-                    $('#modal-individual-fields').show().find('input, textarea').prop('disabled', false).prop('required', true);
+                    $('#modal-individual-fields').show().find('input, textarea').prop('disabled', false);
+                    // Set required fields for individual
+                    $('#modal_first_name, #modal_last_name, #modal_indiv_phone_number, #modal_driving_license_number, #modal_license_expiry_date, #modal_license_issue_country').prop('required', true);
                 } else {
                     $('#modal-individual-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
                     $('#modal-company-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
@@ -293,6 +354,19 @@
 
             // Set correct initial state on page load
             toggleModalFields();
+
+            // Initialize Flatpickr for modal date fields
+            flatpickr('#modal_date_of_birth', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                maxDate: new Date()
+            });
+
+            flatpickr('#modal_license_expiry_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                minDate: new Date()
+            });
 
             // Handle View Customer button click
             $(document).on('click', '.view-customer-btn', function() {

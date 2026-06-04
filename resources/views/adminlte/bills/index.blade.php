@@ -42,7 +42,6 @@
                                 <th>Customer</th>
                                 <th>Amount</th>
                                 <th>Bill Date</th>
-                                <th>Due Date</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -66,7 +65,20 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
+                                <label for="bill_number">Bill #</label>
+                                <input type="text" class="form-control" id="bill_number" readonly>
+                                <input type="hidden" id="bill_number_hidden" name="bill_number">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="bill_date">Bill Date</label>
+                                <input type="text" class="form-control @error('bill_date') is-invalid @enderror"
+                                       id="bill_date" name="bill_date" value="{{ old('bill_date', now()->format('Y-m-d')) }}" readonly required>
+                                @error('bill_date')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label for="invoice_id">Invoice</label>
                                 <select class="form-control @error('invoice_id') is-invalid @enderror" id="invoice_id" name="invoice_id" required>
                                     <option value="">Select Invoice</option>
@@ -87,30 +99,14 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="amount">Amount (OMR)</label>
-                                <input type="number" step="0.01" min="0" class="form-control @error('amount') is-invalid @enderror"
-                                       id="amount" name="amount" value="{{ old('amount') }}" required>
-                                @error('amount')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group col-md-4">
-                                <label for="bill_date">Bill Date</label>
-                                <input type="text" class="form-control datepicker @error('bill_date') is-invalid @enderror"
-                                       id="bill_date" name="bill_date" value="{{ old('bill_date', now()->format('Y-m-d')) }}" required>
-                                @error('bill_date')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="due_date">Due Date</label>
-                                <input type="text" class="form-control datepicker @error('due_date') is-invalid @enderror"
-                                       id="due_date" name="due_date" value="{{ old('due_date') }}">
-                                @error('due_date')
+                                <label for="amount">Amount (OMR)</label>
+                                <input type="number" step="0.01" min="0" class="form-control @error('amount') is-invalid @enderror"
+                                       id="amount" name="amount" value="{{ old('amount') }}" required>
+                                @error('amount')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -122,17 +118,6 @@
                                     <option value="overdue" {{ old('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
                                 </select>
                                 @error('status')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-12">
-                                <label for="notes">Notes</label>
-                                <textarea class="form-control @error('notes') is-invalid @enderror"
-                                          id="notes" name="notes" rows="2">{{ old('notes') }}</textarea>
-                                @error('notes')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -177,17 +162,21 @@
         }, 5000);
 
         $(document).ready(function() {
-            flatpickr('#bill_date', {
-                dateFormat: 'Y-m-d',
-                allowInput: false,
-                defaultDate: '{{ old('bill_date', now()->format('Y-m-d')) }}'
+            // Get next bill number when modal opens
+            $('#addBillModal').on('show.bs.modal', function() {
+                $.ajax({
+                    url: '{{ route("bills.next-number") }}',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#bill_number').val(response.bill_number);
+                            $('#bill_number_hidden').val(response.bill_number);
+                        }
+                    }
+                });
             });
 
-            flatpickr('#due_date', {
-                dateFormat: 'Y-m-d',
-                allowInput: false,
-                defaultDate: '{{ old('due_date') }}'
-            });
+
 
             $('#bills-table').DataTable({
                 processing: true,
@@ -203,7 +192,6 @@
                     { data: 'customer', orderable: false },
                     { data: 'amount', orderable: true },
                     { data: 'bill_date', orderable: true },
-                    { data: 'due_date', orderable: true },
                     { data: 'status', orderable: true }
                 ],
                 responsive: true,

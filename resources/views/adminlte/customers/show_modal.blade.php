@@ -25,28 +25,66 @@
                 <b><i class="fas fa-phone mr-1"></i> Phone</b>
                 <span class="float-right text-dark">{{ $customer->phone_number }}</span>
             </li>
-            @if($customer->customer_type === 'individual')
-                <li class="list-group-item">
-                    <b><i class="fas fa-id-card mr-1"></i> ID Card No.</b>
-                    <span class="float-right text-dark">{{ $customer->id_card_number ?: 'N/A' }}</span>
-                </li>
-            @else
-                <li class="list-group-item">
-                    <b><i class="fas fa-registered mr-1"></i> Reg. ID</b>
-                    <span class="float-right text-dark">{{ $customer->company_registration_id ?: 'N/A' }}</span>
-                </li>
+            @if($customer->email)
+            <li class="list-group-item">
+                <b><i class="fas fa-envelope mr-1"></i> Email</b>
+                <span class="float-right text-dark">{{ $customer->email }}</span>
+            </li>
             @endif
-            
+            @if($customer->customer_type === 'individual')
+                @if($customer->date_of_birth)
+                <li class="list-group-item">
+                    <b><i class="fas fa-birthday-cake mr-1"></i> Date of Birth</b>
+                    <span class="float-right text-dark">{{ $customer->date_of_birth->format('d M Y') }}</span>
+                </li>
+                @endif
+                @if($customer->nationality)
+                <li class="list-group-item">
+                    <b><i class="fas fa-flag mr-1"></i> Nationality</b>
+                    <span class="float-right text-dark">{{ $customer->nationality }}</span>
+                </li>
+                @endif
+                @if($customer->passport_number)
+                <li class="list-group-item">
+                    <b><i class="fas fa-passport mr-1"></i> Passport No.</b>
+                    <span class="float-right text-dark">{{ $customer->passport_number }}</span>
+                </li>
+                @endif
+                @if($customer->driving_license_number)
+                <li class="list-group-item">
+                    <b><i class="fas fa-car-side mr-1"></i> Driving License No.</b>
+                    <span class="float-right text-dark">{{ $customer->driving_license_number }}</span>
+                </li>
+                @endif
+            @endif
         </ul>
     </div>
 
     <div class="col-md-7">
-        <strong><i class="fas fa-map-marker-alt mr-1"></i> Address</strong>
-        <p class="text-muted mt-1">
-            {{ $customer->address ?: 'No address recorded.' }}
-        </p>
-        <hr>
-        
+        @if($customer->customer_type === 'individual')
+            @if($customer->residential_address)
+                <strong><i class="fas fa-map-marker-alt mr-1"></i> Address</strong>
+                <p class="text-muted mt-1">{{ $customer->residential_address }}</p>
+                <hr>
+            @endif
+            @if($customer->license_expiry_date)
+                <strong><i class="fas fa-calendar-times mr-1"></i> License Expiry Date</strong>
+                <p class="text-muted mt-1">{{ $customer->license_expiry_date->format('d M Y') }}</p>
+                <hr>
+            @endif
+            @if($customer->license_issue_country)
+                <strong><i class="fas fa-globe mr-1"></i> License Issue Country</strong>
+                <p class="text-muted mt-1">{{ $customer->license_issue_country }}</p>
+                <hr>
+            @endif
+        @else
+            @if($customer->address)
+                <strong><i class="fas fa-map-marker-alt mr-1"></i> Address</strong>
+                <p class="text-muted mt-1">{{ $customer->address }}</p>
+                <hr>
+            @endif
+        @endif
+
         <strong><i class="fas fa-clock mr-1"></i> Added At</strong>
         <p class="text-muted mt-1">{{ $customer->created_at->format('d M Y') }}</p>
     </div>

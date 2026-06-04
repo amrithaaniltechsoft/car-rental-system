@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\BillController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers-data', [CustomerController::class, 'getData'])->name('customers.data');
 
     // Vehicle Bookings
+    Route::get('/bookings/next-id', [BookingController::class, 'getNextBookingId'])->name('bookings.next-id');
     Route::resource('bookings', BookingController::class);
     Route::get('/bookings-data', [BookingController::class, 'getData'])->name('bookings.data');
     Route::post('/bookings/check-availability', [BookingController::class, 'checkAvailability'])->name('bookings.check-availability');
@@ -40,10 +41,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('invoices', InvoiceController::class)->only(['index', 'show', 'edit', 'update', 'destroy', 'store']);
     Route::get('/invoices-data', [InvoiceController::class, 'getData'])->name('invoices.data');
     Route::get('/invoices/bookings-by-customer', [InvoiceController::class, 'getBookingsByCustomer'])->name('invoices.bookings-by-customer');
+    Route::post('/invoices/{invoice}/bill', [InvoiceController::class, 'createBill'])->name('invoices.createBill');
 
     // Bills
     Route::resource('bills', BillController::class)->only(['index', 'store']);
     Route::get('/bills-data', [BillController::class, 'getData'])->name('bills.data');
+    Route::get('/bills/next-number', [BillController::class, 'getNextBillNumber'])->name('bills.next-number');
 
     // Expenses
     Route::resource('expenses', ExpenseController::class);

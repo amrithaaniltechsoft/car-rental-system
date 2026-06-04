@@ -11,12 +11,6 @@
                 <b><i class="fas fa-hashtag mr-1"></i> Booking ID</b> <span class="float-right text-dark">{{ $booking->booking_id ?: 'N/A' }}</span>
             </li>
             <li class="list-group-item">
-                <b><i class="fas fa-car mr-1"></i> Vehicle</b> <span class="float-right text-dark">{{ $booking->vehicle->name }} ({{ $booking->vehicle->registration_number }})</span>
-            </li>
-            <li class="list-group-item">
-                <b><i class="fas fa-user mr-1"></i> Customer</b> <span class="float-right text-dark">{{ $booking->customer->name }}</span>
-            </li>
-            <li class="list-group-item">
                 <b><i class="fas fa-info-circle mr-1"></i> Status</b>
                 <span class="float-right">
                     @if($booking->status == 'pending')
@@ -32,20 +26,27 @@
                     @endif
                 </span>
             </li>
+
             <li class="list-group-item">
-                <b><i class="fas fa-comment mr-1"></i> Remark</b> <span class="float-right text-muted">{{ $booking->notes ?: 'No remarks' }}</span>
+                <b><i class="fas fa-calendar-alt mr-1"></i> Booking Date</b> <span class="float-right text-muted">{{ $booking->booking_date ? $booking->booking_date->format('d M Y') : 'N/A' }}</span>
             </li>
             <li class="list-group-item">
-                <b><i class="fas fa-credit-card mr-1"></i> Payment Type</b> <span class="float-right text-muted">
-                    @if($booking->payment_type)
-                        {{ ucwords(str_replace('_', ' ', $booking->payment_type)) }}
-                    @else
-                        Not specified
-                    @endif
-                </span>
+                <b><i class="fas fa-clock mr-1"></i> Pickup Date & Time</b> <span class="float-right text-muted">{{ $booking->pickup_datetime ? $booking->pickup_datetime->format('d M Y H:i') : 'N/A' }}</span>
             </li>
             <li class="list-group-item">
-                <b><i class="fas fa-clock mr-1"></i> Booking Created</b> <span class="float-right text-muted">{{ $booking->created_at->format('d M Y') }}</span>
+                <b><i class="fas fa-clock mr-1"></i> Return Date & Time</b> <span class="float-right text-muted">{{ $booking->return_datetime ? $booking->return_datetime->format('d M Y H:i') : 'N/A' }}</span>
+            </li>
+            <li class="list-group-item">
+                <b><i class="fas fa-hourglass-half mr-1"></i> Rental Duration</b> <span class="float-right text-muted">{{ $booking->rental_duration ?: 'N/A' }}</span>
+            </li>
+            <li class="list-group-item">
+                <b><i class="fas fa-map-marker-alt mr-1"></i> Pickup Location</b> <span class="float-right text-muted">{{ $booking->pickup_location ?: 'N/A' }}</span>
+            </li>
+            <li class="list-group-item">
+                <b><i class="fas fa-map-marker-alt mr-1"></i> Return Location</b> <span class="float-right text-muted">{{ $booking->return_location ?: 'N/A' }}</span>
+            </li>
+            <li class="list-group-item">
+                <b><i class="fas fa-history mr-1"></i> Booking Created</b> <span class="float-right text-muted">{{ $booking->created_at->format('d M Y') }}</span>
             </li>
         </ul>
     </div>

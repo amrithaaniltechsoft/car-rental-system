@@ -15,12 +15,18 @@ class Bill extends Model
         'due_date',
         'status',
         'notes',
+        'amount_usd',
+        'exchange_rate',
+        'amount_omr',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'bill_date' => 'date',
         'due_date' => 'date',
+        'amount_usd' => 'decimal:2',
+        'exchange_rate' => 'decimal:4',
+        'amount_omr' => 'decimal:2',
     ];
 
     public function invoice(): BelongsTo

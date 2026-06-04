@@ -22,7 +22,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="vehicle_id">Vehicle</label>
-                                    <select class="form-control @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required>
+                                    <select class="form-control select2 @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required style="width: 100%;">
+                                        <option value="">Select Vehicle</option>
                                         @foreach($vehicles as $vehicle)
                                             <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $booking->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
                                                 {{ $vehicle->name }} ({{ $vehicle->registration_number }})
@@ -135,6 +136,27 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         $(document).ready(function() {
+            // Initialize Select2 for Vehicle dropdown
+            $('#vehicle_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Vehicle',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            // Set pre-selected vehicle value
+            var selectedVehicleId = '{{ old('vehicle_id', $booking->vehicle_id) }}';
+            if (selectedVehicleId) {
+                $('#vehicle_id').val(selectedVehicleId).trigger('change');
+            }
+            // Open dropdown on focus
+            $('#vehicle_id').on('focus', function () {
+                $(this).select2('open');
+            });
+            $('#vehicle_id').on('select2:open', function () {
+                $('.select2-search__field').focus();
+            });
+
             // Initialize Select2 for Customer dropdown with focus behavior
             $('#customer_id').select2({
                 theme: 'bootstrap4',

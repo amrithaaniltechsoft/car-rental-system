@@ -1,11 +1,8 @@
 <?php
 
-use App\Models\Brand;
 use App\Models\Customer;
-use App\Models\FuelType;
 use App\Models\Invoice;
 use App\Models\User;
-use App\Models\VehicleType;
 
 test('invoice index screen can be rendered', function () {
     $user = User::factory()->create();

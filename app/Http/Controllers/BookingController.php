@@ -44,12 +44,12 @@ class BookingController extends Controller
         $validator = \Validator::make($request->all(), [
             'vehicle_id' => 'required|exists:vehicles,id',
             'customer_id' => 'required|exists:customers,id',
-            'from_date' => 'required|date',
-            'to_date' => 'required|date|after_or_equal:from_date',
-            'total_amount' => 'nullable|numeric|min:0',
-            'status' => 'required|in:pending,confirmed,on_hold,cancelled',
-            'notes' => 'nullable|string',
-            'payment_type' => 'nullable|in:card,email_credit,lpo,cash',
+            'booking_date' => 'required|date',
+            'pickup_datetime' => 'required|date',
+            'return_datetime' => 'required|date|after_or_equal:pickup_datetime',
+            'pickup_location' => 'nullable|string|max:255',
+            'return_location' => 'nullable|string|max:255',
+            'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
         if ($validator->fails()) {
@@ -61,23 +61,20 @@ class BookingController extends Controller
                 ], 422);
             }
 
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Check vehicle availability for the requested dates
+        // Check vehicle availability
         $vehicle = Vehicle::findOrFail($request->vehicle_id);
-        $fromDate = $request->from_date;
-        $toDate = $request->to_date;
+        $fromDate = date('Y-m-d', strtotime($request->pickup_datetime));
+        $toDate = date('Y-m-d', strtotime($request->return_datetime));
 
         $hasConflict = Booking::where('vehicle_id', $vehicle->id)
             ->where(function ($query) use ($fromDate, $toDate) {
                 $query->whereBetween('from_date', [$fromDate, $toDate])
                     ->orWhereBetween('to_date', [$fromDate, $toDate])
                     ->orWhere(function ($q) use ($fromDate, $toDate) {
-                        $q->where('from_date', '<=', $fromDate)
-                            ->where('to_date', '>=', $toDate);
+                        $q->where('from_date', '<=', $fromDate)->where('to_date', '>=', $toDate);
                     });
             })
             ->exists();
@@ -91,43 +88,50 @@ class BookingController extends Controller
                 ], 422);
             }
 
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Vehicle is not available for the selected dates. Try on other date.');
+            return redirect()->back()->withInput()->with('error', 'Vehicle is not available for the selected dates. Try on other date.');
         }
 
-        $data = $request->all();
+        $data = $request->only([
+            'vehicle_id',
+            'customer_id',
+            'booking_date',
+            'pickup_datetime',
+            'return_datetime',
+            'pickup_location',
+            'return_location',
+            'status',
+        ]);
 
-        // Generate custom booking ID: BKYearMonthDaySequence
+        // Keep legacy date fields in sync
+        $data['from_date'] = $fromDate;
+        $data['to_date'] = $toDate;
+
+        // Compute rental duration
+        $pickup = new \DateTime($request->pickup_datetime);
+        $return = new \DateTime($request->return_datetime);
+        $diff = $pickup->diff($return);
+        $days = (int) $diff->format('%a');
+        $hours = (int) $diff->format('%h');
+        if ($days > 0) {
+            $data['rental_duration'] = $days.' day'.($days > 1 ? 's' : '').($hours > 0 ? ' '.$hours.'h' : '');
+        } else {
+            $data['rental_duration'] = $hours.' hour'.($hours !== 1 ? 's' : '');
+        }
+
+        // Generate booking ID
         $today = now()->format('Ymd');
         $prefix = 'BK'.$today;
+        $last = Booking::where('booking_id', 'like', $prefix.'%')->orderBy('booking_id', 'desc')->first();
+        $sequence = $last ? (int) substr($last->booking_id, -3) + 1 : 1;
+        $data['booking_id'] = $prefix.str_pad($sequence, 3, '0', STR_PAD_LEFT);
 
-        // Get the last booking created today with this prefix
-        $lastBooking = Booking::where('booking_id', 'like', $prefix.'%')
-            ->orderBy('booking_id', 'desc')
-            ->first();
-
-        if ($lastBooking) {
-            // Extract sequence number and increment
-            $lastSequence = (int) substr($lastBooking->booking_id, -3);
-            $newSequence = $lastSequence + 1;
-        } else {
-            $newSequence = 1;
-        }
-
-        $data['booking_id'] = $prefix.str_pad($newSequence, 3, '0', STR_PAD_LEFT);
-
-        $booking = Booking::create($data);
+        Booking::create($data);
 
         if ($request->ajax() || $request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking created successfully.',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Booking created successfully.']);
         }
 
-        return redirect()->route('bookings.index')
-            ->with('success', 'Booking created successfully.');
+        return redirect()->route('bookings.index')->with('success', 'Booking created successfully.');
     }
 
     /**
@@ -160,25 +164,21 @@ class BookingController extends Controller
     {
         if ($booking->invoice()->exists()) {
             if ($request->ajax() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking cannot be edited as it has an invoice.',
-                ], 422);
+                return response()->json(['success' => false, 'message' => 'Booking cannot be edited as it has an invoice.'], 422);
             }
 
-            return redirect()->back()
-                ->with('error', 'Booking cannot be edited as it has an invoice.');
+            return redirect()->back()->with('error', 'Booking cannot be edited as it has an invoice.');
         }
 
         $validator = \Validator::make($request->all(), [
             'vehicle_id' => 'required|exists:vehicles,id',
             'customer_id' => 'required|exists:customers,id',
-            'from_date' => 'required|date',
-            'to_date' => 'required|date|after_or_equal:from_date',
-            'total_amount' => 'nullable|numeric|min:0',
-            'status' => 'required|in:pending,confirmed,on_hold,cancelled',
-            'notes' => 'nullable|string',
-            'payment_type' => 'nullable|in:card,email_credit,lpo,cash',
+            'booking_date' => 'required|date',
+            'pickup_datetime' => 'required|date',
+            'return_datetime' => 'required|date|after_or_equal:pickup_datetime',
+            'pickup_location' => 'nullable|string|max:255',
+            'return_location' => 'nullable|string|max:255',
+            'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
         if ($validator->fails()) {
@@ -190,28 +190,24 @@ class BookingController extends Controller
                 ], 422);
             }
 
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Check vehicle availability for the requested dates if vehicle or dates changed
+        $fromDate = date('Y-m-d', strtotime($request->pickup_datetime));
+        $toDate = date('Y-m-d', strtotime($request->return_datetime));
+
+        // Check availability if vehicle/dates changed
         if ($request->vehicle_id != $booking->vehicle_id ||
-            $request->from_date != $booking->from_date ||
-            $request->to_date != $booking->to_date) {
+            $fromDate !== optional($booking->from_date)->format('Y-m-d') ||
+            $toDate !== optional($booking->to_date)->format('Y-m-d')) {
 
-            $vehicle = Vehicle::findOrFail($request->vehicle_id);
-            $fromDate = $request->from_date;
-            $toDate = $request->to_date;
-
-            $hasConflict = Booking::where('vehicle_id', $vehicle->id)
+            $hasConflict = Booking::where('vehicle_id', $request->vehicle_id)
                 ->where('id', '!=', $booking->id)
                 ->where(function ($query) use ($fromDate, $toDate) {
                     $query->whereBetween('from_date', [$fromDate, $toDate])
                         ->orWhereBetween('to_date', [$fromDate, $toDate])
                         ->orWhere(function ($q) use ($fromDate, $toDate) {
-                            $q->where('from_date', '<=', $fromDate)
-                                ->where('to_date', '>=', $toDate);
+                            $q->where('from_date', '<=', $fromDate)->where('to_date', '>=', $toDate);
                         });
                 })
                 ->exists();
@@ -225,23 +221,42 @@ class BookingController extends Controller
                     ], 422);
                 }
 
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'Vehicle is not available for the selected dates. Try on other date.');
+                return redirect()->back()->withInput()->with('error', 'Vehicle is not available for the selected dates. Try on other date.');
             }
         }
 
-        $booking->update($request->all());
+        $data = $request->only([
+            'vehicle_id',
+            'customer_id',
+            'booking_date',
+            'pickup_datetime',
+            'return_datetime',
+            'pickup_location',
+            'return_location',
+            'status',
+        ]);
+        $data['from_date'] = $fromDate;
+        $data['to_date'] = $toDate;
 
-        if ($request->ajax() || $request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking updated successfully.',
-            ]);
+        // Compute rental duration
+        $pickup = new \DateTime($request->pickup_datetime);
+        $return = new \DateTime($request->return_datetime);
+        $diff = $pickup->diff($return);
+        $days = (int) $diff->format('%a');
+        $hours = (int) $diff->format('%h');
+        if ($days > 0) {
+            $data['rental_duration'] = $days.' day'.($days > 1 ? 's' : '').($hours > 0 ? ' '.$hours.'h' : '');
+        } else {
+            $data['rental_duration'] = $hours.' hour'.($hours !== 1 ? 's' : '');
         }
 
-        return redirect()->route('bookings.index')
-            ->with('success', 'Booking updated successfully.');
+        $booking->update($data);
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Booking updated successfully.']);
+        }
+
+        return redirect()->route('bookings.index')->with('success', 'Booking updated successfully.');
     }
 
     /**
@@ -328,7 +343,9 @@ class BookingController extends Controller
                 'booking_id' => $booking->booking_id ?: 'N/A',
                 'vehicle' => $booking->vehicle->name.' ('.$booking->vehicle->registration_number.')',
                 'customer' => $booking->customer->name,
-                'dates' => $booking->from_date->format('d/m/Y').' - '.$booking->to_date->format('d/m/Y'),
+                'dates' => ($booking->pickup_datetime ? $booking->pickup_datetime->format('d/m/Y H:i') : ($booking->from_date ? $booking->from_date->format('d/m/Y') : 'N/A'))
+                    .' - '
+                    .($booking->return_datetime ? $booking->return_datetime->format('d/m/Y H:i') : ($booking->to_date ? $booking->to_date->format('d/m/Y') : 'N/A')),
                 'status' => $this->getStatusBadge($booking->status, $booking->id),
                 'actions' => $this->getActionButtons($booking),
             ];
@@ -348,19 +365,20 @@ class BookingController extends Controller
     private function getStatusBadge(string $status, ?int $bookingId = null): string
     {
         $badges = [
-            'pending' => '<span class="badge badge-warning">Pending</span>',
-            'confirmed' => '<span class="badge badge-primary">Confirmed</span>',
-            'on_hold' => '<span class="badge badge-info">On Hold</span>',
-            'cancelled' => '<span class="badge badge-danger">Cancelled</span>',
+            'pending' => 'warning',
+            'confirmed' => 'primary',
+            'cancelled' => 'danger',
+            'completed' => 'success',
         ];
 
-        $badge = $badges[$status] ?? '<span class="badge badge-secondary">'.ucfirst($status).'</span>';
+        $color = $badges[$status] ?? 'secondary';
+        $label = ucfirst($status);
 
-        if ($bookingId && $status !== 'confirmed') {
-            $badge = '<span class="badge badge-'.($status === 'pending' ? 'warning' : ($status === 'on_hold' ? 'info' : 'secondary')).' cursor-pointer change-status-btn" data-id="'.$bookingId.'" style="cursor: pointer;">'.ucfirst(str_replace('_', ' ', $status)).'</span>';
+        if ($bookingId && $status !== 'confirmed' && $status !== 'completed') {
+            return '<span class="badge badge-'.$color.' change-status-btn" data-id="'.$bookingId.'" style="cursor:pointer;">'.$label.'</span>';
         }
 
-        return $badge;
+        return '<span class="badge badge-'.$color.'">'.$label.'</span>';
     }
 
     /**
@@ -425,28 +443,53 @@ class BookingController extends Controller
         }
 
         $validated = $request->validate([
-            'total' => 'required|numeric|min:0',
-            'vat' => 'nullable|numeric|min:0',
-            'subtotal' => 'nullable|numeric|min:0',
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'description' => 'nullable|string',
+            'rate_type' => 'nullable|in:daily,weekly,monthly',
+            'extra_kms_charges' => 'nullable|numeric|min:0',
+            'security_deposit' => 'nullable|numeric|min:0',
+            'insurance_fee' => 'nullable|numeric|min:0',
+            'additional_driver_fee' => 'nullable|numeric|min:0',
+            'delivery_charge' => 'nullable|numeric|min:0',
+            'fuel_charge' => 'nullable|numeric|min:0',
+            'gps_charges' => 'nullable|numeric|min:0',
+            'salik_toll_charges' => 'nullable|numeric|min:0',
+            'vat' => 'nullable|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        // Server-side calculation of total, vat_amount and subtotal
+        $chargesTotal = max(0,
+            ($validated['extra_kms_charges'] ?? 0)
+            + ($validated['security_deposit'] ?? 0)
+            + ($validated['insurance_fee'] ?? 0)
+            + ($validated['additional_driver_fee'] ?? 0)
+            + ($validated['delivery_charge'] ?? 0)
+            + ($validated['fuel_charge'] ?? 0)
+            + ($validated['gps_charges'] ?? 0)
+            + ($validated['salik_toll_charges'] ?? 0)
+        );
+
+        // Calculate discount amount as percentage of charges total
+        $discountPercent = $validated['discount_amount'] ?? 0;
+        $discountAmount = $chargesTotal * ($discountPercent / 100);
+
+        // Total is charges total minus discount
+        $total = max(0, $chargesTotal - $discountAmount);
+
+        $vatPercent = $validated['vat'] ?? 0;
+        $vatAmount = $total * ($vatPercent / 100);
+        $subtotal = $total - $vatAmount;
 
         $validated['customer_id'] = $booking->customer_id;
         $validated['booking_id'] = $booking->id;
         $validated['invoice_number'] = $this->generateInvoiceNumber();
-        $validated['amount'] = $validated['total'];
+        $validated['subtotal'] = $subtotal;
+        $validated['vat_amount'] = $vatAmount;
+        $validated['total'] = $total;
+        $validated['amount'] = $total;
         $validated['status'] = 'pending';
-
-        // Calculate subtotal and vat_amount from total and vat percentage
-        if (isset($validated['total']) && isset($validated['vat'])) {
-            $validated['vat_amount'] = ($validated['total'] * $validated['vat']) / 100;
-            $validated['subtotal'] = $validated['total'] - $validated['vat_amount'];
-        } else {
-            $validated['subtotal'] = $validated['total'];
-            $validated['vat_amount'] = 0;
-        }
 
         Invoice::create($validated);
 
@@ -525,10 +568,15 @@ class BookingController extends Controller
             'success' => true,
             'booking' => [
                 'id' => $booking->id,
+                'booking_id' => $booking->booking_id,
                 'vehicle_id' => $booking->vehicle_id,
                 'customer_id' => $booking->customer_id,
-                'from_date' => $booking->from_date->format('Y-m-d'),
-                'to_date' => $booking->to_date->format('Y-m-d'),
+                'booking_date' => $booking->booking_date?->format('Y-m-d'),
+                'pickup_datetime' => $booking->pickup_datetime?->format('Y-m-d\TH:i'),
+                'return_datetime' => $booking->return_datetime?->format('Y-m-d\TH:i'),
+                'rental_duration' => $booking->rental_duration,
+                'pickup_location' => $booking->pickup_location,
+                'return_location' => $booking->return_location,
                 'status' => $booking->status,
                 'notes' => $booking->notes,
                 'payment_type' => $booking->payment_type,
@@ -568,6 +616,21 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Booking status updated to confirmed successfully.',
+        ]);
+    }
+
+    /**
+     * Get the next booking ID preview for the add form
+     */
+    public function getNextBookingId(): JsonResponse
+    {
+        $today = now()->format('Ymd');
+        $prefix = 'BK'.$today;
+        $last = Booking::where('booking_id', 'like', $prefix.'%')->orderBy('booking_id', 'desc')->first();
+        $sequence = $last ? (int) substr($last->booking_id, -3) + 1 : 1;
+
+        return response()->json([
+            'booking_id' => $prefix.str_pad($sequence, 3, '0', STR_PAD_LEFT),
         ]);
     }
 

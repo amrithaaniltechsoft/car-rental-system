@@ -106,31 +106,84 @@
 
                     <hr>
                     <div class="row">
-                        <div class="col-md-6">
-                            <h5><strong>Financial Details</strong></h5>
-                            <table class="table table-bordered">
-                                <tr>
-                                    <td style="width: 200px;"><strong>Subtotal:</strong></td>
-                                    <td class="text-right">{{ number_format((float)$invoice->subtotal, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>VAT ({{ number_format((float)$invoice->vat, 2) }}):</strong></td>
-                                    <td class="text-right">{{ number_format((float)$invoice->vat, 2) }}</td>
-                                </tr>
-                                <tr class="table-active">
-                                    <td><strong>Total Amount:</strong></td>
-                                    <td class="text-right"><strong>{{ number_format((float)$invoice->total, 2) }}</strong></td>
-                                </tr>
-                            </table>
+                        <div class="col-md-12">
+                            <h5><strong>Pricing Details</strong></h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Extra Kms Charges:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->extra_kms_charges, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Security Deposit:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->security_deposit, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Insurance Fee:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->insurance_fee, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Additional Driver Fee:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->additional_driver_fee, 2) }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-4">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Delivery Charge:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->delivery_charge, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Fuel Charge:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->fuel_charge, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>GPS Charges:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->gps_charges, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Salik/Toll Charges:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->salik_toll_charges, 2) }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-4">
+                                    <table class="table table-sm table-borderless">
+                                        @if($invoice->discount_amount > 0)
+                                            <tr>
+                                                <td><strong>Discount ({{ number_format((float)$invoice->discount_amount, 2) }}%):</strong></td>
+                                                <td class="text-right text-danger">-{{ number_format((float)$invoice->discount_amount, 2) }}</td>
+                                            </tr>
+                                        @endif
+                                        <tr>
+                                            <td><strong>Subtotal:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->subtotal, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>VAT ({{ number_format((float)$invoice->vat, 2) }}%):</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->vat_amount, 2) }}</td>
+                                        </tr>
+                                        <tr class="table-active">
+                                            <td><strong>Total Amount:</strong></td>
+                                            <td class="text-right"><strong>{{ number_format((float)$invoice->total, 2) }}</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        @if($invoice->description)
-                            <div class="col-md-6">
+                    @if($invoice->description)
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
                                 <h5><strong>Notes/Description</strong></h5>
                                 <p>{{ $invoice->description }}</p>
                             </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </div>
                 <div class="card-footer">
                     <a href="{{ route('invoices.index') }}" class="btn btn-secondary">

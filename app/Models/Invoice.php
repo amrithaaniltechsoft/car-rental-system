@@ -22,6 +22,21 @@ class Invoice extends Model
         'due_date',
         'status',
         'description',
+        'total_usd',
+        'exchange_rate',
+        'total_omr',
+        'subtotal_usd',
+        'vat_amount_usd',
+        'rate_type',
+        'extra_kms_charges',
+        'security_deposit',
+        'insurance_fee',
+        'additional_driver_fee',
+        'delivery_charge',
+        'fuel_charge',
+        'gps_charges',
+        'salik_toll_charges',
+        'discount_amount',
     ];
 
     protected $casts = [
@@ -33,6 +48,20 @@ class Invoice extends Model
         'total' => 'decimal:2',
         'invoice_date' => 'date',
         'due_date' => 'date',
+        'total_usd' => 'decimal:2',
+        'exchange_rate' => 'decimal:4',
+        'total_omr' => 'decimal:2',
+        'subtotal_usd' => 'decimal:2',
+        'vat_amount_usd' => 'decimal:2',
+        'extra_kms_charges' => 'decimal:2',
+        'security_deposit' => 'decimal:2',
+        'insurance_fee' => 'decimal:2',
+        'additional_driver_fee' => 'decimal:2',
+        'delivery_charge' => 'decimal:2',
+        'fuel_charge' => 'decimal:2',
+        'gps_charges' => 'decimal:2',
+        'salik_toll_charges' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     public function customer(): BelongsTo

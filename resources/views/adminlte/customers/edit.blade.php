@@ -49,23 +49,55 @@
                         </div>
 
                         <!-- Individual Fields -->
-                        <div id="individual-fields" style="display: none;">
+                        <div id="individual-fields">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="name">Full Name</label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                               id="name" name="name" value="{{ old('name', $customer->customer_type === 'individual' ? $customer->name : '') }}">
-                                        @error('name')
+                                        <label for="first_name">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('first_name') is-invalid @enderror"
+                                               id="first_name" name="first_name" value="{{ old('first_name', $customer->first_name) }}">
+                                        @error('first_name')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
                                 </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('last_name') is-invalid @enderror"
+                                               id="last_name" name="last_name" value="{{ old('last_name', $customer->last_name) }}">
+                                        @error('last_name')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="date_of_birth">Date of Birth</label>
+                                        <input type="text" class="form-control datepicker @error('date_of_birth') is-invalid @enderror"
+                                               id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth', $customer->date_of_birth ? $customer->date_of_birth->format('Y-m-d') : '') }}">
+                                        @error('date_of_birth')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="nationality">Nationality</label>
+                                        <input type="text" class="form-control @error('nationality') is-invalid @enderror"
+                                               id="nationality" name="nationality" value="{{ old('nationality', $customer->nationality) }}">
+                                        @error('nationality')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="indiv_phone_number">Phone Number</label>
+                                        <label for="indiv_phone_number">Mobile Number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('phone_number') is-invalid @enderror"
-                                               id="indiv_phone_number" name="phone_number" value="{{ old('phone_number', $customer->customer_type === 'individual' ? $customer->phone_number : '') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                               id="indiv_phone_number" name="phone_number" value="{{ old('phone_number', $customer->phone_number) }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                         @error('phone_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -73,32 +105,73 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="id_card_number">ID Card Number</label>
-                                        <input type="text" class="form-control @error('id_card_number') is-invalid @enderror"
-                                               id="id_card_number" name="id_card_number" value="{{ old('id_card_number', $customer->id_card_number) }}">
-                                        @error('id_card_number')
+                                        <label for="email">Email Address</label>
+                                        <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                               id="email" name="email" value="{{ old('email', $customer->email) }}">
+                                        @error('email')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="passport_number">Passport Number</label>
+                                        <input type="text" class="form-control @error('passport_number') is-invalid @enderror"
+                                               id="passport_number" name="passport_number" value="{{ old('passport_number', $customer->passport_number) }}">
+                                        @error('passport_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
                                 </div>
                             </div>
-
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="driving_license_number">Driving License Number <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('driving_license_number') is-invalid @enderror"
+                                               id="driving_license_number" name="driving_license_number" value="{{ old('driving_license_number', $customer->driving_license_number) }}">
+                                        @error('driving_license_number')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="license_expiry_date">License Expiry Date <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control datepicker @error('license_expiry_date') is-invalid @enderror"
+                                               id="license_expiry_date" name="license_expiry_date" value="{{ old('license_expiry_date', $customer->license_expiry_date ? $customer->license_expiry_date->format('Y-m-d') : '') }}">
+                                        @error('license_expiry_date')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="license_issue_country">License Issue Country <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('license_issue_country') is-invalid @enderror"
+                                               id="license_issue_country" name="license_issue_country" value="{{ old('license_issue_country', $customer->license_issue_country) }}">
+                                        @error('license_issue_country')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-group">
-                                <label for="indiv_address">Address</label>
-                                <textarea class="form-control @error('address') is-invalid @enderror"
-                                          id="indiv_address" name="address" rows="3">{{ old('address', $customer->customer_type === 'individual' ? $customer->address : '') }}</textarea>
-                                @error('address')
+                                <label for="residential_address">Residential Address</label>
+                                <textarea class="form-control @error('residential_address') is-invalid @enderror"
+                                          id="residential_address" name="residential_address" rows="3">{{ old('residential_address', $customer->residential_address) }}</textarea>
+                                @error('residential_address')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Company Fields -->
-                        <div id="company-fields" style="display: none;">
+                        <div id="company-fields">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="company_name">Company Name</label>
+                                        <label for="company_name">Company Name <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('company_name') is-invalid @enderror"
                                                id="company_name" name="company_name" value="{{ old('company_name', $customer->company_name) }}">
                                         @error('company_name')
@@ -106,32 +179,31 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="comp_phone_number">Phone Number</label>
+                                        <label for="comp_phone_number">Phone Number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('phone_number') is-invalid @enderror"
-                                               id="comp_phone_number" name="phone_number" value="{{ old('phone_number', $customer->customer_type === 'company' ? $customer->phone_number : '') }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                               id="comp_phone_number" name="phone_number" value="{{ old('phone_number', $customer->phone_number) }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                         @error('phone_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="company_registration_id">Company Registration ID</label>
-                                        <input type="text" class="form-control @error('company_registration_id') is-invalid @enderror"
-                                               id="company_registration_id" name="company_registration_id" value="{{ old('company_registration_id', $customer->company_registration_id) }}">
-                                        @error('company_registration_id')
+                                        <label for="email_company">Email Address</label>
+                                        <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                               id="email_company" name="email" value="{{ old('email', $customer->email) }}">
+                                        @error('email')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
                                 </div>
                             </div>
-
                             <div class="form-group">
-                                <label for="comp_address">Address</label>
+                                <label for="comp_address">Address <span class="text-danger">*</span></label>
                                 <textarea class="form-control @error('address') is-invalid @enderror"
-                                          id="comp_address" name="address" rows="3">{{ old('address', $customer->customer_type === 'company' ? $customer->address : '') }}</textarea>
+                                          id="comp_address" name="address" rows="3">{{ old('address', $customer->address) }}</textarea>
                                 @error('address')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -149,16 +221,25 @@
 @stop
 
 @section('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .content label:not(.form-check-label):not(.custom-file-label) {
             font-size: 17px;
             font-weight: 600 !important;
             color: #6c757d;
         }
+        #individual-fields, #company-fields {
+            display: none;
+        }
+        .datepicker[readonly] {
+            background-color: #ffffff;
+            opacity: 1;
+        }
     </style>
 @stop
 
 @section('js')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         $(document).ready(function() {
             function toggleFields() {
@@ -166,7 +247,7 @@
                 if (type === 'company') {
                     $('#individual-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
                     $('#company-fields').show().find('input, textarea').prop('disabled', false).prop('required', true);
-                } else if (type === 'individual') {
+                } else {
                     $('#company-fields').hide().find('input, textarea').prop('disabled', true).prop('required', false);
                     $('#individual-fields').show().find('input, textarea').prop('disabled', false).prop('required', true);
                 }
@@ -177,6 +258,19 @@
             });
 
             toggleFields();
+
+            // Initialize Flatpickr for date fields
+            flatpickr('#date_of_birth', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                maxDate: new Date() // Date of birth can't be in future
+            });
+
+            flatpickr('#license_expiry_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                minDate: new Date() // License expiry should be in future
+            });
         });
     </script>
 @stop

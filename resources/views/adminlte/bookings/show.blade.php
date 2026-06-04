@@ -46,22 +46,39 @@
                             <span class="badge badge-danger">Cancelled</span>
                         @endif
                     </p>
+
                     <hr>
-                    <strong><i class="fas fa-sticky-note mr-1"></i> Remark</strong>
+                    <strong><i class="fas fa-calendar-alt mr-1"></i> Booking Date</strong>
                     <p class="text-muted">
-                        {{ $booking->notes ?: 'No additional remarks' }}
+                        {{ $booking->booking_date ? $booking->booking_date->format('d M Y') : 'N/A' }}
                     </p>
                     <hr>
-                    <strong><i class="fas fa-credit-card mr-1"></i> Payment Type</strong>
+                    <strong><i class="fas fa-clock mr-1"></i> Pickup Date & Time</strong>
                     <p class="text-muted">
-                        @if($booking->payment_type)
-                            {{ ucwords(str_replace('_', ' ', $booking->payment_type)) }}
-                        @else
-                            Not specified
-                        @endif
+                        {{ $booking->pickup_datetime ? $booking->pickup_datetime->format('d M Y H:i') : 'N/A' }}
                     </p>
                     <hr>
-                    <strong><i class="fas fa-clock mr-1"></i> Created At</strong>
+                    <strong><i class="fas fa-clock mr-1"></i> Return Date & Time</strong>
+                    <p class="text-muted">
+                        {{ $booking->return_datetime ? $booking->return_datetime->format('d M Y H:i') : 'N/A' }}
+                    </p>
+                    <hr>
+                    <strong><i class="fas fa-hourglass-half mr-1"></i> Rental Duration</strong>
+                    <p class="text-muted">
+                        {{ $booking->rental_duration ?: 'N/A' }}
+                    </p>
+                    <hr>
+                    <strong><i class="fas fa-map-marker-alt mr-1"></i> Pickup Location</strong>
+                    <p class="text-muted">
+                        {{ $booking->pickup_location ?: 'N/A' }}
+                    </p>
+                    <hr>
+                    <strong><i class="fas fa-map-marker-alt mr-1"></i> Return Location</strong>
+                    <p class="text-muted">
+                        {{ $booking->return_location ?: 'N/A' }}
+                    </p>
+                    <hr>
+                    <strong><i class="fas fa-history mr-1"></i> Created At</strong>
                     <p class="text-muted">{{ $booking->created_at->format('d M Y') }}</p>
                 </div>
             </div>

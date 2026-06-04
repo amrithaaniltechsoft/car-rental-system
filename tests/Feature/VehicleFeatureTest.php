@@ -5,6 +5,7 @@ use App\Models\Brand;
 use App\Models\Customer;
 use App\Models\FuelType;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\VehicleType;
 
 test('vehicle index screen can be rendered with database-driven brand and type list', function () {
@@ -117,7 +118,7 @@ test('vehicle store fails on duplicate vehicle name via AJAX', function () {
     $fuelType = FuelType::first();
 
     // Create a vehicle first
-    \App\Models\Vehicle::create([
+    Vehicle::create([
         'name' => 'Duplicate Name Vehicle',
         'model' => 2024,
         'brand' => $brand->name,
@@ -150,7 +151,7 @@ test('vehicle update via AJAX returns JSON success response', function () {
     $type = VehicleType::first();
     $fuelType = FuelType::first();
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Original Name',
         'model' => 2024,
         'brand' => $brand->name,
@@ -185,7 +186,7 @@ test('vehicle update fails on duplicate name of another vehicle', function () {
     $type = VehicleType::first();
     $fuelType = FuelType::first();
 
-    $vehicle1 = \App\Models\Vehicle::create([
+    $vehicle1 = Vehicle::create([
         'name' => 'Vehicle One',
         'model' => 2024,
         'brand' => $brand->name,
@@ -195,7 +196,7 @@ test('vehicle update fails on duplicate name of another vehicle', function () {
         'seating_capacity' => 5,
     ]);
 
-    $vehicle2 = \App\Models\Vehicle::create([
+    $vehicle2 = Vehicle::create([
         'name' => 'Vehicle Two',
         'model' => 2024,
         'brand' => $brand->name,
@@ -228,7 +229,7 @@ test('vehicle can be deleted', function () {
     $type = VehicleType::first();
     $fuelType = FuelType::first();
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'To Be Deleted',
         'model' => 2024,
         'brand' => $brand->name,
@@ -252,7 +253,7 @@ test('vehicle cannot be deleted when it has bookings', function () {
     $type = VehicleType::first();
     $fuelType = FuelType::first();
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Booked Vehicle',
         'model' => 2024,
         'brand' => $brand->name,
@@ -294,7 +295,7 @@ test('vehicle cannot be deleted via AJAX when it has bookings', function () {
     $type = VehicleType::first();
     $fuelType = FuelType::first();
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Booked Vehicle AJAX',
         'model' => 2024,
         'brand' => $brand->name,
@@ -339,7 +340,7 @@ test('vehicle can be deleted via AJAX', function () {
     $type = VehicleType::first();
     $fuelType = FuelType::first();
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'To Be Deleted AJAX',
         'model' => 2024,
         'brand' => $brand->name,
@@ -360,5 +361,3 @@ test('vehicle can be deleted via AJAX', function () {
     ]);
     $this->assertDatabaseMissing('vehicles', ['id' => $vehicle->id]);
 });
-
-

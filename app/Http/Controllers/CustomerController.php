@@ -32,30 +32,46 @@ class CustomerController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'customer_type'           => 'required|in:individual,company',
-            'name'                    => 'required_if:customer_type,individual|nullable|string|max:255',
-            'company_name'            => 'required_if:customer_type,company|nullable|string|max:255',
-            'address'                 => 'required|string',
-            'phone_number'            => 'required|string|max:20',
-            'id_card_number'          => 'required_if:customer_type,individual|nullable|string|max:50|unique:customers,id_card_number',
-            'company_registration_id' => 'required_if:customer_type,company|nullable|string|max:50|unique:customers,company_registration_id',
+            'customer_type' => 'required|in:individual,company',
+            'first_name' => 'required_if:customer_type,individual|nullable|string|max:255',
+            'last_name' => 'required_if:customer_type,individual|nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'nationality' => 'nullable|string|max:255',
+            'company_name' => 'required_if:customer_type,company|nullable|string|max:255',
+            'address' => 'required_if:customer_type,company|nullable|string',
+            'residential_address' => 'required_if:customer_type,individual|nullable|string',
+            'phone_number' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'passport_number' => 'nullable|string|max:50',
+            'driving_license_number' => 'required_if:customer_type,individual|nullable|string|max:50',
+            'license_expiry_date' => 'required_if:customer_type,individual|nullable|date',
+            'license_issue_country' => 'required_if:customer_type,individual|nullable|string|max:255',
         ]);
 
         $data = $request->all();
         if ($request->customer_type === 'company') {
             $data['name'] = $request->company_name;
-            $data['id_card_number'] = null;
+            $data['first_name'] = null;
+            $data['last_name'] = null;
+            $data['date_of_birth'] = null;
+            $data['nationality'] = null;
+            $data['residential_address'] = null;
+            $data['passport_number'] = null;
+            $data['driving_license_number'] = null;
+            $data['license_expiry_date'] = null;
+            $data['license_issue_country'] = null;
         } else {
+            $data['name'] = $request->first_name.' '.$request->last_name;
             $data['company_name'] = null;
-            $data['company_registration_id'] = null;
+            $data['address'] = $request->residential_address;
         }
 
         // Generate custom customer ID: CUYearMonthDaySequence
         $today = now()->format('Ymd');
-        $prefix = 'CU' . $today;
+        $prefix = 'CU'.$today;
 
         // Get the last customer created today with this prefix
-        $lastCustomer = Customer::where('customer_id', 'like', $prefix . '%')
+        $lastCustomer = Customer::where('customer_id', 'like', $prefix.'%')
             ->orderBy('customer_id', 'desc')
             ->first();
 
@@ -67,7 +83,7 @@ class CustomerController extends Controller
             $newSequence = 1;
         }
 
-        $data['customer_id'] = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+        $data['customer_id'] = $prefix.str_pad($newSequence, 3, '0', STR_PAD_LEFT);
 
         Customer::create($data);
 
@@ -92,11 +108,12 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer): View
     {
-        //return view('adminlte.customers.edit', compact('customer'));
+        // return view('adminlte.customers.edit', compact('customer'));
 
         if (request()->ajax()) {
             return view('adminlte.customers.edit_modal', compact('customer'));
         }
+
         return view('adminlte.customers.edit', compact('customer'));
     }
 
@@ -106,23 +123,39 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer): RedirectResponse
     {
         $request->validate([
-            'customer_type'           => 'required|in:individual,company',
-            'name'                    => 'required_if:customer_type,individual|nullable|string|max:255',
-            'company_name'            => 'required_if:customer_type,company|nullable|string|max:255',
-            'address'                 => 'required|string',
-            'phone_number'            => 'required|string|max:20',
-            'id_card_number'          => 'required_if:customer_type,individual|nullable|string|max:50|unique:customers,id_card_number,' . $customer->id,
-            'company_registration_id' => 'required_if:customer_type,company|nullable|string|max:50|unique:customers,company_registration_id,' . $customer->id,
+            'customer_type' => 'required|in:individual,company',
+            'first_name' => 'required_if:customer_type,individual|nullable|string|max:255',
+            'last_name' => 'required_if:customer_type,individual|nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'nationality' => 'nullable|string|max:255',
+            'company_name' => 'required_if:customer_type,company|nullable|string|max:255',
+            'address' => 'required_if:customer_type,company|nullable|string',
+            'residential_address' => 'required_if:customer_type,individual|nullable|string',
+            'phone_number' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'passport_number' => 'nullable|string|max:50',
+            'driving_license_number' => 'required_if:customer_type,individual|nullable|string|max:50',
+            'license_expiry_date' => 'required_if:customer_type,individual|nullable|date',
+            'license_issue_country' => 'required_if:customer_type,individual|nullable|string|max:255',
         ]);
 
         $data = $request->all();
-       
+
         if ($request->customer_type === 'company') {
             $data['name'] = $request->company_name;
-            $data['id_card_number'] = null;
+            $data['first_name'] = null;
+            $data['last_name'] = null;
+            $data['date_of_birth'] = null;
+            $data['nationality'] = null;
+            $data['residential_address'] = null;
+            $data['passport_number'] = null;
+            $data['driving_license_number'] = null;
+            $data['license_expiry_date'] = null;
+            $data['license_issue_country'] = null;
         } else {
+            $data['name'] = $request->first_name.' '.$request->last_name;
             $data['company_name'] = null;
-            $data['company_registration_id'] = null;
+            $data['address'] = $request->residential_address;
         }
 
         $customer->update($data);
@@ -176,8 +209,6 @@ class CustomerController extends Controller
             'company_name',
             'address',
             'phone_number',
-            'id_card_number',
-            'company_registration_id',
         ];
 
         $draw = (int) $request->input('draw', 0);
@@ -186,15 +217,15 @@ class CustomerController extends Controller
         $searchValue = $request->input('search.value');
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
-        
+
         // Map table columns to DB columns
         $tableColumnsMap = [
             0 => 'id',
-            1 => 'customer_type',
-            2 => 'name',
-            3 => 'address',
-            4 => 'phone_number',
-            5 => 'id_card_number',
+            1 => 'customer_id',
+            2 => 'customer_type',
+            3 => 'name',
+            4 => 'address',
+            5 => 'phone_number',
         ];
         $orderColumn = $tableColumnsMap[$orderColumnIndex] ?? 'id';
 
@@ -205,8 +236,6 @@ class CustomerController extends Controller
                 $q->where('name', 'like', "%{$searchValue}%")
                     ->orWhere('company_name', 'like', "%{$searchValue}%")
                     ->orWhere('phone_number', 'like', "%{$searchValue}%")
-                    ->orWhere('id_card_number', 'like', "%{$searchValue}%")
-                    ->orWhere('company_registration_id', 'like', "%{$searchValue}%")
                     ->orWhere('address', 'like', "%{$searchValue}%");
             });
         }
@@ -231,7 +260,6 @@ class CustomerController extends Controller
                 'name' => $customer->customer_type === 'company' ? $customer->company_name : $customer->name,
                 'address' => $customer->address,
                 'phone_number' => $customer->phone_number,
-                'id_card_number' => $customer->customer_type === 'company' ? $customer->company_registration_id : $customer->id_card_number,
                 'actions' => $this->getActionButtons($customer),
             ];
         }

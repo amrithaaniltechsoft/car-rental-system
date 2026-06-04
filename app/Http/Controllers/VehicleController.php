@@ -75,6 +75,7 @@ class VehicleController extends Controller
         if (request()->ajax()) {
             return view('adminlte.vehicles.show_modal', compact('vehicle'));
         }
+
         return view('adminlte.vehicles.show', compact('vehicle'));
     }
 
@@ -90,6 +91,7 @@ class VehicleController extends Controller
         if (request()->ajax()) {
             return view('adminlte.vehicles.edit_modal', compact('vehicle', 'fuelTypes', 'brands', 'types'));
         }
+
         return view('adminlte.vehicles.edit', compact('vehicle', 'fuelTypes', 'brands', 'types'));
     }
 

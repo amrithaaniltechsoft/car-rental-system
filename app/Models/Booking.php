@@ -11,20 +11,33 @@ class Booking extends Model
     protected $fillable = [
         'vehicle_id',
         'customer_id',
-        'from_date',
-        'to_date',
+        'booking_date',
+        'pickup_datetime',
+        'return_datetime',
+        'rental_duration',
+        'pickup_location',
+        'return_location',
         'total_amount',
         'status',
         'notes',
         'booking_id',
         'payment_type',
+        // keep legacy date fields for backward compat
+        'from_date',
+        'to_date',
     ];
 
-    protected $casts = [
-        'from_date' => 'date',
-        'to_date' => 'date',
-        'total_amount' => 'decimal:2',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'booking_date' => 'date',
+            'pickup_datetime' => 'datetime',
+            'return_datetime' => 'datetime',
+            'from_date' => 'date',
+            'to_date' => 'date',
+            'total_amount' => 'decimal:2',
+        ];
+    }
 
     public function vehicle(): BelongsTo
     {

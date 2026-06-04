@@ -5,6 +5,7 @@ use App\Models\Brand;
 use App\Models\Customer;
 use App\Models\FuelType;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\VehicleType;
 
 test('customer index screen can be rendered', function () {
@@ -139,7 +140,7 @@ test('customer cannot be deleted when they have bookings', function () {
         'address' => 'Booking Street',
     ]);
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Customer Delete Test Vehicle',
         'model' => 2024,
         'brand' => $brand->name,
@@ -181,7 +182,7 @@ test('customer cannot be deleted via AJAX when they have bookings', function () 
         'address' => 'Ajax Street',
     ]);
 
-    $vehicle = \App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Customer Delete AJAX Vehicle',
         'model' => 2024,
         'brand' => $brand->name,

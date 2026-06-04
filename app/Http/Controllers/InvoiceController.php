@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -29,6 +30,7 @@ class InvoiceController extends Controller
         if (request()->ajax()) {
             return view('adminlte.invoices.show_modal', compact('invoice'));
         }
+
         return view('adminlte.invoices.show', compact('invoice'));
     }
 
@@ -50,9 +52,11 @@ class InvoiceController extends Controller
         ]);
 
         if (! empty($validated['booking_id'])) {
+
             $booking = Booking::findOrFail($validated['booking_id']);
 
             if ($booking->customer_id != $validated['customer_id']) {
+
                 if ($request->ajax() || $request->expectsJson()) {
                     return response()->json([
                         'success' => false,
@@ -177,6 +181,18 @@ class InvoiceController extends Controller
                 $bookingToDate = $invoice->booking->to_date->format('d/m/Y');
             }
 
+            $statusBadge = $this->getStatusBadge($invoice->status);
+            $billIndicator = '';
+            if (! $invoice->bill()->exists()) {
+                $billIndicator = '
+                    <button type="button" class="btn btn-success btn-sm create-bill-btn" data-id="'.$invoice->id.'" data-invoice-number="'.$invoice->invoice_number.'" data-amount="'.$invoice->amount.'" data-customer="'.($invoice->customer->customer_type === 'company' ? $invoice->customer->company_name : $invoice->customer->name).'">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </button>
+                ';
+            } else {
+                $billIndicator = ' <span class="badge badge-info">Billed</span>';
+            }
+
             $data[] = [
                 'id' => $rowNum++,
                 'invoice_number' => $invoice->invoice_number,
@@ -185,7 +201,7 @@ class InvoiceController extends Controller
                 'booking_from_date' => $bookingFromDate,
                 'booking_to_date' => $bookingToDate,
                 'amount' => number_format((float) $invoice->amount, 2),
-                'status' => $this->getStatusBadge($invoice->status),
+                'status' => $statusBadge.' '.$billIndicator,
                 'actions' => $this->getActionButtons($invoice),
             ];
         }
@@ -217,7 +233,7 @@ class InvoiceController extends Controller
     private function getStatusBadge(string $status): string
     {
         $badges = [
-            'pending' => '<span class="badge badge-warning">Pending</span>',
+            'pending' => '<span class="badge badge-warning"></span>',
             'paid' => '<span class="badge badge-success">Paid</span>',
             'overdue' => '<span class="badge badge-danger">Overdue</span>',
         ];
@@ -270,6 +286,70 @@ class InvoiceController extends Controller
             'success' => true,
             'bookings' => $bookingsData,
         ]);
+    }
+
+    /**
+     * Create a bill for invoice
+     */
+    public function createBill(Request $request, Invoice $invoice): JsonResponse|RedirectResponse
+    {
+        $request->validate([
+            'amount_usd' => 'required|numeric|min:0',
+            'bill_date' => 'required|date',
+            'bill_number' => 'nullable|string',
+        ]);
+
+        $exchangeRate = 0.385; // Fixed exchange rate
+
+        if ($invoice->bill()->exists()) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This invoice already has a bill.',
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', 'This invoice already has a bill.');
+        }
+
+        // Use provided bill number if available, otherwise generate it
+        if ($request->filled('bill_number')) {
+            $billNumber = $request->bill_number;
+        } else {
+            // Generate bill number using the same format as booking ID
+            $prefix = 'BL'.now()->format('Ymd');
+            $lastBill = Bill::query()
+                ->where('bill_number', 'like', $prefix.'%')
+                ->orderByDesc('bill_number')
+                ->first();
+
+            $sequence = 1;
+            if ($lastBill) {
+                $sequence = (int) substr($lastBill->bill_number, -3) + 1;
+            }
+
+            $billNumber = $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+        }
+
+        Bill::create([
+            'invoice_id' => $invoice->id,
+            'bill_number' => $billNumber,
+            'amount' => $request->amount_usd * $exchangeRate,
+            'amount_usd' => $request->amount_usd,
+            'exchange_rate' => $exchangeRate,
+            'amount_omr' => $request->amount_usd * $exchangeRate,
+            'bill_date' => $request->bill_date,
+            'status' => 'unpaid',
+        ]);
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill created successfully.',
+            ]);
+        }
+
+        return redirect()->route('bills.index')->with('success', 'Bill created successfully.');
     }
 
     /**

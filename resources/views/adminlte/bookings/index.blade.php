@@ -66,21 +66,10 @@
                 <form id="addBookingForm" action="{{ route('bookings.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
+                        {{-- Row 1: Customer, Vehicle, Booking Reference, Status --}}
                         <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="vehicle_id">Vehicle</label>
-                                <select class="form-control @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required>
-                                    <option value="">Select Vehicle</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
-                                    @endforeach
-                                </select>
-                                @error('vehicle_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="customer_id">Customer</label>
+                            <div class="form-group col-md-3">
+                                <label for="customer_id">Customer <span class="text-danger">*</span></label>
                                 <select class="form-control select2 @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id" required style="width: 100%;">
                                     <option value="">Select Customer</option>
                                     @foreach($customers as $customer)
@@ -91,52 +80,78 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="from_date">From Date</label>
-                                <input type="text" class="form-control datepicker @error('from_date') is-invalid @enderror" id="from_date" name="from_date" value="{{ old('from_date') }}" required>
-                                @error('from_date')
+                            <div class="form-group col-md-3">
+                                <label for="vehicle_id">Vehicle <span class="text-danger">*</span></label>
+                                <select class="form-control select2 @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required style="width: 100%;">
+                                    <option value="">Select Vehicle</option>
+                                    @foreach($vehicles as $vehicle)
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
+                                    @endforeach
+                                </select>
+                                @error('vehicle_id')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="to_date">To Date</label>
-                                <input type="text" class="form-control datepicker @error('to_date') is-invalid @enderror" id="to_date" name="to_date" value="{{ old('to_date') }}" required>
-                                @error('to_date')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
+                            <div class="form-group col-md-3">
+                                <label for="add_booking_ref">Booking Reference</label>
+                                <input type="text" class="form-control" id="add_booking_ref" value="Auto Generated" readonly style="background:#f4f6f9; color:#6c757d;">
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="status">Status</label>
+                            <div class="form-group col-md-3">
+                                <label for="status">Booking Status <span class="text-danger">*</span></label>
                                 <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
                                     <option value="pending">Pending</option>
                                     <option value="confirmed">Confirmed</option>
-                                    <option value="on_hold">On Hold</option>
                                     <option value="cancelled">Cancelled</option>
+                                    <option value="completed">Completed</option>
                                 </select>
                                 @error('status')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="notes">Remark</label>
-                                <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="1">{{ old('notes') }}</textarea>
-                                @error('notes')
+                        </div>
+
+                        {{-- Row 2: Booking Date, Pickup Date & Time, Return Date & Time, Rental Duration --}}
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="booking_date">Booking Date <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datepicker @error('booking_date') is-invalid @enderror" id="booking_date" name="booking_date" value="{{ old('booking_date') }}" required>
+                                @error('booking_date')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="payment_type">Payment Type</label>
-                                <select class="form-control @error('payment_type') is-invalid @enderror" id="payment_type" name="payment_type">
-                                    <option value="">Select Payment Type</option>
-                                    <option value="card" {{ old('payment_type') == 'card' ? 'selected' : '' }}>Card</option>
-                                    <option value="email_credit" {{ old('payment_type') == 'email_credit' ? 'selected' : '' }}>Email Credit</option>
-                                    <option value="lpo" {{ old('payment_type') == 'lpo' ? 'selected' : '' }}>LPO</option>
-                                    <option value="cash" {{ old('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
-                                </select>
-                                @error('payment_type')
+                            <div class="form-group col-md-3">
+                                <label for="pickup_datetime">Pickup Date &amp; Time <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datetimepicker @error('pickup_datetime') is-invalid @enderror" id="pickup_datetime" name="pickup_datetime" value="{{ old('pickup_datetime') }}" required>
+                                @error('pickup_datetime')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="return_datetime">Return Date &amp; Time <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datetimepicker @error('return_datetime') is-invalid @enderror" id="return_datetime" name="return_datetime" value="{{ old('return_datetime') }}" required>
+                                @error('return_datetime')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="add_rental_duration">Rental Duration</label>
+                                <input type="text" class="form-control" id="add_rental_duration" value="Auto calculated" readonly style="background:#f4f6f9; color:#6c757d;">
+                            </div>
+                        </div>
+
+                        {{-- Row 3: Pickup Location, Return Location --}}
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="pickup_location">Pickup Location</label>
+                                <input type="text" class="form-control @error('pickup_location') is-invalid @enderror" id="pickup_location" name="pickup_location" value="{{ old('pickup_location') }}" placeholder="Enter pickup location">
+                                @error('pickup_location')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="return_location">Return Location</label>
+                                <input type="text" class="form-control @error('return_location') is-invalid @enderror" id="return_location" name="return_location" value="{{ old('return_location') }}" placeholder="Enter return location">
+                                @error('return_location')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -152,26 +167,9 @@
                                         <span class="customer-type-badge" id="add_cd_type"></span>
                                     </div>
                                     <div class="customer-details-body">
-                                        <div class="cd-item" id="add_cd_phone_wrap">
-                                            <i class="fas fa-phone-alt"></i>
-                                            <span id="add_cd_phone"></span>
-                                        </div>
-                                        <div class="cd-item" id="add_cd_address_wrap">
-                                            <i class="fas fa-map-marker-alt"></i>
-                                            <span id="add_cd_address"></span>
-                                        </div>
-                                        <div class="cd-item" id="add_cd_idcard_wrap">
-                                            <i class="fas fa-id-card"></i>
-                                            <span id="add_cd_idcard"></span>
-                                        </div>
-                                        <div class="cd-item" id="add_cd_company_wrap">
-                                            <i class="fas fa-building"></i>
-                                            <span id="add_cd_company"></span>
-                                        </div>
-                                        <div class="cd-item" id="add_cd_regno_wrap">
-                                            <i class="fas fa-file-alt"></i>
-                                            <span id="add_cd_regno"></span>
-                                        </div>
+                                        <div class="cd-item" id="add_cd_phone_wrap"><i class="fas fa-phone-alt"></i><span id="add_cd_phone"></span></div>
+                                        <div class="cd-item" id="add_cd_address_wrap"><i class="fas fa-map-marker-alt"></i><span id="add_cd_address"></span></div>
+                                        <div class="cd-item" id="add_cd_company_wrap"><i class="fas fa-building"></i><span id="add_cd_company"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -198,18 +196,10 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
+                        {{-- Row 1: Customer, Vehicle, Booking Reference, Status --}}
                         <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="edit_vehicle_id">Vehicle</label>
-                                <select class="form-control" id="edit_vehicle_id" name="vehicle_id" required>
-                                    <option value="">Select Vehicle</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="edit_customer_id">Customer</label>
+                            <div class="form-group col-md-3">
+                                <label for="edit_customer_id">Customer <span class="text-danger">*</span></label>
                                 <select class="form-control select2" id="edit_customer_id" name="customer_id" required style="width: 100%;">
                                     <option value="">Select Customer</option>
                                     @foreach($customers as $customer)
@@ -217,39 +207,59 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="edit_from_date">From Date</label>
-                                <input type="text" class="form-control datepicker" id="edit_from_date" name="from_date" required>
+                            <div class="form-group col-md-3">
+                                <label for="edit_vehicle_id">Vehicle <span class="text-danger">*</span></label>
+                                <select class="form-control select2" id="edit_vehicle_id" name="vehicle_id" required style="width: 100%;">
+                                    <option value="">Select Vehicle</option>
+                                    @foreach($vehicles as $vehicle)
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
+                                    @endforeach
+                                </select>
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="edit_to_date">To Date</label>
-                                <input type="text" class="form-control datepicker" id="edit_to_date" name="to_date" required>
+                            <div class="form-group col-md-3">
+                                <label>Booking Reference</label>
+                                <input type="text" class="form-control" id="edit_booking_ref" readonly style="background:#f4f6f9; color:#6c757d;">
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="edit_status">Status</label>
+                            <div class="form-group col-md-3">
+                                <label for="edit_status">Booking Status <span class="text-danger">*</span></label>
                                 <select class="form-control" id="edit_status" name="status" required>
                                     <option value="pending">Pending</option>
                                     <option value="confirmed">Confirmed</option>
-                                    <option value="on_hold">On Hold</option>
                                     <option value="cancelled">Cancelled</option>
+                                    <option value="completed">Completed</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="edit_notes">Remark</label>
-                                <textarea class="form-control" id="edit_notes" name="notes" rows="1"></textarea>
+                        </div>
+
+                        {{-- Row 2: Booking Date, Pickup Date & Time, Return Date & Time, Rental Duration --}}
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="edit_booking_date">Booking Date <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datepicker" id="edit_booking_date" name="booking_date" required>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="edit_payment_type">Payment Type</label>
-                                <select class="form-control" id="edit_payment_type" name="payment_type">
-                                    <option value="">Select Payment Type</option>
-                                    <option value="card">Card</option>
-                                    <option value="email_credit">Email Credit</option>
-                                    <option value="lpo">LPO</option>
-                                    <option value="cash">Cash</option>
-                                </select>
+                            <div class="form-group col-md-3">
+                                <label for="edit_pickup_datetime">Pickup Date &amp; Time <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datetimepicker" id="edit_pickup_datetime" name="pickup_datetime" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_return_datetime">Return Date &amp; Time <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datetimepicker" id="edit_return_datetime" name="return_datetime" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_rental_duration">Rental Duration</label>
+                                <input type="text" class="form-control" id="edit_rental_duration" readonly style="background:#f4f6f9; color:#6c757d;">
+                            </div>
+                        </div>
+
+                        {{-- Row 3: Locations --}}
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="edit_pickup_location">Pickup Location</label>
+                                <input type="text" class="form-control" id="edit_pickup_location" name="pickup_location" placeholder="Enter pickup location">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="edit_return_location">Return Location</label>
+                                <input type="text" class="form-control" id="edit_return_location" name="return_location" placeholder="Enter return location">
                             </div>
                         </div>
 
@@ -263,26 +273,9 @@
                                         <span class="customer-type-badge" id="edit_cd_type"></span>
                                     </div>
                                     <div class="customer-details-body">
-                                        <div class="cd-item" id="edit_cd_phone_wrap">
-                                            <i class="fas fa-phone-alt"></i>
-                                            <span id="edit_cd_phone"></span>
-                                        </div>
-                                        <div class="cd-item" id="edit_cd_address_wrap">
-                                            <i class="fas fa-map-marker-alt"></i>
-                                            <span id="edit_cd_address"></span>
-                                        </div>
-                                        <div class="cd-item" id="edit_cd_idcard_wrap">
-                                            <i class="fas fa-id-card"></i>
-                                            <span id="edit_cd_idcard"></span>
-                                        </div>
-                                        <div class="cd-item" id="edit_cd_company_wrap">
-                                            <i class="fas fa-building"></i>
-                                            <span id="edit_cd_company"></span>
-                                        </div>
-                                        <div class="cd-item" id="edit_cd_regno_wrap">
-                                            <i class="fas fa-file-alt"></i>
-                                            <span id="edit_cd_regno"></span>
-                                        </div>
+                                        <div class="cd-item" id="edit_cd_phone_wrap"><i class="fas fa-phone-alt"></i><span id="edit_cd_phone"></span></div>
+                                        <div class="cd-item" id="edit_cd_address_wrap"><i class="fas fa-map-marker-alt"></i><span id="edit_cd_address"></span></div>
+                                        <div class="cd-item" id="edit_cd_company_wrap"><i class="fas fa-building"></i><span id="edit_cd_company"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -325,32 +318,24 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="invoice_booking_id">Booking ID</label>
                                 <input type="text" class="form-control" id="invoice_booking_id" readonly>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="invoice_vehicle">Vehicle</label>
                                 <input type="text" class="form-control" id="invoice_vehicle" readonly>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-2">
                                 <label for="invoice_customer">Customer</label>
                                 <input type="text" class="form-control" id="invoice_customer" readonly>
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="booking_from_date">Booking From Date</label>
-                                <input type="text" class="form-control" id="booking_from_date" readonly>
+                            <div class="form-group col-md-2">
+                                <label for="invoice_booking_date">Booking Date</label>
+                                <input type="text" class="form-control" id="invoice_booking_date" readonly>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="invoice_date_display">Invoice Date</label>
-                                <input type="text" class="form-control" id="invoice_date_display" value="{{ now()->format('d M Y') }}" readonly>
-                                <input type="hidden" id="invoice_date" name="invoice_date" value="{{ now()->format('Y-m-d') }}">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="invoice_due_date">Inv Due</label>
+                            <div class="form-group col-md-2">
+                                <label for="invoice_due_date">Due Date</label>
                                 <input type="text" class="form-control datepicker @error('due_date') is-invalid @enderror"
                                        id="invoice_due_date" name="due_date" value="{{ old('due_date') }}">
                                 @error('due_date')
@@ -358,56 +343,89 @@
                                 @enderror
                             </div>
                         </div>
+                        <input type="hidden" id="invoice_date" name="invoice_date" value="{{ now()->format('Y-m-d') }}">
+
+                        <hr>
+                        <h5><strong>Pricing Details</strong></h5>
 
                         <div class="form-row">
-                            <div class="form-group col-md-12">
-                                <label for="invoice_description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror"
-                                          id="invoice_description" name="description" rows="2">{{ old('description') }}</textarea>
-                                @error('description')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
+                            <div class="form-group col-md-3">
+                                <label for="invoice_rate_type">Rate Type</label>
+                                <select class="form-control" id="invoice_rate_type" name="rate_type">
+                                    <option value="daily">Daily Rate</option>
+                                    <option value="weekly">Weekly Rate</option>
+                                    <option value="monthly">Monthly Rate</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="invoice_extra_kms_charges">Extra Kms Charges</label>
+                                <input type="number" step="0.01" min="0" class="form-control pricing-input text-right" id="invoice_extra_kms_charges" name="extra_kms_charges">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="invoice_security_deposit">Security Deposit</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_security_deposit" name="security_deposit">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="invoice_insurance_fee">Insurance Fee</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_insurance_fee" name="insurance_fee">
                             </div>
                         </div>
 
                         <div class="form-row">
-                            <div class="col-md-12 text-right">
-                                <table class="table table-bordered table-sm" style="max-width: 320px; margin-left: auto; font-size: 14px;">
+                            <div class="form-group col-md-3">
+                                <label for="invoice_additional_driver_fee">Additional Driver Fee</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_additional_driver_fee" name="additional_driver_fee">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="invoice_delivery_charge">Delivery Charge</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_delivery_charge" name="delivery_charge">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="invoice_fuel_charge">Fuel Charge</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_fuel_charge" name="fuel_charge">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="invoice_gps_charges">GPS Charges</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_gps_charges" name="gps_charges">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="invoice_salik_toll_charges">Salik/Toll Charges</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_salik_toll_charges" name="salik_toll_charges">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="invoice_vat">VAT/Tax (%)</label>
+                                <input type="number" step="0.01" min="0" class="form-control pricing-input" id="invoice_vat" name="vat" value="5">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="invoice_discount_amount">Discount Amount</label>
+                                <input type="text" class="form-control pricing-input text-right text-danger" id="invoice_discount_amount" name="discount_amount" max="100">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="form-row justify-content-end">
+                            <div class="col-md-5">
+                                <table class="table table-bordered table-sm" style="font-size: 14px;">
                                     <tr>
-                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">Total</strong></td>
-                                        <td class="text-right">
-                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('total') is-invalid @enderror"
-                                                   id="invoice_total" name="total" required style="width: 100%; border: none; background: transparent; -moz-appearance: textfield; font-size: 16px;">
-                                            @error('total')
-                                                <span class="invalid-feedback">{{ $message }}</span>
-                                            @enderror
+                                        <td style="width: 130px; vertical-align: middle;" class="pl-2"><strong>Sub Total</strong></td>
+                                        <td>
+                                            <span class="form-control form-control-sm text-right" id="invoice_subtotal" name="subtotal" style="border: none; background: transparent; font-weight: bold; display: block; pointer-events: none;">0.00</span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">VAT (%)</strong></td>
-                                        <td class="text-right">
-                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('vat') is-invalid @enderror"
-                                                   id="invoice_vat" name="vat" value="5" style="width: 100%; border: none; background: transparent; -moz-appearance: textfield; font-size: 16px;">
-                                            @error('vat')
-                                                <span class="invalid-feedback">{{ $message }}</span>
-                                            @enderror
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>VAT Amount</strong></td>
+                                        <td>
+                                            <span class="form-control form-control-sm text-right" id="invoice_vat_amount" style="border: none; background: transparent; display: block; pointer-events: none;">0.00</span>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">Sub Total</strong></td>
-                                        <td class="text-right">
-                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right @error('subtotal') is-invalid @enderror"
-                                                   id="invoice_subtotal" name="subtotal" readonly style="width: 100%; border: none; background: transparent; -moz-appearance: textfield; font-size: 16px;">
-                                            @error('subtotal')
-                                                <span class="invalid-feedback">{{ $message }}</span>
-                                            @enderror
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width: 120px; text-align: center;" class="invoice-label-cell"><strong style="color: #6c757d;">VAT Amt</strong></td>
-                                        <td class="text-right">
-                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right"
-                                                   id="invoice_vat_amount" readonly style="width: 100%; border: none; background: transparent; -moz-appearance: textfield; font-size: 16px;">
+                                    <tr class="table-success">
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>Total Amount</strong></td>
+                                        <td>
+                                            <span class="form-control form-control-sm text-right font-weight-bold" id="invoice_total" name="total" style="border: none; background: transparent; font-size: 16px; display: block; pointer-events: none;">0.00</span>
                                         </td>
                                     </tr>
                                 </table>
@@ -521,38 +539,98 @@
 
             function destroyFlatpickr(selector) {
                 var el = document.querySelector(selector);
-                if (el && el._flatpickr) {
-                    el._flatpickr.destroy();
-                }
+                if (el && el._flatpickr) { el._flatpickr.destroy(); }
             }
 
-            function initBookingDatePickers(fromSelector, toSelector, fromDate, toDate) {
-                destroyFlatpickr(fromSelector);
-                destroyFlatpickr(toSelector);
+            function calcRentalDuration(pickupVal, returnVal, displayId) {
+                if (!pickupVal || !returnVal) { $('#' + displayId).val('Auto calculated'); return; }
+                var p = new Date(pickupVal), r = new Date(returnVal);
+                if (isNaN(p) || isNaN(r) || r <= p) { $('#' + displayId).val('—'); return; }
+                var diffMs = r - p;
+                var diffHours = Math.floor(diffMs / 3600000);
+                var days = Math.floor(diffHours / 24);
+                var hours = diffHours % 24;
+                var label = '';
+                if (days > 0) label += days + ' day' + (days > 1 ? 's' : '');
+                if (hours > 0) label += (label ? ' ' : '') + hours + 'h';
+                $('#' + displayId).val(label || '< 1 hour');
+            }
 
-                var toPicker = flatpickr(toSelector, {
-                    dateFormat: "Y-m-d",
+            // ── ADD MODAL date pickers ──
+            flatpickr('#booking_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                defaultDate: new Date()
+            });
+
+            function initAddDatetimePickers() {
+                destroyFlatpickr('#pickup_datetime');
+                destroyFlatpickr('#return_datetime');
+
+                var returnPicker = flatpickr('#return_datetime', {
+                    enableTime: true,
+                    dateFormat: 'Y-m-d H:i',
+                    time_24hr: true,
                     allowInput: false,
                     minDate: bookingToday,
-                    defaultDate: toDate || null
+                    onChange: function(sel) {
+                        calcRentalDuration($('#pickup_datetime').val(), sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', 'add_rental_duration');
+                    }
                 });
 
-                flatpickr(fromSelector, {
-                    dateFormat: "Y-m-d",
+                flatpickr('#pickup_datetime', {
+                    enableTime: true,
+                    dateFormat: 'Y-m-d H:i',
+                    time_24hr: true,
                     allowInput: false,
                     minDate: bookingToday,
-                    defaultDate: fromDate || null,
-                    onChange: function(selectedDates) {
-                        var minToDate = selectedDates[0] || bookingToday;
-                        toPicker.set('minDate', minToDate);
-                        if (toPicker.selectedDates[0] && toPicker.selectedDates[0] < minToDate) {
-                            toPicker.setDate(minToDate);
-                        }
+                    onChange: function(sel) {
+                        if (sel[0]) { returnPicker.set('minDate', sel[0]); }
+                        calcRentalDuration(sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', $('#return_datetime').val(), 'add_rental_duration');
                     }
                 });
             }
+            initAddDatetimePickers();
 
-            initBookingDatePickers('#from_date', '#to_date');
+            // ── EDIT MODAL date pickers ──
+            function initEditPickers(bookingDate, pickupVal, returnVal) {
+                destroyFlatpickr('#edit_booking_date');
+                destroyFlatpickr('#edit_pickup_datetime');
+                destroyFlatpickr('#edit_return_datetime');
+
+                flatpickr('#edit_booking_date', {
+                    dateFormat: 'Y-m-d',
+                    allowInput: false,
+                    defaultDate: bookingDate || null
+                });
+
+                var editReturnPicker = flatpickr('#edit_return_datetime', {
+                    enableTime: true,
+                    dateFormat: 'Y-m-d H:i',
+                    time_24hr: true,
+                    allowInput: false,
+                    defaultDate: returnVal || null,
+                    onChange: function(sel) {
+                        calcRentalDuration($('#edit_pickup_datetime').val(), sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', 'edit_rental_duration');
+                    }
+                });
+
+                flatpickr('#edit_pickup_datetime', {
+                    enableTime: true,
+                    dateFormat: 'Y-m-d H:i',
+                    time_24hr: true,
+                    allowInput: false,
+                    defaultDate: pickupVal || null,
+                    onChange: function(sel) {
+                        if (sel[0]) { editReturnPicker.set('minDate', sel[0]); }
+                        calcRentalDuration(sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', $('#edit_return_datetime').val(), 'edit_rental_duration');
+                    }
+                });
+
+                if (pickupVal && returnVal) {
+                    calcRentalDuration(pickupVal, returnVal, 'edit_rental_duration');
+                }
+            }
 
             // Initialize Select2 for Customer inside the Add Booking Modal
             $('#addBookingModal #customer_id').select2({
@@ -563,10 +641,28 @@
                 width: '100%'
             });
 
+            // Initialize Select2 for Vehicle inside the Add Booking Modal
+            $('#addBookingModal #vehicle_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Vehicle',
+                allowClear: true,
+                dropdownParent: $('#addBookingModal'),
+                width: '100%'
+            });
+
             // Initialize Select2 for Customer inside the Edit Booking Modal
             $('#editBookingModal #edit_customer_id').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Select Customer',
+                allowClear: true,
+                dropdownParent: $('#editBookingModal'),
+                width: '100%'
+            });
+
+            // Initialize Select2 for Vehicle inside the Edit Booking Modal
+            $('#editBookingModal #edit_vehicle_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Select Vehicle',
                 allowClear: true,
                 dropdownParent: $('#editBookingModal'),
                 width: '100%'
@@ -923,13 +1019,18 @@
                         if (response.success) {
                             var booking = response.booking;
                             $('#editBookingForm').attr('action', "{{ route('bookings.update', ':id') }}".replace(':id', booking.id));
-                            $('#edit_vehicle_id').val(booking.vehicle_id);
+                            $('#edit_vehicle_id').val(booking.vehicle_id).trigger('change');
                             $('#edit_customer_id').val(booking.customer_id).trigger('change');
+                            $('#edit_booking_ref').val(booking.booking_id || 'N/A');
                             $('#edit_status').val(booking.status);
-                            $('#edit_notes').val(booking.notes);
-                            $('#edit_payment_type').val(booking.payment_type);
+                            $('#edit_pickup_location').val(booking.pickup_location);
+                            $('#edit_return_location').val(booking.return_location);
 
-                            initBookingDatePickers('#edit_from_date', '#edit_to_date', booking.from_date, booking.to_date);
+                            initEditPickers(booking.booking_date, booking.pickup_datetime, booking.return_datetime);
+
+                            if (booking.rental_duration) {
+                                $('#edit_rental_duration').val(booking.rental_duration);
+                            }
 
                             $('#editBookingModal').modal('show');
                         }
@@ -1109,6 +1210,8 @@
                 form.find('.is-invalid').removeClass('is-invalid');
                 form.find('.invalid-feedback').remove();
                 $('#add_customer_details_row').hide();
+                $('#add_rental_duration').val('Auto calculated');
+                initAddDatetimePickers();
             });
 
             // Reset Edit Booking form when modal is closed
@@ -1121,31 +1224,65 @@
                 $('#edit_customer_details_row').hide();
             });
 
-            // Calculate invoice totals (VAT is calculated on Total, Subtotal = Total - VAT)
-            function calculateInvoiceTotals() {
-                var total = parseFloat($('#invoice_total').val()) || 0;
-                var vatPercent = parseFloat($('#invoice_vat').val()) || 0;
-                
-                // Calculate VAT amount as percentage of total
-                var vatAmount = total * (vatPercent / 100);
-                // Subtotal is total minus VAT amount
-                var subtotal = total - vatAmount;
-                
-                $('#invoice_subtotal').val(subtotal.toFixed(2));
-                $('#invoice_vat_amount').val(vatAmount.toFixed(2));
+            function parseNum(id) { return parseFloat($('#' + id).val().replace(/,/g, '')) || 0; }
+
+            function fmtNum(num) { return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+            function formatPricingInput(id) {
+                var val = $('#' + id).val();
+                if (val === '' || val === null || val === undefined) {
+                    return;
+                }
+                var numVal = parseFloat(val.replace(/,/g, '')) || 0;
+                var maxVal = parseFloat($('#' + id).attr('max'));
+                if (!isNaN(maxVal) && numVal > maxVal) {
+                    numVal = maxVal;
+                }
+                $('#' + id).val(fmtNum(numVal));
             }
 
-            // Format total to 2 decimal places on blur and recalculate
-            $(document).on('blur', '#invoice_total', function() {
-                var val = parseFloat($(this).val());
-                if (!isNaN(val)) {
-                    $(this).val(val.toFixed(2));
-                }
+            // Calculate invoice totals based on pricing fields
+            function calculateInvoiceTotals() {
+                var extraKms = parseNum('invoice_extra_kms_charges');
+                var security = parseNum('invoice_security_deposit');
+                var insurance = parseNum('invoice_insurance_fee');
+                var driver = parseNum('invoice_additional_driver_fee');
+                var delivery = parseNum('invoice_delivery_charge');
+                var fuel = parseNum('invoice_fuel_charge');
+                var gps = parseNum('invoice_gps_charges');
+                var salik = parseNum('invoice_salik_toll_charges');
+                var discountPercent = parseNum('invoice_discount_amount');
+                var vatPercent = parseNum('invoice_vat');
+
+                // Calculate charges total (sum of all charges)
+                var chargesTotal = extraKms + security + insurance + driver + delivery + fuel + gps + salik;
+                
+                // Calculate discount amount as percentage of charges total
+                var discountAmount = chargesTotal * (discountPercent / 100);
+                
+                // Total is charges total minus discount
+                var total = chargesTotal - discountAmount;
+                if (total < 0) total = 0;
+
+                // VAT Amount is calculated as percentage of total
+                var vatAmount = total * (vatPercent / 100);
+
+                // Subtotal is total minus VAT Amount
+                var subtotal = total - vatAmount;
+
+                $('#invoice_subtotal').text(fmtNum(subtotal));
+                $('#invoice_vat_amount').text(fmtNum(vatAmount));
+                $('#invoice_total').text(fmtNum(total));
+            }
+
+            // Recalculate totals when any pricing input or VAT changes
+            $(document).on('input', '.pricing-input', calculateInvoiceTotals);
+            $(document).on('change', '.pricing-input', calculateInvoiceTotals);
+            $(document).on('blur', '.pricing-input', function() {
+                var id = $(this).attr('id');
+                formatPricingInput(id);
                 calculateInvoiceTotals();
             });
-
-            // Recalculate totals when total or VAT changes
-            $(document).on('input', '#invoice_total, #invoice_vat', calculateInvoiceTotals);
 
             // Handle create invoice button click
             $(document).on('click', '.create-invoice-btn', function() {
@@ -1162,7 +1299,11 @@
                 $('#invoice_booking_id').val(bookingIdDisplay);
                 $('#invoice_vehicle').val(vehicle);
                 $('#invoice_customer').val(customer);
-                $('#invoice_total').val(parseFloat(rate).toFixed(2));
+                
+                // Reset all pricing fields to blank
+                $('.pricing-input').val('');
+                $('#invoice_rate_type').val('daily'); // Default to Daily Rate
+                $('#invoice_vat').val('5'); // Default VAT %
                 calculateInvoiceTotals();
 
                 // Set booking from date
@@ -1171,7 +1312,7 @@
                 if (fromDate) {
                     var fDate = new Date(fromDate);
                     var displayFromDate = fDate.getDate() + ' ' + months[fDate.getMonth()] + ' ' + fDate.getFullYear();
-                    $('#booking_from_date').val(displayFromDate);
+                    $('#invoice_booking_date').val(displayFromDate);
                 }
 
                 // Invoice date is read-only, set display and hidden value
@@ -1202,6 +1343,26 @@
             $('#createInvoiceForm').on('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+
+                // Strip commas from all pricing-input fields before submission
+                $('.pricing-input').each(function() {
+                    var val = $(this).val();
+                    if (val) {
+                        $(this).val(val.replace(/,/g, ''));
+                    }
+                });
+
+                var total = parseFloat($('#invoice_total').text().replace(/,/g, '')) || 0;
+                if (total <= 0) {
+                    $('.alert').remove();
+                    $('.row').first().before(
+                        '<div class="alert alert-danger alert-dismissible fade show">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<h5><i class="icon fas fa-ban"></i> Error!</h5>Total amount cannot be zero. Please add pricing details.' +
+                        '</div>'
+                    );
+                    return false;
+                }
 
                 var form = $(this);
                 var submitBtn = form.find('button[type="submit"]');
@@ -1338,6 +1499,14 @@
                     });
                 }
             });
+
+            // Fetch and show next booking ID when Add Booking modal opens
+            $('#addBookingModal').on('shown.bs.modal', function () {
+                $.get('{{ route("bookings.next-id") }}', function (res) {
+                    $('#add_booking_ref').val(res.booking_id);
+                });
+            });
+
         });
     </script>
 @stop

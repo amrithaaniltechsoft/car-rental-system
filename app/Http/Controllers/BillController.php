@@ -31,9 +31,8 @@ class BillController extends Controller
             'invoice_id' => 'required|exists:invoices,id',
             'amount' => 'required|numeric|min:0',
             'bill_date' => 'required|date',
-            'due_date' => 'nullable|date|after_or_equal:bill_date',
             'status' => 'required|in:unpaid,paid,overdue',
-            'notes' => 'nullable|string',
+            'bill_number' => 'nullable|string',
         ]);
 
         $invoice = Invoice::findOrFail($validated['invoice_id']);
@@ -53,7 +52,13 @@ class BillController extends Controller
                 ->withErrors(['invoice_id' => $message]);
         }
 
-        $validated['bill_number'] = $this->generateBillNumber();
+        // Use provided bill number if available, otherwise generate it
+        if ($request->filled('bill_number')) {
+            $validated['bill_number'] = $request->bill_number;
+        } else {
+            $validated['bill_number'] = $this->generateBillNumber();
+        }
+
         Bill::create($validated);
 
         if ($request->ajax() || $request->expectsJson()) {
@@ -85,8 +90,7 @@ class BillController extends Controller
             2 => 'invoice_id',
             3 => 'amount',
             4 => 'bill_date',
-            5 => 'due_date',
-            6 => 'status',
+            5 => 'status',
         ];
         $orderColumn = $tableColumnsMap[$orderColumnIndex] ?? 'id';
 
@@ -131,7 +135,6 @@ class BillController extends Controller
                 'customer' => $customerName,
                 'amount' => number_format((float) $bill->amount, 2).' OMR',
                 'bill_date' => $bill->bill_date->format('d/m/Y'),
-                'due_date' => $bill->due_date?->format('d/m/Y') ?? '—',
                 'status' => $this->getStatusBadge($bill->status),
             ];
         }
@@ -146,18 +149,18 @@ class BillController extends Controller
 
     private function generateBillNumber(): string
     {
-        $prefix = 'BILL-'.now()->format('Ymd').'-';
-        $lastNumber = Bill::query()
+        $prefix = 'BL'.now()->format('Ymd');
+        $lastBill = Bill::query()
             ->where('bill_number', 'like', $prefix.'%')
-            ->orderByDesc('id')
-            ->value('bill_number');
+            ->orderByDesc('bill_number')
+            ->first();
 
         $sequence = 1;
-        if ($lastNumber) {
-            $sequence = (int) substr($lastNumber, -4) + 1;
+        if ($lastBill) {
+            $sequence = (int) substr($lastBill->bill_number, -3) + 1;
         }
 
-        return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
     }
 
     private function getStatusBadge(string $status): string
@@ -179,5 +182,13 @@ class BillController extends Controller
             ->select('id', 'invoice_number', 'customer_id', 'amount', 'invoice_date')
             ->orderByDesc('id')
             ->get();
+    }
+
+    public function getNextBillNumber(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'bill_number' => $this->generateBillNumber(),
+        ]);
     }
 }
