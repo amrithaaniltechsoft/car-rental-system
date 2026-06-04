@@ -604,6 +604,23 @@ class BookingController extends Controller
         ]);
     }
 
+    public function getVehicleDetails(Vehicle $vehicle): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'vehicle' => [
+                'id' => $vehicle->id,
+                'name' => $vehicle->name,
+                'registration_number' => $vehicle->registration_number,
+                'brand' => $vehicle->brand,
+                'model' => $vehicle->model,
+                'type' => $vehicle->type,
+                'fuel_type' => $vehicle->fuel_type,
+                'seating_capacity' => $vehicle->seating_capacity,
+            ],
+        ]);
+    }
+
     /**
      * Confirm booking status
      */

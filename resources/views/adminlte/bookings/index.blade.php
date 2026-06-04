@@ -174,6 +174,26 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Vehicle Details Panel --}}
+                        <div class="form-row" id="add_vehicle_details_row" style="display:none;">
+                            <div class="col-md-12">
+                                <div class="vehicle-details-card">
+                                    <div class="vehicle-details-header">
+                                        <i class="fas fa-car mr-1"></i>
+                                        <span id="add_vd_name"></span>
+                                        <span class="vehicle-reg-badge" id="add_vd_reg"></span>
+                                    </div>
+                                    <div class="vehicle-details-body">
+                                        <div class="vd-item" id="add_vd_brand_wrap"><i class="fas fa-tag"></i><span id="add_vd_brand"></span></div>
+                                        <div class="vd-item" id="add_vd_model_wrap"><i class="fas fa-calendar"></i><span id="add_vd_model"></span></div>
+                                        <div class="vd-item" id="add_vd_type_wrap"><i class="fas fa-car-side"></i><span id="add_vd_type"></span></div>
+                                        <div class="vd-item" id="add_vd_fuel_wrap"><i class="fas fa-gas-pump"></i><span id="add_vd_fuel"></span></div>
+                                        <div class="vd-item" id="add_vd_seats_wrap"><i class="fas fa-users"></i><span id="add_vd_seats"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Save Booking</button>
@@ -276,6 +296,26 @@
                                         <div class="cd-item" id="edit_cd_phone_wrap"><i class="fas fa-phone-alt"></i><span id="edit_cd_phone"></span></div>
                                         <div class="cd-item" id="edit_cd_address_wrap"><i class="fas fa-map-marker-alt"></i><span id="edit_cd_address"></span></div>
                                         <div class="cd-item" id="edit_cd_company_wrap"><i class="fas fa-building"></i><span id="edit_cd_company"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Vehicle Details Panel (Edit Modal) --}}
+                        <div class="form-row" id="edit_vehicle_details_row" style="display:none;">
+                            <div class="col-md-12">
+                                <div class="vehicle-details-card">
+                                    <div class="vehicle-details-header">
+                                        <i class="fas fa-car mr-1"></i>
+                                        <span id="edit_vd_name"></span>
+                                        <span class="vehicle-reg-badge" id="edit_vd_reg"></span>
+                                    </div>
+                                    <div class="vehicle-details-body">
+                                        <div class="vd-item" id="edit_vd_brand_wrap"><i class="fas fa-tag"></i><span id="edit_vd_brand"></span></div>
+                                        <div class="vd-item" id="edit_vd_model_wrap"><i class="fas fa-calendar"></i><span id="edit_vd_model"></span></div>
+                                        <div class="vd-item" id="edit_vd_type_wrap"><i class="fas fa-car-side"></i><span id="edit_vd_type"></span></div>
+                                        <div class="vd-item" id="edit_vd_fuel_wrap"><i class="fas fa-gas-pump"></i><span id="edit_vd_fuel"></span></div>
+                                        <div class="vd-item" id="edit_vd_seats_wrap"><i class="fas fa-users"></i><span id="edit_vd_seats"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -514,6 +554,52 @@
             width: 14px;
             text-align: center;
         }
+
+        /* Vehicle Details Card */
+        .vehicle-details-card {
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .vehicle-details-header {
+            background: linear-gradient(135deg, #007bff, #17a2b8);
+            color: #fff;
+            padding: 8px 14px;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .vehicle-reg-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .vehicle-details-body {
+            background: #f8f9ff;
+            padding: 10px 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+        }
+        .vd-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #495057;
+        }
+        .vd-item i {
+            color: #007bff;
+            width: 14px;
+            text-align: center;
+        }
     </style>
 @stop
 
@@ -680,6 +766,7 @@
 
             // Customer details URL template
             var customerDetailsUrl = '{{ route("customers.details", ":id") }}';
+            var vehicleDetailsUrl = '{{ route("vehicles.details", ":id") }}';
 
             function loadCustomerDetails(customerId, prefix) {
                 var detailsRow = $('#' + prefix + '_customer_details_row');
@@ -734,12 +821,73 @@
                 });
             }
 
+            function loadVehicleDetails(vehicleId, prefix) {
+                var detailsRow = $('#' + prefix + '_vehicle_details_row');
+                if (!vehicleId) {
+                    detailsRow.hide();
+                    return;
+                }
+                var url = vehicleDetailsUrl.replace(':id', vehicleId);
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            var v = response.vehicle;
+                            $('#' + prefix + '_vd_name').text(v.name || '');
+                            $('#' + prefix + '_vd_reg').text(v.registration_number || '');
+
+                            if (v.brand) {
+                                $('#' + prefix + '_vd_brand').text(v.brand);
+                                $('#' + prefix + '_vd_brand_wrap').show();
+                            } else {
+                                $('#' + prefix + '_vd_brand_wrap').hide();
+                            }
+                            if (v.model) {
+                                $('#' + prefix + '_vd_model').text(v.model);
+                                $('#' + prefix + '_vd_model_wrap').show();
+                            } else {
+                                $('#' + prefix + '_vd_model_wrap').hide();
+                            }
+                            if (v.type) {
+                                $('#' + prefix + '_vd_type').text(v.type);
+                                $('#' + prefix + '_vd_type_wrap').show();
+                            } else {
+                                $('#' + prefix + '_vd_type_wrap').hide();
+                            }
+                            if (v.fuel_type) {
+                                $('#' + prefix + '_vd_fuel').text(v.fuel_type);
+                                $('#' + prefix + '_vd_fuel_wrap').show();
+                            } else {
+                                $('#' + prefix + '_vd_fuel_wrap').hide();
+                            }
+                            if (v.seating_capacity) {
+                                $('#' + prefix + '_vd_seats').text(v.seating_capacity + ' Seats');
+                                $('#' + prefix + '_vd_seats_wrap').show();
+                            } else {
+                                $('#' + prefix + '_vd_seats_wrap').hide();
+                            }
+
+                            detailsRow.slideDown(200);
+                        }
+                    }
+                });
+            }
+
             // Listen for customer selection changes
             $('#addBookingModal #customer_id').on('change', function() {
                 loadCustomerDetails($(this).val(), 'add');
             });
             $('#editBookingModal #edit_customer_id').on('change', function() {
                 loadCustomerDetails($(this).val(), 'edit');
+            });
+
+            // Listen for vehicle selection changes
+            $('#addBookingModal #vehicle_id').on('change', function() {
+                loadVehicleDetails($(this).val(), 'add');
+            });
+            $('#editBookingModal #edit_vehicle_id').on('change', function() {
+                loadVehicleDetails($(this).val(), 'edit');
             });
 
             $('#bookings-table').DataTable({
@@ -1210,6 +1358,7 @@
                 form.find('.is-invalid').removeClass('is-invalid');
                 form.find('.invalid-feedback').remove();
                 $('#add_customer_details_row').hide();
+                $('#add_vehicle_details_row').hide();
                 $('#add_rental_duration').val('Auto calculated');
                 initAddDatetimePickers();
             });
@@ -1222,6 +1371,7 @@
                 form.find('.is-invalid').removeClass('is-invalid');
                 form.find('.invalid-feedback').remove();
                 $('#edit_customer_details_row').hide();
+                $('#edit_vehicle_details_row').hide();
             });
 
             function parseNum(id) { return parseFloat($('#' + id).val().replace(/,/g, '')) || 0; }
