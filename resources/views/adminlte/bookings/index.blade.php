@@ -661,6 +661,7 @@
                     minDate: bookingToday,
                     onChange: function(sel) {
                         calcRentalDuration($('#pickup_datetime').val(), sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', 'add_rental_duration');
+                        if (sel[0]) checkVehicleAvailability();
                     }
                 });
 
@@ -673,10 +674,50 @@
                     onChange: function(sel) {
                         if (sel[0]) { returnPicker.set('minDate', sel[0]); }
                         calcRentalDuration(sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', $('#return_datetime').val(), 'add_rental_duration');
+                        if (sel[0]) checkVehicleAvailability();
                     }
                 });
             }
             initAddDatetimePickers();
+
+            // Check vehicle availability
+            function checkVehicleAvailability() {
+                var vehicleId = $('#vehicle_id').val();
+                var pickupDate = $('#pickup_datetime').val();
+                var returnDate = $('#return_datetime').val();
+
+                if (!vehicleId || !pickupDate || !returnDate) {
+                    return;
+                }
+
+                // Extract date part (Y-m-d) from datetime
+                var fromDate = pickupDate.split(' ')[0];
+                var toDate = returnDate.split(' ')[0];
+
+                $.ajax({
+                    url: '{{ route("bookings.check-availability") }}',
+                    type: 'POST',
+                    data: {
+                        vehicle_id: vehicleId,
+                        from_date: fromDate,
+                        to_date: toDate,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (!response.available) {
+                            alert(response.message);
+                            $('#pickup_datetime, #return_datetime').val('');
+                            initAddDatetimePickers();
+                            $('#add_rental_duration').val('Auto calculated');
+                        }
+                    }
+                });
+            }
+
+            // Check availability when vehicle changes
+            $('#vehicle_id').on('change', function() {
+                checkVehicleAvailability();
+            });
 
             // ── EDIT MODAL date pickers ──
             function initEditPickers(bookingDate, pickupVal, returnVal) {
@@ -1216,6 +1257,7 @@
                         }, 5000);
                     }
                 });
+                
             });
 
             // Handle delete button click
