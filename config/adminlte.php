@@ -351,12 +351,6 @@ return [
             'icon' => 'fas fa-fw fa-receipt',
             'active' => ['bills*'],
         ],
-        [
-            'text' => 'Expenses',
-            'url' => 'expenses',
-            'icon' => 'fas fa-fw fa-money-bill-wave',
-            'active' => ['expenses*'],
-        ],
         ['header' => 'reports'],
         [
             'text' => 'Reports',

@@ -6,6 +6,7 @@ use App\Models\Bill;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,11 @@ class InvoiceController extends Controller
      */
     public function index(): View
     {
-        return view('adminlte.invoices.index');
+        $customers = Customer::select('id', 'name', 'company_name', 'customer_type')->orderBy('name')->get();
+        $vehicles = Vehicle::select('id', 'name', 'registration_number')->orderBy('name')->get();
+        $invoiceNumbers = Invoice::distinct()->orderBy('invoice_number')->pluck('invoice_number')->filter()->values();
+
+        return view('adminlte.invoices.index', compact('customers', 'vehicles', 'invoiceNumbers'));
     }
 
     /**
@@ -143,6 +148,29 @@ class InvoiceController extends Controller
 
         $query = Invoice::with(['customer', 'booking.vehicle']);
 
+        // Apply custom filters
+        if ($request->filled('filter_invoice')) {
+            $query->where('invoice_number', $request->input('filter_invoice'));
+        }
+        if ($request->filled('filter_customer')) {
+            $query->where('customer_id', $request->input('filter_customer'));
+        }
+        if ($request->filled('filter_vehicle')) {
+            $query->whereHas('booking.vehicle', function ($q) use ($request) {
+                $q->where('id', $request->input('filter_vehicle'));
+            });
+        }
+        if ($request->filled('filter_from_date')) {
+            $query->whereHas('booking', function ($q) use ($request) {
+                $q->whereDate('from_date', $request->input('filter_from_date'));
+            });
+        }
+        if ($request->filled('filter_to_date')) {
+            $query->whereHas('booking', function ($q) use ($request) {
+                $q->whereDate('to_date', $request->input('filter_to_date'));
+            });
+        }
+
         if (! empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('invoice_number', 'like', "%{$searchValue}%")
@@ -189,8 +217,6 @@ class InvoiceController extends Controller
                         <i class="fas fa-file-invoice-dollar"></i>
                     </button>
                 ';
-            } else {
-                $billIndicator = ' <span class="badge badge-info">Billed</span>';
             }
 
             $data[] = [
@@ -236,6 +262,7 @@ class InvoiceController extends Controller
             'pending' => '<span class="badge badge-warning"></span>',
             'paid' => '<span class="badge badge-success">Paid</span>',
             'overdue' => '<span class="badge badge-danger">Overdue</span>',
+            'billed' => '<span class="badge badge-info">Invoice Billed</span>',
         ];
 
         return $badges[$status] ?? '<span class="badge badge-secondary">'.ucfirst($status).'</span>';
@@ -342,6 +369,9 @@ class InvoiceController extends Controller
             'status' => 'unpaid',
         ]);
 
+        // Update invoice status to billed
+        $invoice->update(['status' => 'billed']);
+
         if ($request->ajax() || $request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -350,6 +380,116 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('bills.index')->with('success', 'Bill created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Invoice $invoice): JsonResponse
+    {
+        $customer = $invoice->customer;
+        $vehicle = $invoice->booking ? $invoice->booking->vehicle : null;
+
+        return response()->json([
+            'success' => true,
+            'invoice' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'customer_id' => $invoice->customer_id,
+                'booking_id' => $invoice->booking_id,
+                'total' => $invoice->amount,
+                'vat' => $invoice->vat,
+                'vat_amount' => $invoice->vat_amount,
+                'subtotal' => $invoice->subtotal,
+                'invoice_date' => $invoice->invoice_date->format('Y-m-d'),
+                'due_date' => $invoice->due_date ? $invoice->due_date->format('Y-m-d') : null,
+                'status' => $invoice->status,
+                'rate' => $invoice->rate,
+                'rate_type' => $invoice->rate_type,
+                'extra_kms_charges' => $invoice->extra_kms_charges,
+                'security_deposit' => $invoice->security_deposit,
+                'insurance_fee' => $invoice->insurance_fee,
+                'additional_driver_fee' => $invoice->additional_driver_fee,
+                'delivery_charge' => $invoice->delivery_charge,
+                'fuel_charge' => $invoice->fuel_charge,
+                'gps_charges' => $invoice->gps_charges,
+                'salik_toll_charges' => $invoice->salik_toll_charges,
+                'discount_amount' => $invoice->discount_amount,
+                'customer_name' => $customer ? $customer->name : '',
+                'vehicle_name' => $vehicle ? $vehicle->name : '',
+            ],
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Invoice $invoice): JsonResponse
+    {
+        $validated = $request->validate([
+            'total' => 'required|numeric|min:0',
+            'vat' => 'required|numeric|min:0',
+            'invoice_date' => 'required|date',
+            'due_date' => 'nullable|date|after_or_equal:invoice_date',
+            'rate' => 'nullable|numeric|min:0',
+            'rate_type' => 'nullable|in:daily,weekly,monthly',
+            'extra_kms_charges' => 'nullable|numeric|min:0',
+            'security_deposit' => 'nullable|numeric|min:0',
+            'insurance_fee' => 'nullable|numeric|min:0',
+            'additional_driver_fee' => 'nullable|numeric|min:0',
+            'delivery_charge' => 'nullable|numeric|min:0',
+            'fuel_charge' => 'nullable|numeric|min:0',
+            'gps_charges' => 'nullable|numeric|min:0',
+            'salik_toll_charges' => 'nullable|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        // Calculate charges total (sum of all charges)
+        $chargesTotal = max(0,
+            ($validated['extra_kms_charges'] ?? 0)
+            + ($validated['security_deposit'] ?? 0)
+            + ($validated['insurance_fee'] ?? 0)
+            + ($validated['additional_driver_fee'] ?? 0)
+            + ($validated['delivery_charge'] ?? 0)
+            + ($validated['fuel_charge'] ?? 0)
+            + ($validated['gps_charges'] ?? 0)
+            + ($validated['salik_toll_charges'] ?? 0)
+        );
+
+        // Calculate discount amount as percentage of charges total
+        $discountPercent = $validated['discount_amount'] ?? 0;
+        $discountAmount = $chargesTotal * ($discountPercent / 100);
+
+        // Total is charges total minus discount
+        $total = max(0, $chargesTotal - $discountAmount);
+
+        $vatPercent = $validated['vat'] ?? 0;
+        $vatAmount = $total * ($vatPercent / 100);
+        $subtotal = $total - $vatAmount;
+
+        $validated['vat_amount'] = $vatAmount;
+        $validated['subtotal'] = $subtotal;
+        $validated['amount'] = $total;
+
+        $invoice->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice updated successfully.',
+        ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Invoice $invoice): JsonResponse
+    {
+        $invoice->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice deleted successfully.',
+        ]);
     }
 
     /**

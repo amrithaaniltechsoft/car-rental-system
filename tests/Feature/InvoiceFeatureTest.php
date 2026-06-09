@@ -12,7 +12,7 @@ test('invoice index screen can be rendered', function () {
         ->get(route('invoices.index'));
 
     $response->assertOk();
-    $response->assertViewHas(['customers', 'bookings']);
+    $response->assertViewHas(['customers', 'vehicles']);
 });
 
 test('invoice can be stored with valid data', function () {

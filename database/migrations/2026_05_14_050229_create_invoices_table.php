@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('amount', 10, 2); // OMR currency
             $table->decimal('rate', 8, 2)->nullable(); // Manual rate
             $table->date('invoice_date');
-            $table->enum('status', ['pending', 'paid', 'overdue'])->default('pending');
+            $table->enum('status', ['pending', 'paid', 'overdue', 'billed'])->default('pending');
             $table->text('description')->nullable();
             $table->timestamps();
         });

@@ -35,6 +35,40 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_name" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($vehicleNames as $name)
+                                    <option value="{{ $name }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_brand" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->name }}">{{ $brand->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_type" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($types as $type)
+                                    <option value="{{ $type->name }}">{{ ucfirst($type->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_registration" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($registrations as $reg)
+                                    <option value="{{ $reg }}">{{ $reg }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
                     <table id="vehicles-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -255,12 +289,18 @@
                 }, 50);
             });
 
-            $('#vehicles-table').DataTable({
+            var vehicleTable = $('#vehicles-table').DataTable({
                 "processing": true,
                 "serverSide": true,
                 "ajax": {
                     "url": "{{ route('vehicles.data') }}",
-                    "type": "GET"
+                    "type": "GET",
+                    "data": function(d) {
+                        d.filter_name = $('#filter_name').val();
+                        d.filter_brand = $('#filter_brand').val();
+                        d.filter_type = $('#filter_type').val();
+                        d.filter_registration = $('#filter_registration').val();
+                    }
                 },
                 "columns": [
                     { "data": "id", "orderable": true },
@@ -276,16 +316,52 @@
                 "autoWidth": false,
                 "pageLength": 10,
                 "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "dom": 'lfrtip',
+                "searching": false,
                 "language": {
                     "processing": "<i class='fas fa-spinner fa-spin'></i> Loading...",
-                    "search": "Search vehicles:",
                     "lengthMenu": "Show _MENU_ entries",
                     "info": "Showing _START_ to _END_ of _TOTAL_ vehicles",
                     "infoEmpty": "No vehicles found",
                     "infoFiltered": "(filtered from _MAX_ total vehicles)",
                     "zeroRecords": "No matching vehicles found"
                 },
-                "order": [[0, "desc"]] // Default sort by ID descending
+                "order": [[0, "desc"]]
+            });
+
+            $('#filter_brand').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Brand',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            $('#filter_type').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Type',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            $('#filter_name').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Name',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            $('#filter_registration').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Registration',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            $('#filter_name, #filter_brand, #filter_type, #filter_registration').on('change', function() {
+                vehicleTable.draw();
             });
 
             // Handle View Vehicle button click

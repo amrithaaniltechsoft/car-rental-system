@@ -1,5 +1,7 @@
 @extends('adminlte::page')
 
+@section('plugins.Select2', true)
+
 @section('title', 'Customers')
 
 @section('content_header')
@@ -33,6 +35,34 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_customer_id" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($customerIds as $cid)
+                                    <option value="{{ $cid }}">{{ $cid }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_type" style="width: 100%;">
+                                <option value=""></option>
+                                <option value="individual">Individual</option>
+                                <option value="company">Company</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control select2" id="filter_name" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($names as $n)
+                                    <option value="{{ $n }}">{{ $n }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="filter_phone" placeholder="Search by Phone Number">
+                        </div>
+                    </div>
                     <table id="customers-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -298,12 +328,18 @@
 
         // Initialize DataTable with AJAX
         $(document).ready(function() {
-            $('#customers-table').DataTable({
+            var customerTable = $('#customers-table').DataTable({
                 "processing": true,
                 "serverSide": true,
                 "ajax": {
                     "url": "{{ route('customers.data') }}",
-                    "type": "GET"
+                    "type": "GET",
+                    "data": function(d) {
+                        d.filter_customer_id = $('#filter_customer_id').val();
+                        d.filter_type = $('#filter_type').val();
+                        d.filter_name = $('#filter_name').val();
+                        d.filter_phone = $('#filter_phone').val();
+                    }
                 },
                 "columns": [
                     { "data": "id", "orderable": true },
@@ -318,16 +354,46 @@
                 "autoWidth": false,
                 "pageLength": 10,
                 "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "dom": 'lfrtip',
+                "searching": false,
                 "language": {
                     "processing": "<i class='fas fa-spinner fa-spin'></i> Loading...",
-                    "search": "Search customers:",
                     "lengthMenu": "Show _MENU_ entries",
                     "info": "Showing _START_ to _END_ of _TOTAL_ customers",
                     "infoEmpty": "No customers found",
                     "infoFiltered": "(filtered from _MAX_ total customers)",
                     "zeroRecords": "No matching customers found"
                 },
-                "order": [[0, "desc"]] // Default sort by ID descending
+                "order": [[0, "desc"]]
+            });
+
+            $('#filter_customer_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Customer ID',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            $('#filter_type').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Type',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            $('#filter_name').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Name',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            $('#filter_customer_id, #filter_type, #filter_name').on('change', function() {
+                customerTable.draw();
+            });
+            $('#filter_phone').on('keyup', function() {
+                customerTable.draw();
             });
 
             function toggleModalFields() {

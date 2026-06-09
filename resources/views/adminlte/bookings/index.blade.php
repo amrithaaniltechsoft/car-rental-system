@@ -34,6 +34,47 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <select class="form-control select2" id="filter_booking_id" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($bookingIds as $bid)
+                                    <option value="{{ $bid }}">{{ $bid }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control select2" id="filter_customer" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($customers as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control select2" id="filter_vehicle" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($vehicles as $vehicle)
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control datepicker" id="filter_from_date" placeholder="From Date">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control datepicker" id="filter_to_date" placeholder="To Date">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control select2" id="filter_status" style="width: 100%;">
+                                <option value=""></option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
                     <table id="bookings-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -931,12 +972,20 @@
                 loadVehicleDetails($(this).val(), 'edit');
             });
 
-            $('#bookings-table').DataTable({
+            var bookingTable = $('#bookings-table').DataTable({
                 "processing": true,
                 "serverSide": true,
                 "ajax": {
                     "url": "{{ route('bookings.data') }}",
-                    "type": "GET"
+                    "type": "GET",
+                    "data": function(d) {
+                        d.filter_booking_id = $('#filter_booking_id').val();
+                        d.filter_customer = $('#filter_customer').val();
+                        d.filter_vehicle = $('#filter_vehicle').val();
+                        d.filter_from_date = $('#filter_from_date').val();
+                        d.filter_to_date = $('#filter_to_date').val();
+                        d.filter_status = $('#filter_status').val();
+                    }
                 },
                 "columns": [
                     { "data": "id", "orderable": true },
@@ -951,16 +1000,64 @@
                 "autoWidth": false,
                 "pageLength": 10,
                 "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "dom": 'lfrtip',
+                "searching": false,
                 "language": {
                     "processing": "<i class='fas fa-spinner fa-spin'></i> Loading...",
-                    "search": "Search bookings:",
                     "lengthMenu": "Show _MENU_ entries",
                     "info": "Showing _START_ to _END_ of _TOTAL_ bookings",
                     "infoEmpty": "No bookings found",
                     "infoFiltered": "(filtered from _MAX_ total bookings)",
                     "zeroRecords": "No matching bookings found"
                 },
-                "order": [[0, "desc"]] // Default sort by SI descending
+                "order": [[0, "desc"]]
+            });
+
+            // Initialize filter Select2
+            $('#filter_booking_id').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Booking ID',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            $('#filter_customer').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Customer',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            $('#filter_vehicle').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Vehicle',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+            $('#filter_status').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Status',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            // Initialize filter date pickers
+            flatpickr('#filter_from_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                onChange: function() { bookingTable.draw(); }
+            });
+            flatpickr('#filter_to_date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                onChange: function() { bookingTable.draw(); }
+            });
+
+            // Trigger table draw on filter change
+            $('#filter_booking_id, #filter_customer, #filter_vehicle, #filter_status').on('change', function() {
+                bookingTable.draw();
             });
 
             // AJAX form submission for add booking modal
@@ -1487,6 +1584,7 @@
                 });
 
                 var total = parseFloat($('#invoice_total').text().replace(/,/g, '')) || 0;
+                
                 if (total <= 0) {
                     $('.alert').remove();
                     $('.row').first().before(
@@ -1616,6 +1714,7 @@
                             }
                         },
                         error: function(xhr) {
+
                             $('.alert').remove();
                             var alertHtml = '<div class="alert alert-danger alert-dismissible fade show">' +
                                 '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
@@ -1629,6 +1728,7 @@
                                     $(this).remove();
                                 });
                             }, 5000);
+                            
                         }
                     });
                 }

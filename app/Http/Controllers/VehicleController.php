@@ -21,8 +21,10 @@ class VehicleController extends Controller
         $fuelTypes = FuelType::orderBy('name')->get();
         $brands = Brand::orderBy('name')->get();
         $types = VehicleType::orderBy('name')->get();
+        $vehicleNames = Vehicle::distinct()->orderBy('name')->pluck('name');
+        $registrations = Vehicle::distinct()->orderBy('registration_number')->pluck('registration_number');
 
-        return view('adminlte.vehicles.index', compact('fuelTypes', 'brands', 'types'));
+        return view('adminlte.vehicles.index', compact('fuelTypes', 'brands', 'types', 'vehicleNames', 'registrations'));
     }
 
     /**
@@ -144,22 +146,27 @@ class VehicleController extends Controller
         $draw = (int) $request->input('draw', 0);
         $start = (int) $request->input('start', 0);
         $length = (int) $request->input('length', 10);
-        $searchValue = $request->input('search.value');
+        $filterName = $request->input('filter_name');
+        $filterBrand = $request->input('filter_brand');
+        $filterType = $request->input('filter_type');
+        $filterRegistration = $request->input('filter_registration');
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
         $orderColumn = $columns[$orderColumnIndex] ?? 'id';
 
-        // Only select needed columns - HUGE performance boost
         $query = Vehicle::query()->select($columns);
 
-        if (! empty($searchValue)) {
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('name', 'like', "%{$searchValue}%")
-                    ->orWhere('model', 'like', "%{$searchValue}%")
-                    ->orWhere('brand', 'like', "%{$searchValue}%")
-                    ->orWhere('registration_number', 'like', "%{$searchValue}%")
-                    ->orWhere('fuel_type', '=', $searchValue); // Exact match for fuel type
-            });
+        if (! empty($filterName)) {
+            $query->where('name', 'like', "%{$filterName}%");
+        }
+        if (! empty($filterBrand)) {
+            $query->where('brand', 'like', "%{$filterBrand}%");
+        }
+        if (! empty($filterType)) {
+            $query->where('type', 'like', "%{$filterType}%");
+        }
+        if (! empty($filterRegistration)) {
+            $query->where('registration_number', 'like', "%{$filterRegistration}%");
         }
 
         // Count before filtering is unnecessary in most cases

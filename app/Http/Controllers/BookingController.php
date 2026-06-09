@@ -21,8 +21,9 @@ class BookingController extends Controller
     {
         $vehicles = $this->vehiclesForSelect();
         $customers = $this->customersForSelect();
+        $bookingIds = Booking::distinct()->orderBy('booking_id')->pluck('booking_id')->filter()->values();
 
-        return view('adminlte.bookings.index', compact('vehicles', 'customers'));
+        return view('adminlte.bookings.index', compact('vehicles', 'customers', 'bookingIds'));
     }
 
     /**
@@ -53,7 +54,7 @@ class BookingController extends Controller
         ]);
 
         if ($validator->fails()) {
-            
+
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -298,7 +299,12 @@ class BookingController extends Controller
         $draw = (int) $request->input('draw', 0);
         $start = (int) $request->input('start', 0);
         $length = (int) $request->input('length', 10);
-        $searchValue = $request->input('search.value');
+        $filterBookingId = $request->input('filter_booking_id');
+        $filterCustomer = $request->input('filter_customer');
+        $filterVehicle = $request->input('filter_vehicle');
+        $filterFromDate = $request->input('filter_from_date');
+        $filterToDate = $request->input('filter_to_date');
+        $filterStatus = $request->input('filter_status');
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
 
@@ -316,14 +322,23 @@ class BookingController extends Controller
 
         $query = Booking::with(['vehicle', 'customer', 'invoice']);
 
-        if (! empty($searchValue)) {
-            $query->where('booking_id', 'like', "%{$searchValue}%")
-                ->orWhereHas('customer', function ($q) use ($searchValue) {
-                    $q->where('name', 'like', "%{$searchValue}%");
-                })->orWhereHas('vehicle', function ($q) use ($searchValue) {
-                    $q->where('name', 'like', "%{$searchValue}%")
-                        ->orWhere('registration_number', 'like', "%{$searchValue}%");
-                })->orWhere('status', 'like', "%{$searchValue}%");
+        if (! empty($filterBookingId)) {
+            $query->where('booking_id', $filterBookingId);
+        }
+        if (! empty($filterCustomer)) {
+            $query->where('customer_id', $filterCustomer);
+        }
+        if (! empty($filterVehicle)) {
+            $query->where('vehicle_id', $filterVehicle);
+        }
+        if (! empty($filterFromDate)) {
+            $query->whereDate('from_date', $filterFromDate);
+        }
+        if (! empty($filterToDate)) {
+            $query->whereDate('to_date', $filterToDate);
+        }
+        if (! empty($filterStatus)) {
+            $query->where('status', $filterStatus);
         }
 
         $recordsTotal = Booking::count();

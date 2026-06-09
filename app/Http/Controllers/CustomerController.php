@@ -15,7 +15,12 @@ class CustomerController extends Controller
      */
     public function index(): View
     {
-        return view('adminlte.customers.index');
+        $customerIds = Customer::distinct()->orderBy('customer_id')->pluck('customer_id')->filter();
+        $customerNames = Customer::distinct()->orderBy('name')->pluck('name')->filter()->values();
+        $companyNames = Customer::distinct()->orderBy('company_name')->pluck('company_name')->filter()->values();
+        $names = $customerNames->merge($companyNames)->unique()->sort()->values();
+
+        return view('adminlte.customers.index', compact('customerIds', 'names'));
     }
 
     /**
@@ -214,7 +219,10 @@ class CustomerController extends Controller
         $draw = (int) $request->input('draw', 0);
         $start = (int) $request->input('start', 0);
         $length = (int) $request->input('length', 10);
-        $searchValue = $request->input('search.value');
+        $filterCustomerId = $request->input('filter_customer_id');
+        $filterType = $request->input('filter_type');
+        $filterName = $request->input('filter_name');
+        $filterPhone = $request->input('filter_phone');
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
 
@@ -231,13 +239,20 @@ class CustomerController extends Controller
 
         $query = Customer::query()->select($columns);
 
-        if (! empty($searchValue)) {
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('name', 'like', "%{$searchValue}%")
-                    ->orWhere('company_name', 'like', "%{$searchValue}%")
-                    ->orWhere('phone_number', 'like', "%{$searchValue}%")
-                    ->orWhere('address', 'like', "%{$searchValue}%");
+        if (! empty($filterCustomerId)) {
+            $query->where('customer_id', 'like', "%{$filterCustomerId}%");
+        }
+        if (! empty($filterType)) {
+            $query->where('customer_type', $filterType);
+        }
+        if (! empty($filterName)) {
+            $query->where(function ($q) use ($filterName) {
+                $q->where('name', 'like', "%{$filterName}%")
+                    ->orWhere('company_name', 'like', "%{$filterName}%");
             });
+        }
+        if (! empty($filterPhone)) {
+            $query->where('phone_number', 'like', "%{$filterPhone}%");
         }
 
         $recordsTotal = Customer::count();
