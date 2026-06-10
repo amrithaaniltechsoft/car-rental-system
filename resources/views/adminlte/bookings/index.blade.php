@@ -292,7 +292,7 @@
                             </div>
                         </div>
 
-                        {{-- Row 2: Booking Date, Pickup Date & Time, Return Date & Time, Rental Duration --}}
+                         {{-- Row 2: Booking Date, Pickup Date & Time, Return Date & Time, Rental Duration --}}
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="edit_booking_date">Booking Date <span class="text-danger">*</span></label>
@@ -310,6 +310,9 @@
                                 <label for="edit_rental_duration">Rental Duration</label>
                                 <input type="text" class="form-control" id="edit_rental_duration" readonly style="background:#f4f6f9; color:#6c757d;">
                             </div>
+                        </div>
+                        <div id="edit_availability_alert" class="alert alert-danger d-none" role="alert" style="margin-bottom:8px;">
+                            <i class="fas fa-ban mr-1"></i> <span id="edit_availability_msg"></span>
                         </div>
 
                         {{-- Row 3: Locations --}}
@@ -760,6 +763,47 @@
                 checkVehicleAvailability();
             });
 
+            var currentEditBookingDbId = null;
+
+            function checkEditVehicleAvailability(overridePickup, overrideReturn) {
+                var vehicleId = $('#edit_vehicle_id').val();
+                var pickupDate = overridePickup || $('#edit_pickup_datetime').val();
+                var returnDate = overrideReturn || $('#edit_return_datetime').val();
+
+                if (!vehicleId || !pickupDate || !returnDate) {
+                    return;
+                }
+
+                var fromDate = pickupDate.split(' ')[0];
+                var toDate = returnDate.split(' ')[0];
+
+                $.ajax({
+                    url: '{{ route("bookings.check-availability") }}',
+                    type: 'POST',
+                    data: {
+                        vehicle_id: vehicleId,
+                        from_date: fromDate,
+                        to_date: toDate,
+                        exclude_booking_id: currentEditBookingDbId,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (!response.available) {
+                            alert(response.message);
+                            // Clear the date pickers
+                            var editReturnFp = document.querySelector('#edit_return_datetime')._flatpickr;
+                            var editPickupFp = document.querySelector('#edit_pickup_datetime')._flatpickr;
+                            if (editReturnFp) { editReturnFp.clear(); }
+                            if (editPickupFp) { editPickupFp.clear(); }
+                            $('#edit_rental_duration').val('Auto calculated');
+                        }
+                    },
+                    error: function() {
+                        // Silently ignore errors
+                    }
+                });
+            }
+
             // ── EDIT MODAL date pickers ──
             function initEditPickers(bookingDate, pickupVal, returnVal) {
                 destroyFlatpickr('#edit_booking_date');
@@ -779,7 +823,11 @@
                     allowInput: false,
                     defaultDate: returnVal || null,
                     onChange: function(sel) {
-                        calcRentalDuration($('#edit_pickup_datetime').val(), sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', 'edit_rental_duration');
+                        var retFormatted = sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '';
+                        calcRentalDuration($('#edit_pickup_datetime').val(), retFormatted, 'edit_rental_duration');
+                        if (sel[0]) {
+                            checkEditVehicleAvailability($('#edit_pickup_datetime').val(), retFormatted);
+                        }
                     }
                 });
 
@@ -790,8 +838,12 @@
                     allowInput: false,
                     defaultDate: pickupVal || null,
                     onChange: function(sel) {
+                        var pickFormatted = sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '';
                         if (sel[0]) { editReturnPicker.set('minDate', sel[0]); }
-                        calcRentalDuration(sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', $('#edit_return_datetime').val(), 'edit_rental_duration');
+                        calcRentalDuration(pickFormatted, $('#edit_return_datetime').val(), 'edit_rental_duration');
+                        if (sel[0] && $('#edit_return_datetime').val()) {
+                            checkEditVehicleAvailability(pickFormatted, $('#edit_return_datetime').val());
+                        }
                     }
                 });
 
@@ -970,6 +1022,7 @@
             });
             $('#editBookingModal #edit_vehicle_id').on('change', function() {
                 loadVehicleDetails($(this).val(), 'edit');
+                checkEditVehicleAvailability();
             });
 
             var bookingTable = $('#bookings-table').DataTable({
@@ -1312,12 +1365,14 @@
                             $('#edit_pickup_location').val(booking.pickup_location);
                             $('#edit_return_location').val(booking.return_location);
 
+                            currentEditBookingDbId = booking.id;
                             initEditPickers(booking.booking_date, booking.pickup_datetime, booking.return_datetime);
 
                             if (booking.rental_duration) {
                                 $('#edit_rental_duration').val(booking.rental_duration);
                             }
 
+                            $('#edit_availability_alert').addClass('d-none');
                             $('#editBookingModal').modal('show');
                         }
                     },

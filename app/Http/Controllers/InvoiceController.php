@@ -427,7 +427,7 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice): JsonResponse
     {
         $validated = $request->validate([
-            'total' => 'required|numeric|min:0',
+            'total' => 'required|numeric|min:0.01',
             'vat' => 'required|numeric|min:0',
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
@@ -441,7 +441,7 @@ class InvoiceController extends Controller
             'fuel_charge' => 'nullable|numeric|min:0',
             'gps_charges' => 'nullable|numeric|min:0',
             'salik_toll_charges' => 'nullable|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Calculate charges total (sum of all charges)

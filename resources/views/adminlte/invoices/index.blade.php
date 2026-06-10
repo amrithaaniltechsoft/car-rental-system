@@ -251,8 +251,9 @@
                                 <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_vat" name="vat" required>
                             </div>
                             <div class="form-group col-md-4">
-                                <label for="edit_discount_amount">Discount Amount</label>
+                                <label for="edit_discount_amount">Discount Amount (%)</label>
                                 <input type="text" step="0.01" min="0" class="form-control pricing-input text-right text-danger" id="edit_discount_amount" name="discount_amount" max="100">
+                                <small id="edit_discount_error" class="text-danger d-none">Discount cannot exceed 100%.</small>
                             </div>
                         </div>
 
@@ -277,6 +278,7 @@
                                             <td>
                                                 <span class="form-control form-control-sm text-right font-weight-bold" id="edit_total_display" style="border: none; background: transparent; font-size: 16px; display: block; pointer-events: none;">0.00</span>
                                                 <input type="hidden" id="edit_total" name="total" value="0.00">
+                                                <small id="edit_total_zero_error" class="text-danger d-none">Total amount must be greater than zero to save.</small>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -486,6 +488,17 @@
                 });
             });
 
+            // Clamp discount to max 100%
+            $(document).on('input', '#edit_discount_amount', function() {
+                var val = parseFloat($(this).val()) || 0;
+                if (val > 100) {
+                    $(this).val(100);
+                    $('#edit_discount_error').removeClass('d-none');
+                } else {
+                    $('#edit_discount_error').addClass('d-none');
+                }
+            });
+
             // Calculate totals when pricing fields change in edit modal
             $(document).on('input', '.pricing-input', calculateEditInvoiceTotals);
 
@@ -498,6 +511,14 @@
             $('#editInvoiceForm').on('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+
+                // Validate total amount is not zero
+                var totalVal = parseFloat($('#edit_total').val()) || 0;
+                if (totalVal <= 0) {
+                    $('#edit_total_zero_error').removeClass('d-none');
+                    return false;
+                }
+                $('#edit_total_zero_error').addClass('d-none');
 
                 // Strip commas from all pricing-input fields before submission
                 $('.pricing-input').each(function() {

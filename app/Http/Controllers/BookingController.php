@@ -547,24 +547,28 @@ class BookingController extends Controller
             'vehicle_id' => 'required|exists:vehicles,id',
             'from_date' => 'required|date',
             'to_date' => 'required|date|after_or_equal:from_date',
+            'exclude_booking_id' => 'nullable|integer|exists:bookings,id',
         ]);
 
         $vehicle = Vehicle::findOrFail($request->vehicle_id);
         $fromDate = $request->from_date;
         $toDate = $request->to_date;
 
-        // Check if vehicle has any confirmed bookings that overlap with the requested dates
-        $hasConflict = Booking::where('vehicle_id', $vehicle->id)
-            ->where(function ($query) use ($fromDate, $toDate) {
-                $query->whereBetween('from_date', [$fromDate, $toDate])
+        $query = Booking::where('vehicle_id', $vehicle->id)
+            ->where(function ($q) use ($fromDate, $toDate) {
+                $q->whereBetween('from_date', [$fromDate, $toDate])
                     ->orWhereBetween('to_date', [$fromDate, $toDate])
-                    ->orWhere(function ($q) use ($fromDate, $toDate) {
-                        $q->where('from_date', '<=', $fromDate)
+                    ->orWhere(function ($q2) use ($fromDate, $toDate) {
+                        $q2->where('from_date', '<=', $fromDate)
                             ->where('to_date', '>=', $toDate);
                     });
-            })
-            ->exists();
+            });
 
+        if ($request->filled('exclude_booking_id')) {
+            $query->where('id', '!=', $request->exclude_booking_id);
+        }
+
+        $hasConflict = $query->exists();
         $isAvailable = ! $hasConflict;
 
         return response()->json([
