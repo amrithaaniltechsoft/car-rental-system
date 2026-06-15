@@ -421,8 +421,10 @@ class BookingController extends Controller
         ';
 
         if (! $hasInvoice && $isConfirmed) {
+            $pickupStr = $booking->pickup_datetime ? $booking->pickup_datetime->format('Y-m-d H:i') : ($booking->from_date ? $booking->from_date->format('Y-m-d 00:00') : '');
+            $returnStr = $booking->return_datetime ? $booking->return_datetime->format('Y-m-d H:i') : ($booking->to_date ? $booking->to_date->format('Y-m-d 00:00') : '');
             $buttons .= '
-                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'">
+                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'" data-pickup-datetime="'.$pickupStr.'" data-return-datetime="'.$returnStr.'">
                     <i class="fas fa-file-invoice"></i>
                 </button>
             ';
@@ -462,6 +464,7 @@ class BookingController extends Controller
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'description' => 'nullable|string',
+            'rate' => 'nullable|numeric|min:0',
             'rate_type' => 'nullable|in:daily,weekly,monthly',
             'extra_kms_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -475,9 +478,12 @@ class BookingController extends Controller
             'discount_amount' => 'nullable|numeric|min:0|max:100',
         ]);
 
+        $rentalCharge = $this->calculateRentalCharge($booking, (float) ($validated['rate'] ?? 0), $validated['rate_type'] ?? null);
+
         // Server-side calculation of total, vat_amount and subtotal
         $chargesTotal = max(0,
-            ($validated['extra_kms_charges'] ?? 0)
+            $rentalCharge
+            + ($validated['extra_kms_charges'] ?? 0)
             + ($validated['security_deposit'] ?? 0)
             + ($validated['insurance_fee'] ?? 0)
             + ($validated['additional_driver_fee'] ?? 0)
@@ -517,6 +523,40 @@ class BookingController extends Controller
         }
 
         return redirect()->route('bookings.index')->with('success', 'Invoice created successfully.');
+    }
+
+    private function calculateRentalCharge(Booking $booking, float $rate, ?string $rateType): float
+    {
+        if ($rate <= 0 || ! $rateType) {
+            return 0.0;
+        }
+
+        $pickup = $booking->pickup_datetime ?: $booking->from_date;
+        $return = $booking->return_datetime ?: $booking->to_date;
+
+        if (! $pickup || ! $return || $return <= $pickup) {
+            return $rate;
+        }
+
+        $diff = $pickup->diff($return);
+        $days = (int) $diff->format('%a');
+        $hours = (int) $diff->format('%h');
+
+        $dayCount = $days;
+        if ($hours > 0 || $days === 0) {
+            $dayCount += 1;
+        }
+
+        switch ($rateType) {
+            case 'daily':
+                return $rate * $dayCount;
+            case 'weekly':
+                return $rate * ($dayCount / 7);
+            case 'monthly':
+                return $rate * ($dayCount / 30);
+            default:
+                return $rate;
+        }
     }
 
     /**

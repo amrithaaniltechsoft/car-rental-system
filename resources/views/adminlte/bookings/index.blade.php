@@ -435,27 +435,31 @@
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="invoice_rate_type">Rate Type</label>
-                                <select class="form-control" id="invoice_rate_type" name="rate_type">
+                                <select class="form-control pricing-input" id="invoice_rate_type" name="rate_type">
                                     <option value="daily">Daily Rate</option>
                                     <option value="weekly">Weekly Rate</option>
                                     <option value="monthly">Monthly Rate</option>
                                 </select>
                             </div>
                             <div class="form-group col-md-3">
+                                <label for="invoice_rate">Rate Amount</label>
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_rate" name="rate">
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="invoice_extra_kms_charges">Extra Kms Charges</label>
-                                <input type="number" step="0.01" min="0" class="form-control pricing-input text-right" id="invoice_extra_kms_charges" name="extra_kms_charges">
+                                <input type="text" class="form-control pricing-input text-right" id="invoice_extra_kms_charges" name="extra_kms_charges">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="invoice_security_deposit">Security Deposit</label>
                                 <input type="text" class="form-control pricing-input text-right" id="invoice_security_deposit" name="security_deposit">
                             </div>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="invoice_insurance_fee">Insurance Fee</label>
                                 <input type="text" class="form-control pricing-input text-right" id="invoice_insurance_fee" name="insurance_fee">
                             </div>
-                        </div>
-
-                        <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="invoice_additional_driver_fee">Additional Driver Fee</label>
                                 <input type="text" class="form-control pricing-input text-right" id="invoice_additional_driver_fee" name="additional_driver_fee">
@@ -468,22 +472,22 @@
                                 <label for="invoice_fuel_charge">Fuel Charge</label>
                                 <input type="text" class="form-control pricing-input text-right" id="invoice_fuel_charge" name="fuel_charge">
                             </div>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="invoice_gps_charges">GPS Charges</label>
                                 <input type="text" class="form-control pricing-input text-right" id="invoice_gps_charges" name="gps_charges">
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="invoice_salik_toll_charges">Salik/Toll Charges</label>
                                 <input type="text" class="form-control pricing-input text-right" id="invoice_salik_toll_charges" name="salik_toll_charges">
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="invoice_vat">VAT/Tax (%)</label>
                                 <input type="number" step="0.01" min="0" class="form-control pricing-input text-right" id="invoice_vat" name="vat" value="5">
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="invoice_discount_amount">Discount Amount</label>
                                 <input type="text" class="form-control pricing-input text-right text-danger" id="invoice_discount_amount" name="discount_amount" max="100">
                             </div>
@@ -1515,6 +1519,9 @@
             function fmtNum(num) { return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
             function formatPricingInput(id) {
+                if ($('#' + id).is('select')) {
+                    return;
+                }
                 var val = $('#' + id).val();
                 if (val === '' || val === null || val === undefined) {
                     return;
@@ -1529,6 +1536,38 @@
 
             // Calculate invoice totals based on pricing fields
             function calculateInvoiceTotals() {
+                var rate = parseFloat($('#invoice_rate').val().replace(/,/g, '')) || 0;
+                var rateType = $('#invoice_rate_type').val();
+                var pickupDatetime = $('#createInvoiceForm').data('pickup-datetime');
+                var returnDatetime = $('#createInvoiceForm').data('return-datetime');
+
+                var rentalCharge = 0;
+                if (rate > 0 && rateType && pickupDatetime && returnDatetime) {
+                    var p = new Date(pickupDatetime);
+                    var r = new Date(returnDatetime);
+                    if (!isNaN(p) && !isNaN(r) && r > p) {
+                        var diffMs = r - p;
+                        var diffHours = Math.floor(diffMs / 3600000);
+                        var days = Math.floor(diffHours / 24);
+                        var hours = diffHours % 24;
+                        var dayCount = days;
+                        if (hours > 0 || days === 0) {
+                            dayCount += 1;
+                        }
+                        if (rateType === 'daily') {
+                            rentalCharge = rate * dayCount;
+                        } else if (rateType === 'weekly') {
+                            rentalCharge = rate * (dayCount / 7);
+                        } else if (rateType === 'monthly') {
+                            rentalCharge = rate * (dayCount / 30);
+                        }
+                    } else {
+                        rentalCharge = rate;
+                    }
+                } else {
+                    rentalCharge = rate;
+                }
+
                 var extraKms = parseNum('invoice_extra_kms_charges');
                 var security = parseNum('invoice_security_deposit');
                 var insurance = parseNum('invoice_insurance_fee');
@@ -1540,8 +1579,8 @@
                 var discountPercent = parseNum('invoice_discount_amount');
                 var vatPercent = parseNum('invoice_vat');
 
-                // Calculate charges total (sum of all charges)
-                var chargesTotal = extraKms + security + insurance + driver + delivery + fuel + gps + salik;
+                // Calculate charges total (sum of all charges + rental charge)
+                var chargesTotal = rentalCharge + extraKms + security + insurance + driver + delivery + fuel + gps + salik;
                 
                 // Calculate discount amount as percentage of charges total
                 var discountAmount = chargesTotal * (discountPercent / 100);
@@ -1578,9 +1617,14 @@
                 var customer = $(this).data('customer');
                 var rate = $(this).data('amount');
                 var fromDate = $(this).data('from-date');
+                var pickupDatetime = $(this).data('pickup-datetime');
+                var returnDatetime = $(this).data('return-datetime');
 
                 var actionUrl = '{{ route("bookings.create-invoice", ":id") }}'.replace(':id', bookingId);
                 $('#createInvoiceForm').attr('action', actionUrl);
+
+                $('#createInvoiceForm').data('pickup-datetime', pickupDatetime);
+                $('#createInvoiceForm').data('return-datetime', returnDatetime);
 
                 $('#invoice_booking_id').val(bookingIdDisplay);
                 $('#invoice_vehicle').val(vehicle);
@@ -1588,6 +1632,7 @@
                 
                 // Reset all pricing fields to blank
                 $('.pricing-input').val('');
+                $('#invoice_rate').val(rate ? fmtNum(parseFloat(rate)) : '');
                 $('#invoice_rate_type').val('daily'); // Default to Daily Rate
                 $('#invoice_vat').val('5'); // Default VAT %
                 calculateInvoiceTotals();

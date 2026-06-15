@@ -41,8 +41,8 @@
                 <tr>
                     <td class="text-center p-1">Discount<br><strong>{{ number_format((float) $invoice->discount_amount, 2) }}%</strong></td>
                     <td class="text-center p-1">VAT/Tax (%)<br><strong>{{ number_format((float) $invoice->vat, 2) }}%</strong></td>
-                    <td></td>
-                    <td></td>
+                    <td class="text-center p-1">Rate Type<br><strong>{{ ucfirst($invoice->rate_type) ?: 'Daily' }}</strong></td>
+                    <td class="text-center p-1">Rate Amount<br><strong>{{ number_format((float) $invoice->rate, 2) }}</strong></td>
                 </tr>
             </table>
             <hr>

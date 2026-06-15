@@ -417,6 +417,8 @@ class InvoiceController extends Controller
                 'discount_amount' => $invoice->discount_amount,
                 'customer_name' => $customer ? $customer->name : '',
                 'vehicle_name' => $vehicle ? $vehicle->name : '',
+                'pickup_datetime' => $invoice->booking?->pickup_datetime?->format('Y-m-d H:i') ?: ($invoice->booking?->from_date?->format('Y-m-d 00:00') ?: ''),
+                'return_datetime' => $invoice->booking?->return_datetime?->format('Y-m-d H:i') ?: ($invoice->booking?->to_date?->format('Y-m-d 00:00') ?: ''),
             ],
         ]);
     }
@@ -444,9 +446,18 @@ class InvoiceController extends Controller
             'discount_amount' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        // Calculate charges total (sum of all charges)
+        $booking = $invoice->booking;
+        $rentalCharge = 0;
+        if ($booking && isset($validated['rate']) && isset($validated['rate_type'])) {
+            $rentalCharge = $this->calculateRentalCharge($booking, (float) $validated['rate'], $validated['rate_type']);
+        } elseif (isset($validated['rate'])) {
+            $rentalCharge = (float) $validated['rate'];
+        }
+
+        // Calculate charges total (sum of all charges + rental charge)
         $chargesTotal = max(0,
-            ($validated['extra_kms_charges'] ?? 0)
+            $rentalCharge
+            + ($validated['extra_kms_charges'] ?? 0)
             + ($validated['security_deposit'] ?? 0)
             + ($validated['insurance_fee'] ?? 0)
             + ($validated['additional_driver_fee'] ?? 0)
@@ -495,6 +506,40 @@ class InvoiceController extends Controller
     /**
      * Get action buttons HTML
      */
+    private function calculateRentalCharge(Booking $booking, float $rate, ?string $rateType): float
+    {
+        if ($rate <= 0 || ! $rateType) {
+            return 0.0;
+        }
+
+        $pickup = $booking->pickup_datetime ?: $booking->from_date;
+        $return = $booking->return_datetime ?: $booking->to_date;
+
+        if (! $pickup || ! $return || $return <= $pickup) {
+            return $rate;
+        }
+
+        $diff = $pickup->diff($return);
+        $days = (int) $diff->format('%a');
+        $hours = (int) $diff->format('%h');
+
+        $dayCount = $days;
+        if ($hours > 0 || $days === 0) {
+            $dayCount += 1;
+        }
+
+        switch ($rateType) {
+            case 'daily':
+                return $rate * $dayCount;
+            case 'weekly':
+                return $rate * ($dayCount / 7);
+            case 'monthly':
+                return $rate * ($dayCount / 30);
+            default:
+                return $rate;
+        }
+    }
+
     private function getActionButtons(Invoice $invoice): string
     {
         $buttons = '

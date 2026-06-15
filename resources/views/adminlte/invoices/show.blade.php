@@ -115,6 +115,14 @@
                                             <td><strong>Additional Driver Fee:</strong></td>
                                             <td class="text-right">{{ number_format((float)$invoice->additional_driver_fee, 2) }}</td>
                                         </tr>
+                                        <tr>
+                                            <td><strong>Rate Type:</strong></td>
+                                            <td class="text-right">{{ ucfirst($invoice->rate_type) ?: 'Daily' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Rate Amount:</strong></td>
+                                            <td class="text-right">{{ number_format((float)$invoice->rate, 2) }}</td>
+                                        </tr>
                                     </table>
                                 </div>
                                 <div class="col-md-4">

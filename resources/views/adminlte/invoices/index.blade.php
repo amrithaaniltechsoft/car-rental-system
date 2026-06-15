@@ -202,57 +202,61 @@
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="edit_rate_type">Rate Type</label>
-                                <select class="form-control" id="edit_rate_type" name="rate_type">
+                                <select class="form-control pricing-input" id="edit_rate_type" name="rate_type">
                                     <option value="daily">Daily Rate</option>
                                     <option value="weekly">Weekly Rate</option>
                                     <option value="monthly">Monthly Rate</option>
                                 </select>
                             </div>
                             <div class="form-group col-md-3">
+                                <label for="edit_rate">Rate Amount</label>
+                                <input type="text" class="form-control pricing-input text-right" id="edit_rate" name="rate">
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="edit_extra_kms_charges">Extra Kms Charges</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_extra_kms_charges" name="extra_kms_charges">
+                                <input type="text" class="form-control pricing-input text-right" id="edit_extra_kms_charges" name="extra_kms_charges">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="edit_security_deposit">Security Deposit</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_security_deposit" name="security_deposit">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="edit_insurance_fee">Insurance Fee</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_insurance_fee" name="insurance_fee">
+                                <input type="text" class="form-control pricing-input text-right" id="edit_security_deposit" name="security_deposit">
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group col-md-3">
+                                <label for="edit_insurance_fee">Insurance Fee</label>
+                                <input type="text" class="form-control pricing-input text-right" id="edit_insurance_fee" name="insurance_fee">
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="edit_additional_driver_fee">Additional Driver Fee</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_additional_driver_fee" name="additional_driver_fee">
+                                <input type="text" class="form-control pricing-input text-right" id="edit_additional_driver_fee" name="additional_driver_fee">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="edit_delivery_charge">Delivery Charge</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_delivery_charge" name="delivery_charge">
+                                <input type="text" class="form-control pricing-input text-right" id="edit_delivery_charge" name="delivery_charge">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="edit_fuel_charge">Fuel Charge</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_fuel_charge" name="fuel_charge">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="edit_gps_charges">GPS Charges</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_gps_charges" name="gps_charges">
+                                <input type="text" class="form-control pricing-input text-right" id="edit_fuel_charge" name="fuel_charge">
                             </div>
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
+                                <label for="edit_gps_charges">GPS Charges</label>
+                                <input type="text" class="form-control pricing-input text-right" id="edit_gps_charges" name="gps_charges">
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="edit_salik_toll_charges">Salik/Toll Charges</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_salik_toll_charges" name="salik_toll_charges">
+                                <input type="text" class="form-control pricing-input text-right" id="edit_salik_toll_charges" name="salik_toll_charges">
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="edit_vat">VAT/Tax (%) <span class="text-danger">*</span></label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right" id="edit_vat" name="vat" required>
+                                <input type="text" class="form-control pricing-input text-right" id="edit_vat" name="vat" required>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="edit_discount_amount">Discount Amount (%)</label>
-                                <input type="text" step="0.01" min="0" class="form-control pricing-input text-right text-danger" id="edit_discount_amount" name="discount_amount" max="100">
+                                <input type="text" class="form-control pricing-input text-right text-danger" id="edit_discount_amount" name="discount_amount" max="100">
                                 <small id="edit_discount_error" class="text-danger d-none">Discount cannot exceed 100%.</small>
                             </div>
                         </div>
@@ -338,6 +342,9 @@
         function fmtNum(num) { return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
         function formatEditPricingInput(id) {
+            if ($('#' + id).is('select')) {
+                return;
+            }
             var val = $('#' + id).val();
             if (val === '') return;
             var numVal = parseFloat(val.replace(/,/g, '')) || 0;
@@ -345,6 +352,38 @@
         }
 
         function calculateEditInvoiceTotals() {
+            var rate = parseFloat($('#edit_rate').val().replace(/,/g, '')) || 0;
+            var rateType = $('#edit_rate_type').val();
+            var pickupDatetime = $('#editInvoiceForm').data('pickup-datetime');
+            var returnDatetime = $('#editInvoiceForm').data('return-datetime');
+
+            var rentalCharge = 0;
+            if (rate > 0 && rateType && pickupDatetime && returnDatetime) {
+                var p = new Date(pickupDatetime);
+                var r = new Date(returnDatetime);
+                if (!isNaN(p) && !isNaN(r) && r > p) {
+                    var diffMs = r - p;
+                    var diffHours = Math.floor(diffMs / 3600000);
+                    var days = Math.floor(diffHours / 24);
+                    var hours = diffHours % 24;
+                    var dayCount = days;
+                    if (hours > 0 || days === 0) {
+                        dayCount += 1;
+                    }
+                    if (rateType === 'daily') {
+                        rentalCharge = rate * dayCount;
+                    } else if (rateType === 'weekly') {
+                        rentalCharge = rate * (dayCount / 7);
+                    } else if (rateType === 'monthly') {
+                        rentalCharge = rate * (dayCount / 30);
+                    }
+                } else {
+                    rentalCharge = rate;
+                }
+            } else {
+                rentalCharge = rate;
+            }
+
             var extraKms = parseFloat($('#edit_extra_kms_charges').val().replace(/,/g, '')) || 0;
             var security = parseFloat($('#edit_security_deposit').val().replace(/,/g, '')) || 0;
             var insurance = parseFloat($('#edit_insurance_fee').val().replace(/,/g, '')) || 0;
@@ -356,8 +395,8 @@
             var discountPercent = parseFloat($('#edit_discount_amount').val().replace(/,/g, '')) || 0;
             var vatPercent = parseFloat($('#edit_vat').val().replace(/,/g, '')) || 0;
 
-            // Calculate charges total (sum of all charges)
-            var chargesTotal = extraKms + security + insurance + driver + delivery + fuel + gps + salik;
+            // Calculate charges total (sum of all charges + rental charge)
+            var chargesTotal = rentalCharge + extraKms + security + insurance + driver + delivery + fuel + gps + salik;
             
             // Calculate discount amount as percentage of charges total
             var discountAmount = chargesTotal * (discountPercent / 100);
@@ -445,40 +484,45 @@
                             $('#edit_invoice_number').val(invoice.invoice_number);
                             $('#edit_invoice_date').val(invoice.invoice_date);
                             $('#edit_due_date').val(invoice.due_date);
-                            $('#edit_customer').val(invoice.customer_name || '');
-                            $('#edit_vehicle').val(invoice.vehicle_name || '');
-                            $('#edit_rate_type').val(invoice.rate_type || 'daily');
-                            $('#edit_extra_kms_charges').val(invoice.extra_kms_charges ? fmtNum(parseFloat(invoice.extra_kms_charges)) : 0);
-                            $('#edit_security_deposit').val(invoice.security_deposit ? fmtNum(parseFloat(invoice.security_deposit)) : 0);
-                            $('#edit_insurance_fee').val(invoice.insurance_fee ? fmtNum(parseFloat(invoice.insurance_fee)) : 0);
-                            $('#edit_additional_driver_fee').val(invoice.additional_driver_fee ? fmtNum(parseFloat(invoice.additional_driver_fee)) : 0);
-                            $('#edit_delivery_charge').val(invoice.delivery_charge ? fmtNum(parseFloat(invoice.delivery_charge)) : 0);
-                            $('#edit_fuel_charge').val(invoice.fuel_charge ? fmtNum(parseFloat(invoice.fuel_charge)) : 0);
-                            $('#edit_gps_charges').val(invoice.gps_charges ? fmtNum(parseFloat(invoice.gps_charges)) : 0);
-                            $('#edit_salik_toll_charges').val(invoice.salik_toll_charges ? fmtNum(parseFloat(invoice.salik_toll_charges)) : 0);
-                            $('#edit_vat').val(invoice.vat || 0);
-                            $('#edit_discount_amount').val(invoice.discount_amount || 0);
-                            $('#edit_total').val(parseFloat(invoice.total || 0));
-                            $('#edit_total_display').text(fmtNum(parseFloat(invoice.total || 0)));
-                            $('#edit_subtotal').text(fmtNum(parseFloat(invoice.subtotal || 0)));
-                            $('#edit_vat_amount').text(fmtNum(parseFloat(invoice.vat_amount || 0)));
-                            
-                            $('#editInvoiceForm').attr('action', '{{ route('invoices.update', ':id') }}'.replace(':id', currentInvoiceId));
-                            console.log('Showing edit modal');
-                            $('#editInvoiceModal').modal('show');
-                            
-                            // Initialize date pickers for edit modal
-                            flatpickr('#edit_invoice_date', {
-                                dateFormat: 'Y-m-d',
-                                allowInput: false
-                            });
-                            flatpickr('#edit_due_date', {
-                                dateFormat: 'Y-m-d',
-                                allowInput: false
-                            });
-                            
-                            // Calculate totals on load
-                            calculateEditInvoiceTotals();
+                             $('#edit_customer').val(invoice.customer_name || '');
+                             $('#edit_vehicle').val(invoice.vehicle_name || '');
+                             $('#edit_rate_type').val(invoice.rate_type || 'daily');
+                             $('#edit_rate').val(invoice.rate ? fmtNum(parseFloat(invoice.rate)) : 0);
+                             
+                             $('#editInvoiceForm').data('pickup-datetime', invoice.pickup_datetime);
+                             $('#editInvoiceForm').data('return-datetime', invoice.return_datetime);
+
+                             $('#edit_extra_kms_charges').val(invoice.extra_kms_charges ? fmtNum(parseFloat(invoice.extra_kms_charges)) : 0);
+                             $('#edit_security_deposit').val(invoice.security_deposit ? fmtNum(parseFloat(invoice.security_deposit)) : 0);
+                             $('#edit_insurance_fee').val(invoice.insurance_fee ? fmtNum(parseFloat(invoice.insurance_fee)) : 0);
+                             $('#edit_additional_driver_fee').val(invoice.additional_driver_fee ? fmtNum(parseFloat(invoice.additional_driver_fee)) : 0);
+                             $('#edit_delivery_charge').val(invoice.delivery_charge ? fmtNum(parseFloat(invoice.delivery_charge)) : 0);
+                             $('#edit_fuel_charge').val(invoice.fuel_charge ? fmtNum(parseFloat(invoice.fuel_charge)) : 0);
+                             $('#edit_gps_charges').val(invoice.gps_charges ? fmtNum(parseFloat(invoice.gps_charges)) : 0);
+                             $('#edit_salik_toll_charges').val(invoice.salik_toll_charges ? fmtNum(parseFloat(invoice.salik_toll_charges)) : 0);
+                             $('#edit_vat').val(invoice.vat || 0);
+                             $('#edit_discount_amount').val(invoice.discount_amount || 0);
+                             $('#edit_total').val(parseFloat(invoice.total || 0));
+                             $('#edit_total_display').text(fmtNum(parseFloat(invoice.total || 0)));
+                             $('#edit_subtotal').text(fmtNum(parseFloat(invoice.subtotal || 0)));
+                             $('#edit_vat_amount').text(fmtNum(parseFloat(invoice.vat_amount || 0)));
+                             
+                             $('#editInvoiceForm').attr('action', '{{ route('invoices.update', ':id') }}'.replace(':id', currentInvoiceId));
+                             console.log('Showing edit modal');
+                             $('#editInvoiceModal').modal('show');
+                             
+                             // Initialize date pickers for edit modal
+                             flatpickr('#edit_invoice_date', {
+                                 dateFormat: 'Y-m-d',
+                                 allowInput: false
+                             });
+                             flatpickr('#edit_due_date', {
+                                 dateFormat: 'Y-m-d',
+                                 allowInput: false
+                             });
+                             
+                             // Calculate totals on load
+                             calculateEditInvoiceTotals();
                         }
                     },
                     error: function(xhr, status, error) {
