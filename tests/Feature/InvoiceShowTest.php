@@ -32,7 +32,8 @@ test('invoice show page displays correctly', function () {
 
     $vehicle = Vehicle::create([
         'name' => 'Test Vehicle',
-        'registration_number' => 'ABC-123',
+        'number_plate' => 'ABC-123',
+        'number_code' => 'CODE-123',
         'type' => 'sedan',
         'model' => 'Test Model',
         'brand' => 'Test Brand',

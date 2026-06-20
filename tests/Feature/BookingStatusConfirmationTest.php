@@ -20,7 +20,8 @@ test('booking status can be confirmed via ajax', function () {
 
     $vehicle = Vehicle::create([
         'name' => 'Test Vehicle',
-        'registration_number' => 'ABC-123',
+        'number_plate' => 'ABC-123',
+        'number_code' => 'CODE-123',
         'type' => 'sedan',
         'model' => 'Test Model',
         'brand' => 'Test Brand',
@@ -64,7 +65,8 @@ test('status badge is clickable for non-confirmed bookings', function () {
 
     $vehicle = Vehicle::create([
         'name' => 'Test Vehicle',
-        'registration_number' => 'ABC-123',
+        'number_plate' => 'ABC-123',
+        'number_code' => 'CODE-123',
         'type' => 'sedan',
         'model' => 'Test Model',
         'brand' => 'Test Brand',
@@ -128,7 +130,8 @@ test('confirmed bookings status badge is not clickable', function () {
 
     $vehicle = Vehicle::create([
         'name' => 'Test Vehicle',
-        'registration_number' => 'ABC-123',
+        'number_plate' => 'ABC-123',
+        'number_code' => 'CODE-123',
         'type' => 'sedan',
         'model' => 'Test Model',
         'brand' => 'Test Brand',

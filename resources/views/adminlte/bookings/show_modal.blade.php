@@ -54,7 +54,8 @@
         <strong><i class="fas fa-car mr-1"></i> Vehicle Details</strong>
         <p class="text-muted">
             {{ $booking->vehicle->name }} - {{ $booking->vehicle->brand }} {{ $booking->vehicle->model }}<br>
-            Registration: {{ $booking->vehicle->registration_number }}<br>
+            Plate: {{ $booking->vehicle->number_plate }}<br>
+            Code: {{ $booking->vehicle->number_code }}<br>
             Type: {{ ucfirst($booking->vehicle->type) }}<br>
             Fuel: {{ ucfirst($booking->vehicle->fuel_type) }}
         </p>

@@ -69,7 +69,7 @@
                                         <td style="width: 150px;"><strong>Booking ID:</strong></td>
                                         <td>#{{ $invoice->booking->id }}</td>
                                         <td style="width: 150px;"><strong>Vehicle:</strong></td>
-                                        <td>{{ $invoice->booking->vehicle->name }} ({{ $invoice->booking->vehicle->registration_number }})</td>
+                                        <td>{{ $invoice->booking->vehicle->name }} ({{ $invoice->booking->vehicle->number_plate }})</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Rental Period:</strong></td>

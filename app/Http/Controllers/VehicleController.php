@@ -22,9 +22,10 @@ class VehicleController extends Controller
         $brands = Brand::orderBy('name')->get();
         $types = VehicleType::orderBy('name')->get();
         $vehicleNames = Vehicle::distinct()->orderBy('name')->pluck('name');
-        $registrations = Vehicle::distinct()->orderBy('registration_number')->pluck('registration_number');
+        $numberPlates = Vehicle::distinct()->orderBy('number_plate')->pluck('number_plate');
+        $numberCodes = Vehicle::distinct()->orderBy('number_code')->pluck('number_code');
 
-        return view('adminlte.vehicles.index', compact('fuelTypes', 'brands', 'types', 'vehicleNames', 'registrations'));
+        return view('adminlte.vehicles.index', compact('fuelTypes', 'brands', 'types', 'vehicleNames', 'numberPlates', 'numberCodes'));
     }
 
     /**
@@ -45,11 +46,12 @@ class VehicleController extends Controller
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:vehicles,name',
+            'name' => 'required|string|max:255',
             'model' => 'required|integer|between:2000,2100',
             'brand' => 'required|exists:brands,name',
             'type' => 'required|exists:vehicle_types,name',
-            'registration_number' => 'required|string|max:255|unique:vehicles',
+            'number_plate' => 'required|string|max:255|unique:vehicles',
+            'number_code' => 'required|string|max:255|unique:vehicles',
             'fuel_type' => 'required|exists:fuel_types,name',
             'seating_capacity' => 'required|integer|min:1',
             'rc_book_details' => 'nullable|string',
@@ -103,11 +105,12 @@ class VehicleController extends Controller
     public function update(Request $request, Vehicle $vehicle): RedirectResponse|JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:vehicles,name,'.$vehicle->id,
+            'name' => 'required|string|max:255',
             'model' => 'required|integer|between:2000,2100',
             'brand' => 'required|exists:brands,name',
             'type' => 'required|exists:vehicle_types,name',
-            'registration_number' => 'required|string|max:255|unique:vehicles,registration_number,'.$vehicle->id,
+            'number_plate' => 'required|string|max:255|unique:vehicles,number_plate,'.$vehicle->id,
+            'number_code' => 'required|string|max:255|unique:vehicles,number_code,'.$vehicle->id,
             'fuel_type' => 'required|exists:fuel_types,name',
             'seating_capacity' => 'required|integer|min:1',
             'rc_book_details' => 'nullable|string',
@@ -138,7 +141,8 @@ class VehicleController extends Controller
             'model',
             'brand',
             'type',
-            'registration_number',
+            'number_plate',
+            'number_code',
             'fuel_type',
             'seating_capacity',
         ];
@@ -149,7 +153,8 @@ class VehicleController extends Controller
         $filterName = $request->input('filter_name');
         $filterBrand = $request->input('filter_brand');
         $filterType = $request->input('filter_type');
-        $filterRegistration = $request->input('filter_registration');
+        $filterPlate = $request->input('filter_plate');
+        $filterCode = $request->input('filter_code');
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
         $orderColumn = $columns[$orderColumnIndex] ?? 'id';
@@ -165,8 +170,11 @@ class VehicleController extends Controller
         if (! empty($filterType)) {
             $query->where('type', 'like', "%{$filterType}%");
         }
-        if (! empty($filterRegistration)) {
-            $query->where('registration_number', 'like', "%{$filterRegistration}%");
+        if (! empty($filterPlate)) {
+            $query->where('number_plate', 'like', "%{$filterPlate}%");
+        }
+        if (! empty($filterCode)) {
+            $query->where('number_code', 'like', "%{$filterCode}%");
         }
 
         // Count before filtering is unnecessary in most cases
@@ -189,7 +197,8 @@ class VehicleController extends Controller
                 'model' => $vehicle->model,
                 'brand' => $vehicle->brand,
                 'type' => ucfirst($vehicle->type),
-                'registration_number' => $vehicle->registration_number,
+                'number_plate' => $vehicle->number_plate,
+                'number_code' => $vehicle->number_code,
                 'fuel_type' => ucfirst($vehicle->fuel_type),
                 'seating_capacity' => $vehicle->seating_capacity,
                 'actions' => $this->getActionButtons($vehicle),
@@ -242,16 +251,16 @@ class VehicleController extends Controller
     private function getActionButtons(Vehicle $vehicle): string
     {
         return '
-            <button type="button" class="btn btn-info btn-sm view-vehicle-btn" data-url="'.route('vehicles.show', $vehicle).'">
+            <button type="button" class="btn btn-info btn-sm view-vehicle-btn" data-toggle="tooltip" title="View" data-url="'.route('vehicles.show', $vehicle).'">
                 <i class="fas fa-eye"></i>
             </button>
-            <button type="button" class="btn btn-warning btn-sm edit-vehicle-btn" data-url="'.route('vehicles.edit', $vehicle).'">
+            <button type="button" class="btn btn-warning btn-sm edit-vehicle-btn" data-toggle="tooltip" title="Edit" data-url="'.route('vehicles.edit', $vehicle).'">
                 <i class="fas fa-edit"></i>
             </button>
             <form action="'.route('vehicles.destroy', $vehicle).'" method="POST" style="display: inline;">
                 '.csrf_field().'
                 '.method_field('DELETE').'
-                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure?\')">
+                <button type="submit" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete" onclick="return confirm(\'Are you sure?\')">
                     <i class="fas fa-trash"></i>
                 </button>
             </form>

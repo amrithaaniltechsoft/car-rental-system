@@ -145,7 +145,8 @@ test('customer cannot be deleted when they have bookings', function () {
         'model' => 2024,
         'brand' => $brand->name,
         'type' => $type->name,
-        'registration_number' => 'TS-CUST-DEL',
+        'number_plate' => 'TS-CUST-DEL',
+        'number_code' => 'CODE-CUST-DEL',
         'fuel_type' => $fuelType->name,
         'seating_capacity' => 5,
     ]);
@@ -187,7 +188,8 @@ test('customer cannot be deleted via AJAX when they have bookings', function () 
         'model' => 2024,
         'brand' => $brand->name,
         'type' => $type->name,
-        'registration_number' => 'TS-CUST-AJX',
+        'number_plate' => 'TS-CUST-AJX',
+        'number_code' => 'CODE-CUST-AJX',
         'fuel_type' => $fuelType->name,
         'seating_capacity' => 5,
     ]);

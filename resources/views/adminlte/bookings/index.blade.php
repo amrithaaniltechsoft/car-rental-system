@@ -55,7 +55,7 @@
                             <select class="form-control select2" id="filter_vehicle" style="width: 100%;">
                                 <option value=""></option>
                                 @foreach($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -107,7 +107,7 @@
                 <form id="addBookingForm" action="{{ route('bookings.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
-                        {{-- Row 1: Customer, Vehicle, Booking Reference, Status --}}
+                        {{-- Row 1: Customer, Pickup Date & Time, Return Date & Time, Booking Reference --}}
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="customer_id">Customer <span class="text-danger">*</span></label>
@@ -118,45 +118,6 @@
                                     @endforeach
                                 </select>
                                 @error('customer_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="vehicle_id">Vehicle <span class="text-danger">*</span></label>
-                                <select class="form-control select2 @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required style="width: 100%;">
-                                    <option value="">Select Vehicle</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
-                                    @endforeach
-                                </select>
-                                @error('vehicle_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="add_booking_ref">Booking Reference</label>
-                                <input type="text" class="form-control" id="add_booking_ref" value="Auto Generated" readonly style="background:#f4f6f9; color:#6c757d;">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="status">Booking Status <span class="text-danger">*</span></label>
-                                <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
-                                    <option value="pending">Pending</option>
-                                    <option value="confirmed">Confirmed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                    <option value="completed">Completed</option>
-                                </select>
-                                @error('status')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Row 2: Booking Date, Pickup Date & Time, Return Date & Time, Rental Duration --}}
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <label for="booking_date">Booking Date <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control datepicker @error('booking_date') is-invalid @enderror" id="booking_date" name="booking_date" value="{{ old('booking_date') }}" required>
-                                @error('booking_date')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -175,8 +136,47 @@
                                 @enderror
                             </div>
                             <div class="form-group col-md-3">
+                                <label for="add_booking_ref">Booking Reference</label>
+                                <input type="text" class="form-control" id="add_booking_ref" value="Auto Generated" readonly style="background:#f4f6f9; color:#6c757d;">
+                            </div>
+                        </div>
+
+                        {{-- Row 2: Status, Vehicle, Rental Duration, Booking Date --}}
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="status">Booking Status <span class="text-danger">*</span></label>
+                                <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                                @error('status')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="vehicle_id">Vehicle <span class="text-danger">*</span></label>
+                                <select class="form-control select2 @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required style="width: 100%;">
+                                    <option value="">Select Vehicle</option>
+                                    @foreach($vehicles as $vehicle)
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
+                                    @endforeach
+                                </select>
+                                @error('vehicle_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="add_rental_duration">Rental Duration</label>
                                 <input type="text" class="form-control" id="add_rental_duration" value="Auto calculated" readonly style="background:#f4f6f9; color:#6c757d;">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="booking_date">Booking Date <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datepicker @error('booking_date') is-invalid @enderror" id="booking_date" name="booking_date" value="{{ old('booking_date') }}" required>
+                                @error('booking_date')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
 
@@ -224,6 +224,7 @@
                                         <i class="fas fa-car mr-1"></i>
                                         <span id="add_vd_name"></span>
                                         <span class="vehicle-reg-badge" id="add_vd_reg"></span>
+                                        <span class="vehicle-reg-badge" id="add_vd_code"></span>
                                     </div>
                                     <div class="vehicle-details-body">
                                         <div class="vd-item" id="add_vd_brand_wrap"><i class="fas fa-tag"></i><span id="add_vd_brand"></span></div>
@@ -257,7 +258,7 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
-                        {{-- Row 1: Customer, Vehicle, Booking Reference, Status --}}
+                        {{-- Row 1: Customer, Pickup Date & Time, Return Date & Time, Booking Reference --}}
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="edit_customer_id">Customer <span class="text-danger">*</span></label>
@@ -269,18 +270,21 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-3">
-                                <label for="edit_vehicle_id">Vehicle <span class="text-danger">*</span></label>
-                                <select class="form-control select2" id="edit_vehicle_id" name="vehicle_id" required style="width: 100%;">
-                                    <option value="">Select Vehicle</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
-                                    @endforeach
-                                </select>
+                                <label for="edit_pickup_datetime">Pickup Date &amp; Time <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datetimepicker" id="edit_pickup_datetime" name="pickup_datetime" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_return_datetime">Return Date &amp; Time <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datetimepicker" id="edit_return_datetime" name="return_datetime" required>
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Booking Reference</label>
                                 <input type="text" class="form-control" id="edit_booking_ref" readonly style="background:#f4f6f9; color:#6c757d;">
                             </div>
+                        </div>
+
+                        {{-- Row 2: Status, Vehicle, Rental Duration, Booking Date --}}
+                        <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="edit_status">Booking Status <span class="text-danger">*</span></label>
                                 <select class="form-control" id="edit_status" name="status" required>
@@ -290,25 +294,22 @@
                                     <option value="completed">Completed</option>
                                 </select>
                             </div>
-                        </div>
-
-                         {{-- Row 2: Booking Date, Pickup Date & Time, Return Date & Time, Rental Duration --}}
-                        <div class="form-row">
                             <div class="form-group col-md-3">
-                                <label for="edit_booking_date">Booking Date <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control datepicker" id="edit_booking_date" name="booking_date" required>
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="edit_pickup_datetime">Pickup Date &amp; Time <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control datetimepicker" id="edit_pickup_datetime" name="pickup_datetime" required>
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="edit_return_datetime">Return Date &amp; Time <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control datetimepicker" id="edit_return_datetime" name="return_datetime" required>
+                                <label for="edit_vehicle_id">Vehicle <span class="text-danger">*</span></label>
+                                <select class="form-control select2" id="edit_vehicle_id" name="vehicle_id" required style="width: 100%;">
+                                    <option value="">Select Vehicle</option>
+                                    @foreach($vehicles as $vehicle)
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="edit_rental_duration">Rental Duration</label>
                                 <input type="text" class="form-control" id="edit_rental_duration" readonly style="background:#f4f6f9; color:#6c757d;">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_booking_date">Booking Date <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control datepicker" id="edit_booking_date" name="booking_date" required>
                             </div>
                         </div>
                         <div id="edit_availability_alert" class="alert alert-danger d-none" role="alert" style="margin-bottom:8px;">
@@ -353,6 +354,7 @@
                                         <i class="fas fa-car mr-1"></i>
                                         <span id="edit_vd_name"></span>
                                         <span class="vehicle-reg-badge" id="edit_vd_reg"></span>
+                                        <span class="vehicle-reg-badge" id="edit_vd_code"></span>
                                     </div>
                                     <div class="vehicle-details-body">
                                         <div class="vd-item" id="edit_vd_brand_wrap"><i class="fas fa-tag"></i><span id="edit_vd_brand"></span></div>
@@ -402,23 +404,29 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-4">
                                 <label for="invoice_booking_id">Booking ID</label>
                                 <input type="text" class="form-control" id="invoice_booking_id" readonly>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-4">
                                 <label for="invoice_vehicle">Vehicle</label>
                                 <input type="text" class="form-control" id="invoice_vehicle" readonly>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-4">
                                 <label for="invoice_customer">Customer</label>
                                 <input type="text" class="form-control" id="invoice_customer" readonly>
                             </div>
-                            <div class="form-group col-md-2">
-                                <label for="invoice_booking_date">Booking Date</label>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="invoice_booking_date">From Date</label>
                                 <input type="text" class="form-control" id="invoice_booking_date" readonly>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-4">
+                                <label for="invoice_to_date">To Date</label>
+                                <input type="text" class="form-control" id="invoice_to_date" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label for="invoice_due_date">Due Date</label>
                                 <input type="text" class="form-control datepicker @error('due_date') is-invalid @enderror"
                                        id="invoice_due_date" name="due_date" value="{{ old('due_date') }}">
@@ -501,7 +509,7 @@
                                     <tr>
                                         <td style="width: 130px; vertical-align: middle;" class="pl-2"><strong>Sub Total</strong></td>
                                         <td>
-                                            <span class="form-control form-control-sm text-right" id="invoice_subtotal" name="subtotal" style="border: none; background: transparent; font-weight: bold; display: block; pointer-events: none;">0.00</span>
+                                            <span class="form-control form-control-sm text-right" id="invoice_subtotal" name="subtotal" style="border: none; background: transparent; display: block; pointer-events: none;">0.00</span>
                                         </td>
                                     </tr>
                                     <tr>
@@ -667,6 +675,27 @@
         }, 5000);
 
         // Initialize DataTable with AJAX
+        // Invoice calculation in OMR
+        function calculateInvoiceTotals() {
+            var subtotal = 0.0;
+            $('.pricing-input').each(function(){
+                var val = parseFloat($(this).val());
+                if (!isNaN(val)) subtotal += val;
+            });
+            $('#invoice_subtotal').text(subtotal.toFixed(2));
+            var vatRate = parseFloat($('#invoice_vat').val()) || 0;
+            var vatAmount = subtotal * (vatRate/100);
+            $('#invoice_vat_amount').text(vatAmount.toFixed(2));
+            var discount = parseFloat($('#invoice_discount_amount').val()) || 0;
+            var total = subtotal + vatAmount - discount;
+            var totalOMR = total * 0.3845;
+            $('#invoice_total').text(totalOMR.toFixed(2));
+        }
+        $('.pricing-input').on('input', function(){
+            calculateInvoiceTotals();
+        });
+        // Initial calculation
+        calculateInvoiceTotals();
         $(document).ready(function() {
             var bookingToday = new Date();
             bookingToday.setHours(0, 0, 0, 0);
@@ -706,10 +735,38 @@
                     dateFormat: 'Y-m-d H:i',
                     time_24hr: true,
                     allowInput: false,
-                    minDate: bookingToday,
+                    shorthandCurrentMonth: false,
+                    disable: [function(date) { return date < new Date(); }],
                     onChange: function(sel) {
                         calcRentalDuration($('#pickup_datetime').val(), sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', 'add_rental_duration');
-                        if (sel[0]) checkVehicleAvailability();
+                        if (sel[0] && $('#pickup_datetime').val()) fetchAvailableVehicles();
+                    },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                        if (!wrapper) return;
+                        var select = document.createElement('select');
+                        select.style.marginLeft = '4px';
+                        select.style.fontSize = 'inherit';
+                        select.style.border = 'none';
+                        select.style.borderRadius = '0';
+                        select.style.fontWeight = 'inherit';
+                        var curr = new Date().getFullYear();
+                        for (var y = curr; y <= curr + 20; y++) {
+                            var opt = document.createElement('option');
+                            opt.value = y;
+                            opt.textContent = y;
+                            if (y === instance.currentYear) opt.selected = true;
+                            select.appendChild(opt);
+                        }
+                        select.addEventListener('change', function(e) {
+                            instance.changeYear(parseInt(e.target.value));
+                        });
+                        wrapper.style.display = 'none';
+                        wrapper.parentNode.insertBefore(select, wrapper);
+                        instance._yearSelect = select;
+                    },
+                    onYearChange: function(selectedDates, dateStr, instance) {
+                        if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
                     }
                 });
 
@@ -718,92 +775,120 @@
                     dateFormat: 'Y-m-d H:i',
                     time_24hr: true,
                     allowInput: false,
-                    minDate: bookingToday,
+                    shorthandCurrentMonth: false,
+                    disable: [function(date) { return date < new Date(); }],
                     onChange: function(sel) {
                         if (sel[0]) { returnPicker.set('minDate', sel[0]); }
                         calcRentalDuration(sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', $('#return_datetime').val(), 'add_rental_duration');
-                        if (sel[0]) checkVehicleAvailability();
+                        if (sel[0] && $('#return_datetime').val()) fetchAvailableVehicles();
+                    },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                        if (!wrapper) return;
+                        var select = document.createElement('select');
+                        select.style.marginLeft = '4px';
+                        select.style.fontSize = 'inherit';
+                        select.style.border = 'none';
+                        select.style.borderRadius = '0';
+                        select.style.fontWeight = 'inherit';
+                        var curr = new Date().getFullYear();
+                        for (var y = curr; y <= curr + 20; y++) {
+                            var opt = document.createElement('option');
+                            opt.value = y;
+                            opt.textContent = y;
+                            if (y === instance.currentYear) opt.selected = true;
+                            select.appendChild(opt);
+                        }
+                        select.addEventListener('change', function(e) {
+                            instance.changeYear(parseInt(e.target.value));
+                        });
+                        wrapper.style.display = 'none';
+                        wrapper.parentNode.insertBefore(select, wrapper);
+                        instance._yearSelect = select;
+                    },
+                    onYearChange: function(selectedDates, dateStr, instance) {
+                        if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
                     }
                 });
             }
             initAddDatetimePickers();
 
-            // Check vehicle availability
-            function checkVehicleAvailability() {
-                var vehicleId = $('#vehicle_id').val();
+            // Fetch available vehicles for the Add Booking modal
+            function fetchAvailableVehicles() {
                 var pickupDate = $('#pickup_datetime').val();
                 var returnDate = $('#return_datetime').val();
+                if (!pickupDate || !returnDate) return;
 
-                if (!vehicleId || !pickupDate || !returnDate) {
-                    return;
-                }
-
-                // Extract date part (Y-m-d) from datetime
                 var fromDate = pickupDate.split(' ')[0];
                 var toDate = returnDate.split(' ')[0];
 
                 $.ajax({
-                    url: '{{ route("bookings.check-availability") }}',
-                    type: 'POST',
-                    data: {
-                        vehicle_id: vehicleId,
-                        from_date: fromDate,
-                        to_date: toDate,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        if (!response.available) {
-                            alert(response.message);
-                            $('#pickup_datetime, #return_datetime').val('');
-                            initAddDatetimePickers();
-                            $('#add_rental_duration').val('Auto calculated');
+                    url: '{{ route("bookings.available-vehicles") }}',
+                    type: 'GET',
+                    data: { from_date: fromDate, to_date: toDate },
+                    success: function(vehicles) {
+                        var $select = $('#vehicle_id');
+                        var currentVal = $select.val();
+                        $select.empty().append('<option value="">Select Vehicle</option>');
+                        $.each(vehicles, function(i, v) {
+                            $select.append('<option value="' + v.id + '">' + v.name + ' (' + v.number_plate + ')</option>');
+                        });
+                        $select.val(currentVal);
+                        $select.select2('destroy');
+                        $select.select2({
+                            theme: 'bootstrap4',
+                            placeholder: 'Select Vehicle',
+                            allowClear: true,
+                            dropdownParent: $('#addBookingModal'),
+                            width: '100%'
+                        });
+                        // If the previously selected vehicle is no longer available, clear it
+                        if (currentVal && !$select.val()) {
+                            alert('The previously selected vehicle is not available for the updated dates. Please select another vehicle.');
+                            $('#vehicle_id').val('').trigger('change');
+                            $('#add_vehicle_details_row').hide();
                         }
                     }
                 });
             }
 
-            // Check availability when vehicle changes
-            $('#vehicle_id').on('change', function() {
-                checkVehicleAvailability();
-            });
-
             var currentEditBookingDbId = null;
 
-            function checkEditVehicleAvailability(overridePickup, overrideReturn) {
-                var vehicleId = $('#edit_vehicle_id').val();
-                var pickupDate = overridePickup || $('#edit_pickup_datetime').val();
-                var returnDate = overrideReturn || $('#edit_return_datetime').val();
-
-                if (!vehicleId || !pickupDate || !returnDate) {
-                    return;
-                }
+            // Fetch available vehicles for the Edit Booking modal
+            function fetchEditAvailableVehicles() {
+                var pickupDate = $('#edit_pickup_datetime').val();
+                var returnDate = $('#edit_return_datetime').val();
+                if (!pickupDate || !returnDate) return;
 
                 var fromDate = pickupDate.split(' ')[0];
                 var toDate = returnDate.split(' ')[0];
 
                 $.ajax({
-                    url: '{{ route("bookings.check-availability") }}',
-                    type: 'POST',
-                    data: {
-                        vehicle_id: vehicleId,
-                        from_date: fromDate,
-                        to_date: toDate,
-                        exclude_booking_id: currentEditBookingDbId,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        if (!response.available) {
-                            alert(response.message);
-                            // Clear the date pickers
-                            var editReturnFp = document.querySelector('#edit_return_datetime')._flatpickr;
-                            var editPickupFp = document.querySelector('#edit_pickup_datetime')._flatpickr;
-                            if (editReturnFp) { editReturnFp.clear(); }
-                            if (editPickupFp) { editPickupFp.clear(); }
-                            $('#edit_rental_duration').val('Auto calculated');
+                    url: '{{ route("bookings.available-vehicles") }}',
+                    type: 'GET',
+                    data: { from_date: fromDate, to_date: toDate, exclude_booking_id: currentEditBookingDbId },
+                    success: function(vehicles) {
+                        var $select = $('#edit_vehicle_id');
+                        var currentVal = $select.val();
+                        $select.empty().append('<option value="">Select Vehicle</option>');
+                        $.each(vehicles, function(i, v) {
+                            $select.append('<option value="' + v.id + '">' + v.name + ' (' + v.number_plate + ')</option>');
+                        });
+                        $select.val(currentVal);
+                        $select.select2('destroy');
+                        $select.select2({
+                            theme: 'bootstrap4',
+                            placeholder: 'Select Vehicle',
+                            allowClear: true,
+                            dropdownParent: $('#editBookingModal'),
+                            width: '100%'
+                        });
+                        // If the previously selected vehicle is no longer available, clear it
+                        if (currentVal && !$select.val()) {
+                            alert('The previously selected vehicle is not available for the updated dates. Please select another vehicle.');
+                            $('#edit_vehicle_id').val('').trigger('change');
+                            $('#edit_vehicle_details_row').hide();
                         }
-                    },
-                    error: function() {
-                        // Silently ignore errors
                     }
                 });
             }
@@ -825,13 +910,41 @@
                     dateFormat: 'Y-m-d H:i',
                     time_24hr: true,
                     allowInput: false,
+                    shorthandCurrentMonth: false,
                     defaultDate: returnVal || null,
                     onChange: function(sel) {
                         var retFormatted = sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '';
                         calcRentalDuration($('#edit_pickup_datetime').val(), retFormatted, 'edit_rental_duration');
-                        if (sel[0]) {
-                            checkEditVehicleAvailability($('#edit_pickup_datetime').val(), retFormatted);
+                        if (sel[0] && $('#edit_pickup_datetime').val()) {
+                            fetchEditAvailableVehicles();
                         }
+                    },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                        if (!wrapper) return;
+                        var select = document.createElement('select');
+                        select.style.marginLeft = '4px';
+                        select.style.fontSize = 'inherit';
+                        select.style.border = 'none';
+                        select.style.borderRadius = '0';
+                        select.style.fontWeight = 'inherit';
+                        var curr = new Date().getFullYear();
+                        for (var y = curr; y <= curr + 20; y++) {
+                            var opt = document.createElement('option');
+                            opt.value = y;
+                            opt.textContent = y;
+                            if (y === instance.currentYear) opt.selected = true;
+                            select.appendChild(opt);
+                        }
+                        select.addEventListener('change', function(e) {
+                            instance.changeYear(parseInt(e.target.value));
+                        });
+                        wrapper.style.display = 'none';
+                        wrapper.parentNode.insertBefore(select, wrapper);
+                        instance._yearSelect = select;
+                    },
+                    onYearChange: function(selectedDates, dateStr, instance) {
+                        if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
                     }
                 });
 
@@ -840,14 +953,42 @@
                     dateFormat: 'Y-m-d H:i',
                     time_24hr: true,
                     allowInput: false,
+                    shorthandCurrentMonth: false,
                     defaultDate: pickupVal || null,
                     onChange: function(sel) {
                         var pickFormatted = sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '';
                         if (sel[0]) { editReturnPicker.set('minDate', sel[0]); }
                         calcRentalDuration(pickFormatted, $('#edit_return_datetime').val(), 'edit_rental_duration');
                         if (sel[0] && $('#edit_return_datetime').val()) {
-                            checkEditVehicleAvailability(pickFormatted, $('#edit_return_datetime').val());
+                            fetchEditAvailableVehicles();
                         }
+                    },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                        if (!wrapper) return;
+                        var select = document.createElement('select');
+                        select.style.marginLeft = '4px';
+                        select.style.fontSize = 'inherit';
+                        select.style.border = 'none';
+                        select.style.borderRadius = '0';
+                        select.style.fontWeight = 'inherit';
+                        var curr = new Date().getFullYear();
+                        for (var y = curr; y <= curr + 20; y++) {
+                            var opt = document.createElement('option');
+                            opt.value = y;
+                            opt.textContent = y;
+                            if (y === instance.currentYear) opt.selected = true;
+                            select.appendChild(opt);
+                        }
+                        select.addEventListener('change', function(e) {
+                            instance.changeYear(parseInt(e.target.value));
+                        });
+                        wrapper.style.display = 'none';
+                        wrapper.parentNode.insertBefore(select, wrapper);
+                        instance._yearSelect = select;
+                    },
+                    onYearChange: function(selectedDates, dateStr, instance) {
+                        if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
                     }
                 });
 
@@ -973,7 +1114,8 @@
                         if (response.success) {
                             var v = response.vehicle;
                             $('#' + prefix + '_vd_name').text(v.name || '');
-                            $('#' + prefix + '_vd_reg').text(v.registration_number || '');
+                            $('#' + prefix + '_vd_reg').text(v.number_plate || '');
+                            $('#' + prefix + '_vd_code').text(v.number_code || '');
 
                             if (v.brand) {
                                 $('#' + prefix + '_vd_brand').text(v.brand);
@@ -1026,7 +1168,6 @@
             });
             $('#editBookingModal #edit_vehicle_id').on('change', function() {
                 loadVehicleDetails($(this).val(), 'edit');
-                checkEditVehicleAvailability();
             });
 
             var bookingTable = $('#bookings-table').DataTable({
@@ -1068,6 +1209,10 @@
                     "zeroRecords": "No matching bookings found"
                 },
                 "order": [[0, "desc"]]
+            });
+
+            bookingTable.on('draw.dt', function() {
+                $('[data-toggle="tooltip"]', $('#bookings-table')).tooltip({ trigger: 'hover' });
             });
 
             // Initialize filter Select2
@@ -1376,6 +1521,9 @@
                                 $('#edit_rental_duration').val(booking.rental_duration);
                             }
 
+                            // Filter vehicle dropdown to only show available vehicles for these dates
+                            fetchEditAvailableVehicles();
+
                             $('#edit_availability_alert').addClass('d-none');
                             $('#editBookingModal').modal('show');
                         }
@@ -1592,12 +1740,16 @@
                 // VAT Amount is calculated as percentage of total
                 var vatAmount = total * (vatPercent / 100);
 
-                // Subtotal is total minus VAT Amount
-                var subtotal = total - vatAmount;
-
-                $('#invoice_subtotal').text(fmtNum(subtotal));
-                $('#invoice_vat_amount').text(fmtNum(vatAmount));
-                $('#invoice_total').text(fmtNum(total));
+                // Compute total in OMR
+                var totalOMR = total * 0.3845;
+                // Compute VAT amount in OMR
+                var vatAmountOMR = totalOMR * (vatPercent / 100);
+                // Compute subtotal in OMR
+                var subtotalOMR = totalOMR - vatAmountOMR;
+                // Update UI with OMR values
+                $('#invoice_subtotal').text(fmtNum(subtotalOMR));
+                $('#invoice_vat_amount').text(fmtNum(vatAmountOMR));
+                $('#invoice_total').text(totalOMR.toFixed(2));
             }
 
             // Recalculate totals when any pricing input or VAT changes
@@ -1637,13 +1789,19 @@
                 $('#invoice_vat').val('5'); // Default VAT %
                 calculateInvoiceTotals();
 
-                // Set booking from date
+                // Set booking from and to dates
                 var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 
                 if (fromDate) {
                     var fDate = new Date(fromDate);
                     var displayFromDate = fDate.getDate() + ' ' + months[fDate.getMonth()] + ' ' + fDate.getFullYear();
                     $('#invoice_booking_date').val(displayFromDate);
+                }
+
+                if (returnDatetime) {
+                    var tDate = new Date(returnDatetime);
+                    var displayToDate = tDate.getDate() + ' ' + months[tDate.getMonth()] + ' ' + tDate.getFullYear();
+                    $('#invoice_to_date').val(displayToDate);
                 }
 
                 // Invoice date is read-only, set display and hidden value
@@ -1738,6 +1896,7 @@
                         }
                     },
                     error: function(xhr) {
+
                         submitBtn.prop('disabled', false).html(originalBtnHtml);
 
                         if (xhr.status === 422) {
@@ -1761,6 +1920,7 @@
                             }
                         }
                     }
+                    
                 });
 
                 return false;

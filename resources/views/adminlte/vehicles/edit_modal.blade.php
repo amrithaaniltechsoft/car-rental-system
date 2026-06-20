@@ -53,15 +53,25 @@
         </div>
 
         <div class="form-row">
-            <div class="form-group col-md-4">
-                <label for="registration_number">Registration Number</label>
-                <input type="text" class="form-control @error('registration_number') is-invalid @enderror"
-                       id="registration_number" name="registration_number" value="{{ old('registration_number', $vehicle->registration_number) }}" required>
-                @error('registration_number')
+            <div class="form-group col-md-3">
+                <label for="number_plate">Number Plate</label>
+                <input type="text" class="form-control @error('number_plate') is-invalid @enderror"
+                       id="number_plate" name="number_plate" value="{{ old('number_plate', $vehicle->number_plate) }}" required>
+                @error('number_plate')
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
+                <label for="number_code">Plate Code</label>
+                <input type="text" class="form-control @error('number_code') is-invalid @enderror"
+                       id="number_code" name="number_code" value="{{ old('number_code', $vehicle->number_code) }}" required
+                       pattern="[0-9]*" inputmode="numeric"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                @error('number_code')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="form-group col-md-3">
                 <label for="fuel_type">Fuel Type</label>
                 <select class="form-control @error('fuel_type') is-invalid @enderror"
                         id="fuel_type" name="fuel_type" required>
@@ -74,7 +84,7 @@
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label for="seating_capacity">Seating Capacity</label>
                 <input type="number" class="form-control @error('seating_capacity') is-invalid @enderror"
                        id="seating_capacity" name="seating_capacity" value="{{ old('seating_capacity', $vehicle->seating_capacity) }}" min="1" required>

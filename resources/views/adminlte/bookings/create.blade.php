@@ -24,7 +24,7 @@
                                         <option value="">Select Vehicle</option>
                                         @foreach($vehicles as $vehicle)
                                             <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
-                                                {{ $vehicle->name }} ({{ $vehicle->registration_number }})
+                                                {{ $vehicle->name }} ({{ $vehicle->number_plate }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -140,41 +140,49 @@
             var toPicker = flatpickr('#to_date', {
                 dateFormat: 'Y-m-d',
                 allowInput: false,
-                minDate: bookingToday
+                shorthandCurrentMonth: false,
+                disable: [function(date) { return date < bookingToday; }],
+                onReady: function(selectedDates, dateStr, instance) {
+                    var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                    if (!wrapper) return;
+                    var select = document.createElement('select');
+                    select.style.marginLeft = '4px';
+                    select.style.fontSize = 'inherit';
+                    select.style.border = 'none';
+                    select.style.borderRadius = '0';
+                    select.style.fontWeight = 'inherit';
+                    var curr = new Date().getFullYear();
+                    for (var y = curr; y <= curr + 20; y++) {
+                        var opt = document.createElement('option');
+                        opt.value = y;
+                        opt.textContent = y;
+                        if (y === instance.currentYear) opt.selected = true;
+                        select.appendChild(opt);
+                    }
+                    select.addEventListener('change', function(e) {
+                        instance.changeYear(parseInt(e.target.value));
+                    });
+                    wrapper.style.display = 'none';
+                    wrapper.parentNode.insertBefore(select, wrapper);
+                    instance._yearSelect = select;
+                },
+                onYearChange: function(selectedDates, dateStr, instance) {
+                    if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
+                }
             });
 
             flatpickr('#from_date', {
                 dateFormat: 'Y-m-d',
                 allowInput: false,
-                minDate: bookingToday,
+                shorthandCurrentMonth: false,
+                disable: [function(date) { return date < bookingToday; }],
                 onChange: function(selectedDates) {
                     var minToDate = selectedDates[0] || bookingToday;
-                    toPicker.set('minDate', minToDate);
+                    toPicker.set('disable', [function(date) { return date < minToDate; }]);
                     if (toPicker.selectedDates[0] && toPicker.selectedDates[0] < minToDate) {
                         toPicker.setDate(minToDate);
                     }
-                }
-            });
-
-            $('form').on('submit', function(e) {
-                e.preventDefault();
-                var form = $(this);
-                var url = form.attr('action');
-                var method = form.attr('method');
-                var formData = new FormData(form[0]);
-
-                $.ajax({
-                    url: url,
-                    type: method,
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            alert(response.message);
-                            window.location.href = "{{ route('bookings.index') }}";
-                        }
-                    },
+                },
                     error: function(xhr) {
                         if (xhr.status === 422) {
                             var response = xhr.responseJSON;

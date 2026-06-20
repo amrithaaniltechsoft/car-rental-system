@@ -19,7 +19,10 @@
 
                     <ul class="list-group list-group-unbordered mb-3">
                         <li class="list-group-item">
-                            <b>Registration</b> <a class="float-right">{{ $vehicle->registration_number }}</a>
+                            <b>Number Plate</b> <a class="float-right">{{ $vehicle->number_plate }}</a>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Plate Code</b> <a class="float-right">{{ $vehicle->number_code }}</a>
                         </li>
                         <li class="list-group-item">
                             <b>Vehicle Type</b> <a class="float-right">{{ ucfirst($vehicle->type) ?: 'N/A' }}</a>

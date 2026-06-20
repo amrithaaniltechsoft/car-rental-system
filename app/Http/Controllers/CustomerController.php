@@ -293,16 +293,16 @@ class CustomerController extends Controller
     private function getActionButtons(Customer $customer): string
     {
         return '
-            <button type="button" class="btn btn-info btn-sm view-customer-btn" data-url="'.route('customers.show', $customer).'">
+            <button type="button" class="btn btn-info btn-sm view-customer-btn" data-toggle="tooltip" title="View" data-url="'.route('customers.show', $customer).'">
                 <i class="fas fa-eye"></i>
             </button>
-            <button type="button" class="btn btn-warning btn-sm edit-customer-btn" data-url="'.route('customers.edit', $customer).'">
+            <button type="button" class="btn btn-warning btn-sm edit-customer-btn" data-toggle="tooltip" title="Edit" data-url="'.route('customers.edit', $customer).'">
                 <i class="fas fa-edit"></i>
             </button>
             <form action="'.route('customers.destroy', $customer).'" method="POST" style="display: inline;">
                 '.csrf_field().'
                 '.method_field('DELETE').'
-                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure?\')">
+                <button type="submit" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete" onclick="return confirm(\'Are you sure?\')">
                     <i class="fas fa-trash"></i>
                 </button>
             </form>

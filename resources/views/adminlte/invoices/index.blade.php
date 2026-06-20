@@ -54,7 +54,7 @@
                             <select class="form-control select2" id="filter_vehicle" style="width: 100%;">
                                 <option value=""></option>
                                 @foreach($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->registration_number }})</option>
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -174,25 +174,31 @@
                     @method('PUT')
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-4">
                                 <label for="edit_invoice_number">Invoice #</label>
                                 <input type="text" class="form-control" id="edit_invoice_number" readonly>
                             </div>
-                            <div class="form-group col-md-2">
-                                <label for="edit_invoice_date">Invoice Date <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control datepicker" id="edit_invoice_date" name="invoice_date" required>
-                            </div>
-                            <div class="form-group col-md-2">
-                                <label for="edit_due_date">Due Date</label>
-                                <input type="text" class="form-control datepicker" id="edit_due_date" name="due_date">
-                            </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-4">
                                 <label for="edit_customer">Customer</label>
                                 <input type="text" class="form-control" id="edit_customer" readonly>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-4">
                                 <label for="edit_vehicle">Vehicle</label>
                                 <input type="text" class="form-control" id="edit_vehicle" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="edit_invoice_date">From Date <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_invoice_date" name="invoice_date" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_to_date">To Date</label>
+                                <input type="text" class="form-control" id="edit_to_date" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="edit_due_date">Due Date</label>
+                                <input type="text" class="form-control datepicker" id="edit_due_date" name="due_date">
                             </div>
                         </div>
 
@@ -280,7 +286,7 @@
                                         <tr class="table-success">
                                             <td style="vertical-align: middle;" class="pl-2"><strong>Total Amount</strong></td>
                                             <td>
-                                                <span class="form-control form-control-sm text-right font-weight-bold" id="edit_total_display" style="border: none; background: transparent; font-size: 16px; display: block; pointer-events: none;">0.00</span>
+                                                <span class="form-control form-control-sm text-right font-weight-bold" id="edit_total_display" style="border: none; background: transparent; font-size: 16px; display: block; pointer-events: none;">0.00 OMR</span>
                                                 <input type="hidden" id="edit_total" name="total" value="0.00">
                                                 <small id="edit_total_zero_error" class="text-danger d-none">Total amount must be greater than zero to save.</small>
                                             </td>
@@ -334,7 +340,7 @@
 
         function calculateBillOMRTotal() {
             var amountUSD = parseFloat($('#bill_amount_usd').val()) || 0;
-            var exchangeRate = 0.385; // Fixed exchange rate
+            var exchangeRate = 0.3845; // Fixed exchange rate
             var amountOMR = amountUSD * exchangeRate;
             $('#bill_amount_omr').val(amountOMR.toFixed(2));
         }
@@ -412,9 +418,9 @@
             var subtotal = total - vatAmount;
             
             $('#edit_total').val(total.toFixed(2));
-            $('#edit_total_display').text(fmtNum(total));
-            $('#edit_vat_amount').text(fmtNum(vatAmount));
-            $('#edit_subtotal').text(fmtNum(subtotal));
+            $('#edit_total_display').text(fmtNum(total * 0.3845));
+            $('#edit_vat_amount').text(fmtNum(vatAmount * 0.3845));
+            $('#edit_subtotal').text(fmtNum(subtotal * 0.3845));
         }
 
         $(document).ready(function() {
@@ -486,6 +492,15 @@
                             $('#edit_due_date').val(invoice.due_date);
                              $('#edit_customer').val(invoice.customer_name || '');
                              $('#edit_vehicle').val(invoice.vehicle_name || '');
+                             
+                             // Set to date from return_datetime
+                             var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                             if (invoice.return_datetime) {
+                                 var rd = new Date(invoice.return_datetime);
+                                 $('#edit_to_date').val(rd.getDate() + ' ' + months[rd.getMonth()] + ' ' + rd.getFullYear());
+                             } else {
+                                 $('#edit_to_date').val('');
+                             }
                              $('#edit_rate_type').val(invoice.rate_type || 'daily');
                              $('#edit_rate').val(invoice.rate ? fmtNum(parseFloat(invoice.rate)) : 0);
                              
@@ -512,10 +527,6 @@
                              $('#editInvoiceModal').modal('show');
                              
                              // Initialize date pickers for edit modal
-                             flatpickr('#edit_invoice_date', {
-                                 dateFormat: 'Y-m-d',
-                                 allowInput: false
-                             });
                              flatpickr('#edit_due_date', {
                                  dateFormat: 'Y-m-d',
                                  allowInput: false
@@ -805,6 +816,10 @@
                     "zeroRecords": 'No matching invoices found'
                 },
                 "order": [[0, 'desc']]
+            });
+
+            invoiceTable.on('draw.dt', function() {
+                $('[data-toggle="tooltip"]', $('#invoices-table')).tooltip({ trigger: 'hover' });
             });
 
             // Initialize filter Select2

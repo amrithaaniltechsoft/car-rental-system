@@ -8,7 +8,10 @@
 
         <ul class="list-group list-group-unbordered mb-3">
             <li class="list-group-item">
-                <b><i class="fas fa-id-card mr-1"></i> Registration</b> <span class="float-right text-dark">{{ $vehicle->registration_number }}</span>
+                <b><i class="fas fa-id-card mr-1"></i> Number Plate</b> <span class="float-right text-dark">{{ $vehicle->number_plate }}</span>
+            </li>
+            <li class="list-group-item">
+                <b><i class="fas fa-id-card mr-1"></i> Plate Code</b> <span class="float-right text-dark">{{ $vehicle->number_code }}</span>
             </li>
             <li class="list-group-item">
                 <b><i class="fas fa-car-side mr-1"></i> Vehicle Type</b> <span class="float-right text-dark">{{ ucfirst($vehicle->type) ?: 'N/A' }}</span>

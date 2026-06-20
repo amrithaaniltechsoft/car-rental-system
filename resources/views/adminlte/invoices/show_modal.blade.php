@@ -50,15 +50,15 @@
             <table class="table table-sm table-borderless mb-0">
                 <tr>
                     <td><strong>Subtotal</strong></td>
-                    <td class="text-right text-dark">{{ number_format((float) $invoice->subtotal, 2) }}</td>
+                    <td class="text-right text-dark"><strong>{{ number_format((float) $invoice->subtotal * 0.3845, 2) }} OMR</strong></td>
                 </tr>
                 <tr>
                     <td><strong>VAT ({{ number_format((float) $invoice->vat, 2) }}%)</strong></td>
-                    <td class="text-right text-dark">{{ number_format((float) $invoice->vat_amount, 2) }}</td>
+                    <td class="text-right text-dark"><strong>{{ number_format((float) $invoice->vat_amount * 0.3845, 2) }} OMR</strong></td>
                 </tr>
                 <tr class="table-active">
                     <td><strong>Total Amount</strong></td>
-                    <td class="text-right text-dark"><strong>{{ number_format((float) $invoice->total, 2) }}</strong></td>
+                    <td class="text-right text-dark"><strong>{{ number_format((float) $invoice->total * 0.3845, 2) }} OMR</strong></td>
                 </tr>
             </table>
         </div>

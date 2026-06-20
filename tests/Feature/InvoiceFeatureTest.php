@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Models\Vehicle;
 
 test('invoice index screen can be rendered', function () {
     $user = User::factory()->create();
@@ -114,11 +116,17 @@ test('booking invoice can be created with rate and rate type', function () {
         'id_card_number' => 'ID-INV-BK',
         'address' => 'Booking Street',
     ]);
-    $vehicle = App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Test Car',
-        'registration_number' => 'REG-INV-BK',
+        'number_plate' => 'REG-INV-BK',
+        'number_code' => 'CODE-INV-BK',
+        'model' => 2024,
+        'brand' => 'Test Brand',
+        'type' => 'sedan',
+        'fuel_type' => 'petrol',
+        'seating_capacity' => 5,
     ]);
-    $booking = App\Models\Booking::create([
+    $booking = Booking::create([
         'booking_id' => 'BK20260612001',
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
@@ -148,10 +156,10 @@ test('booking invoice can be created with rate and rate type', function () {
 
     $invoice = Invoice::where('booking_id', $booking->id)->first();
     expect($invoice)->not->toBeNull();
-    expect((float)$invoice->rate)->toBe(100.00);
+    expect((float) $invoice->rate)->toBe(100.00);
     expect($invoice->rate_type)->toBe('daily');
-    expect((float)$invoice->total)->toBe(550.00);
-    expect((float)$invoice->subtotal)->toBe(522.50);
+    expect((float) $invoice->total)->toBe(550.00);
+    expect((float) $invoice->subtotal)->toBe(522.50);
 });
 
 test('invoice can be updated with rate and rate type', function () {
@@ -163,11 +171,17 @@ test('invoice can be updated with rate and rate type', function () {
         'id_card_number' => 'ID-INV-BK2',
         'address' => 'Booking Street',
     ]);
-    $vehicle = App\Models\Vehicle::create([
+    $vehicle = Vehicle::create([
         'name' => 'Test Car 2',
-        'registration_number' => 'REG-INV-BK2',
+        'number_plate' => 'REG-INV-BK2',
+        'number_code' => 'CODE-INV-BK2',
+        'model' => 2024,
+        'brand' => 'Test Brand',
+        'type' => 'sedan',
+        'fuel_type' => 'petrol',
+        'seating_capacity' => 5,
     ]);
-    $booking = App\Models\Booking::create([
+    $booking = Booking::create([
         'booking_id' => 'BK20260612002',
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
@@ -201,12 +215,11 @@ test('invoice can be updated with rate and rate type', function () {
         ]);
 
     $response->assertOk();
-    
-    $invoice->refresh();
-    expect((float)$invoice->rate)->toBe(100.00);
-    expect($invoice->rate_type)->toBe('daily');
-    expect((float)$invoice->total)->toBe(220.00);
-    expect((float)$invoice->subtotal)->toBe(198.00);
-    expect((float)$invoice->vat_amount)->toBe(22.00);
-});
 
+    $invoice->refresh();
+    expect((float) $invoice->rate)->toBe(100.00);
+    expect($invoice->rate_type)->toBe('daily');
+    expect((float) $invoice->total)->toBe(220.00);
+    expect((float) $invoice->subtotal)->toBe(198.00);
+    expect((float) $invoice->vat_amount)->toBe(22.00);
+});

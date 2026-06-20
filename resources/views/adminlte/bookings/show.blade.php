@@ -21,7 +21,7 @@
                     <hr>
                     <strong><i class="fas fa-car mr-1"></i> Vehicle</strong>
                     <p class="text-muted">
-                        {{ $booking->vehicle->name }} ({{ $booking->vehicle->registration_number }})
+                        {{ $booking->vehicle->name }} ({{ $booking->vehicle->number_plate }})
                     </p>
                     <hr>
                     <strong><i class="fas fa-user mr-1"></i> Customer</strong>

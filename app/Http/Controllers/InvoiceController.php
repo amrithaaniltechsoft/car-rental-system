@@ -21,7 +21,7 @@ class InvoiceController extends Controller
     public function index(): View
     {
         $customers = Customer::select('id', 'name', 'company_name', 'customer_type')->orderBy('name')->get();
-        $vehicles = Vehicle::select('id', 'name', 'registration_number')->orderBy('name')->get();
+        $vehicles = Vehicle::select('id', 'name', 'number_plate')->orderBy('name')->get();
         $invoiceNumbers = Invoice::distinct()->orderBy('invoice_number')->pluck('invoice_number')->filter()->values();
 
         return view('adminlte.invoices.index', compact('customers', 'vehicles', 'invoiceNumbers'));
@@ -204,7 +204,7 @@ class InvoiceController extends Controller
             $bookingFromDate = '—';
             $bookingToDate = '—';
             if ($invoice->booking && $invoice->booking->vehicle) {
-                $vehicleLabel = $invoice->booking->vehicle->name.' ('.$invoice->booking->vehicle->registration_number.')';
+                $vehicleLabel = $invoice->booking->vehicle->name.' ('.$invoice->booking->vehicle->number_plate.')';
                 $bookingFromDate = $invoice->booking->from_date->format('d/m/Y');
                 $bookingToDate = $invoice->booking->to_date->format('d/m/Y');
             }
@@ -213,7 +213,7 @@ class InvoiceController extends Controller
             $billIndicator = '';
             if (! $invoice->bill()->exists()) {
                 $billIndicator = '
-                    <button type="button" class="btn btn-success btn-sm create-bill-btn" data-id="'.$invoice->id.'" data-invoice-number="'.$invoice->invoice_number.'" data-amount="'.$invoice->amount.'" data-customer="'.($invoice->customer->customer_type === 'company' ? $invoice->customer->company_name : $invoice->customer->name).'">
+                    <button type="button" class="btn btn-success btn-sm create-bill-btn" data-toggle="tooltip" title="Add Bill" data-id="'.$invoice->id.'" data-invoice-number="'.$invoice->invoice_number.'" data-amount="'.$invoice->amount.'" data-customer="'.($invoice->customer->customer_type === 'company' ? $invoice->customer->company_name : $invoice->customer->name).'">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </button>
                 ';
@@ -226,7 +226,7 @@ class InvoiceController extends Controller
                 'vehicle' => $vehicleLabel,
                 'booking_from_date' => $bookingFromDate,
                 'booking_to_date' => $bookingToDate,
-                'amount' => number_format((float) $invoice->amount, 2),
+                'amount' => number_format((float) $invoice->amount * 0.3845, 2).' OMR',
                 'status' => $statusBadge.' '.$billIndicator,
                 'actions' => $this->getActionButtons($invoice),
             ];
@@ -279,7 +279,7 @@ class InvoiceController extends Controller
     private function bookingsForSelect(): Collection
     {
         return Booking::query()
-            ->with(['vehicle:id,name,registration_number'])
+            ->with(['vehicle:id,name,number_plate'])
             ->whereDoesntHave('invoice')
             ->select('id', 'customer_id', 'vehicle_id', 'from_date', 'to_date', 'total_amount')
             ->orderByDesc('id')
@@ -293,7 +293,7 @@ class InvoiceController extends Controller
         ]);
 
         $bookings = Booking::query()
-            ->with(['vehicle:id,name,registration_number'])
+            ->with(['vehicle:id,name,number_plate'])
             ->where('customer_id', $request->customer_id)
             ->whereDoesntHave('invoice')
             ->select('id', 'customer_id', 'vehicle_id', 'from_date', 'to_date', 'total_amount')
@@ -303,7 +303,7 @@ class InvoiceController extends Controller
         $bookingsData = $bookings->map(function ($booking) {
             return [
                 'id' => $booking->id,
-                'label' => '#'.$booking->id.' — '.$booking->vehicle->name.' ('.$booking->vehicle->registration_number.') — '.$booking->from_date->format('d/m/Y').' to '.$booking->to_date->format('d/m/Y'),
+                'label' => '#'.$booking->id.' — '.$booking->vehicle->name.' ('.$booking->vehicle->number_plate.') — '.$booking->from_date->format('d/m/Y').' to '.$booking->to_date->format('d/m/Y'),
                 'amount' => $booking->total_amount,
                 'from_date' => $booking->from_date->format('Y-m-d'),
             ];
@@ -326,7 +326,7 @@ class InvoiceController extends Controller
             'bill_number' => 'nullable|string',
         ]);
 
-        $exchangeRate = 0.385; // Fixed exchange rate
+        $exchangeRate = 0.3845; // Fixed exchange rate
 
         if ($invoice->bill()->exists()) {
             if ($request->ajax() || $request->expectsJson()) {
@@ -543,13 +543,13 @@ class InvoiceController extends Controller
     private function getActionButtons(Invoice $invoice): string
     {
         $buttons = '
-            <button type="button" class="btn btn-info btn-sm view-invoice-btn" data-id="'.$invoice->id.'" data-url="'.route('invoices.show', $invoice).'">
+            <button type="button" class="btn btn-info btn-sm view-invoice-btn mr-1" data-toggle="tooltip" title="View" data-id="'.$invoice->id.'" data-url="'.route('invoices.show', $invoice).'">
                 <i class="fas fa-eye"></i>
             </button>
-            <button type="button" class="btn btn-warning btn-sm edit-invoice-btn" data-id="'.$invoice->id.'" data-url="'.route('invoices.edit', $invoice).'">
+            <button type="button" class="btn btn-warning btn-sm edit-invoice-btn mr-1" data-toggle="tooltip" title="Edit" data-id="'.$invoice->id.'" data-url="'.route('invoices.edit', $invoice).'">
                 <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="btn btn-danger btn-sm delete-invoice-btn" data-id="'.$invoice->id.'" data-url="'.route('invoices.destroy', $invoice).'">
+            <button type="button" class="btn btn-danger btn-sm delete-invoice-btn" data-toggle="tooltip" title="Delete" data-id="'.$invoice->id.'" data-url="'.route('invoices.destroy', $invoice).'">
                 <i class="fas fa-trash"></i>
             </button>
         ';

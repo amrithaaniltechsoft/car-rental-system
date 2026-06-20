@@ -52,7 +52,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <select class="form-control select2" id="filter_type" style="width: 100%;">
                                 <option value=""></option>
                                 @foreach($types as $type)
@@ -60,11 +60,19 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <select class="form-control select2" id="filter_registration" style="width: 100%;">
+                        <div class="col-md-2">
+                            <select class="form-control select2" id="filter_plate" style="width: 100%;">
                                 <option value=""></option>
-                                @foreach($registrations as $reg)
-                                    <option value="{{ $reg }}">{{ $reg }}</option>
+                                @foreach($numberPlates as $plate)
+                                    <option value="{{ $plate }}">{{ $plate }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control select2" id="filter_code" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($numberCodes as $code)
+                                    <option value="{{ $code }}">{{ $code }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -74,7 +82,8 @@
                             <tr>
                                 <th>SI</th>
                                 <th>Type</th>
-                                <th>Registration</th>
+                                <th>Plate #</th>
+                                <th>Code</th>
                                 <th>Name</th>
                                 <th>Model</th>
                                 <th>Brand</th>
@@ -149,14 +158,23 @@
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="registration_number">Registration Number</label>
-                                <input type="text" class="form-control @error('registration_number') is-invalid @enderror" id="registration_number" name="registration_number" value="{{ old('registration_number') }}" required>
-                                @error('registration_number')
+                            <div class="form-group col-md-3">
+                                <label for="number_plate">Number Plate</label>
+                                <input type="text" class="form-control @error('number_plate') is-invalid @enderror" id="number_plate" name="number_plate" value="{{ old('number_plate') }}" required>
+                                @error('number_plate')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
+                                <label for="number_code">Plate Code</label>
+                                <input type="text" class="form-control @error('number_code') is-invalid @enderror" id="number_code" name="number_code" value="{{ old('number_code') }}" required
+                                       pattern="[0-9]*" inputmode="numeric"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                @error('number_code')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-3">
                                 <label for="fuel_type">Fuel Type</label>
                                 <select class="form-control @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type" required>
                                     <option value="">Select Fuel Type</option>
@@ -168,7 +186,7 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="seating_capacity">Seating Capacity</label>
                                 <input type="number" class="form-control @error('seating_capacity') is-invalid @enderror" id="seating_capacity" name="seating_capacity" value="{{ old('seating_capacity') }}" min="1" required>
                                 @error('seating_capacity')
@@ -299,13 +317,15 @@
                         d.filter_name = $('#filter_name').val();
                         d.filter_brand = $('#filter_brand').val();
                         d.filter_type = $('#filter_type').val();
-                        d.filter_registration = $('#filter_registration').val();
+                        d.filter_plate = $('#filter_plate').val();
+                        d.filter_code = $('#filter_code').val();
                     }
                 },
                 "columns": [
                     { "data": "id", "orderable": true },
                     { "data": "type", "orderable": true },
-                    { "data": "registration_number", "orderable": true },
+                    { "data": "number_plate", "orderable": true },
+                    { "data": "number_code", "orderable": true },
                     { "data": "name", "orderable": true },
                     { "data": "model", "orderable": true },
                     { "data": "brand", "orderable": true },
@@ -327,6 +347,10 @@
                     "zeroRecords": "No matching vehicles found"
                 },
                 "order": [[0, "desc"]]
+            });
+
+            vehicleTable.on('draw.dt', function() {
+                $('[data-toggle="tooltip"]', $('#vehicles-table')).tooltip({ trigger: 'hover' });
             });
 
             $('#filter_brand').select2({
@@ -352,15 +376,23 @@
                 minimumResultsForSearch: 0
             });
 
-            $('#filter_registration').select2({
+            $('#filter_plate').select2({
                 theme: 'bootstrap4',
-                placeholder: 'Search by Registration',
+                placeholder: 'Search by Plate',
                 allowClear: true,
                 width: '100%',
                 minimumResultsForSearch: 0
             });
 
-            $('#filter_name, #filter_brand, #filter_type, #filter_registration').on('change', function() {
+            $('#filter_code').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Code',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            $('#filter_name, #filter_brand, #filter_type, #filter_plate, #filter_code').on('change', function() {
                 vehicleTable.draw();
             });
 

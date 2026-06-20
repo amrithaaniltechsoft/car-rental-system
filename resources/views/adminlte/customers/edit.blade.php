@@ -263,13 +263,71 @@
             flatpickr('#date_of_birth', {
                 dateFormat: 'Y-m-d',
                 allowInput: false,
-                maxDate: new Date() // Date of birth can't be in future
+                shorthandCurrentMonth: false,
+                disable: [function(date) { return date > new Date(); }],
+                onReady: function(selectedDates, dateStr, instance) {
+                    var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                    if (!wrapper) return;
+                    var select = document.createElement('select');
+                    select.style.marginLeft = '4px';
+                    select.style.fontSize = 'inherit';
+                    select.style.padding = '1px 2px';
+                    select.style.border = 'none';
+                    select.style.borderRadius = '0';
+                    select.style.fontWeight = 'inherit';
+                    var curr = new Date().getFullYear();
+                    for (var y = curr; y >= curr - 100; y--) {
+                        var opt = document.createElement('option');
+                        opt.value = y;
+                        opt.textContent = y;
+                        if (y === instance.currentYear) opt.selected = true;
+                        select.appendChild(opt);
+                    }
+                    select.addEventListener('change', function(e) {
+                        instance.changeYear(parseInt(e.target.value));
+                    });
+                    wrapper.style.display = 'none';
+                    wrapper.parentNode.insertBefore(select, wrapper);
+                    instance._yearSelect = select;
+                },
+                onYearChange: function(selectedDates, dateStr, instance) {
+                    if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
+                }
             });
 
             flatpickr('#license_expiry_date', {
                 dateFormat: 'Y-m-d',
                 allowInput: false,
-                minDate: new Date() // License expiry should be in future
+                shorthandCurrentMonth: false,
+                disable: [function(date) { return date < new Date(); }],
+                onReady: function(selectedDates, dateStr, instance) {
+                    var wrapper = instance.calendarContainer.querySelector('.numInputWrapper');
+                    if (!wrapper) return;
+                    var select = document.createElement('select');
+                    select.style.marginLeft = '4px';
+                    select.style.fontSize = 'inherit';
+                    select.style.padding = '1px 2px';
+                    select.style.border = 'none';
+                    select.style.borderRadius = '0';
+                    select.style.fontWeight = 'inherit';
+                    var curr = new Date().getFullYear();
+                    for (var y = curr; y <= curr + 20; y++) {
+                        var opt = document.createElement('option');
+                        opt.value = y;
+                        opt.textContent = y;
+                        if (y === instance.currentYear) opt.selected = true;
+                        select.appendChild(opt);
+                    }
+                    select.addEventListener('change', function(e) {
+                        instance.changeYear(parseInt(e.target.value));
+                    });
+                    wrapper.style.display = 'none';
+                    wrapper.parentNode.insertBefore(select, wrapper);
+                    instance._yearSelect = select;
+                },
+                onYearChange: function(selectedDates, dateStr, instance) {
+                    if (instance._yearSelect) instance._yearSelect.value = instance.currentYear;
+                }
             });
         });
     </script>

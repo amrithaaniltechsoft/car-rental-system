@@ -327,6 +327,12 @@ return [
             'active' => ['vehicles*'],
         ],
         [
+            'text' => 'Suppliers',
+            'url' => 'suppliers',
+            'icon' => 'fas fa-fw fa-handshake',
+            'active' => ['suppliers*'],
+        ],
+        [
             'text' => 'Customers',
             'url' => 'customers',
             'icon' => 'fas fa-fw fa-users',

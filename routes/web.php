@@ -7,6 +7,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,8 @@ Route::middleware('auth')->group(function () {
     // Fleet Management
     Route::resource('vehicles', VehicleController::class);
     Route::get('/vehicles-data', [VehicleController::class, 'getData'])->name('vehicles.data');
+    Route::resource('suppliers', SupplierController::class);
+    Route::get('/suppliers-data', [SupplierController::class, 'getData'])->name('suppliers.getData');
 
     // Customer Management
     Route::resource('customers', CustomerController::class);
@@ -29,9 +32,10 @@ Route::middleware('auth')->group(function () {
 
     // Vehicle Bookings
     Route::get('/bookings/next-id', [BookingController::class, 'getNextBookingId'])->name('bookings.next-id');
+    Route::get('/bookings/available-vehicles', [BookingController::class, 'availableVehicles'])->name('bookings.available-vehicles');
+    Route::post('/bookings/check-availability', [BookingController::class, 'checkAvailability'])->name('bookings.check-availability');
     Route::resource('bookings', BookingController::class);
     Route::get('/bookings-data', [BookingController::class, 'getData'])->name('bookings.data');
-    Route::post('/bookings/check-availability', [BookingController::class, 'checkAvailability'])->name('bookings.check-availability');
     Route::get('/bookings/{booking}/data', [BookingController::class, 'getBookingData'])->name('bookings.get-data');
     Route::get('/customers/{customer}/details', [BookingController::class, 'getCustomerDetails'])->name('customers.details');
     Route::get('/vehicles/{vehicle}/details', [BookingController::class, 'getVehicleDetails'])->name('vehicles.details');

@@ -357,7 +357,7 @@ class BookingController extends Controller
             $data[] = [
                 'id' => $rowNum++,
                 'booking_id' => $booking->booking_id ?: 'N/A',
-                'vehicle' => $booking->vehicle->name.' ('.$booking->vehicle->registration_number.')',
+                'vehicle' => $booking->vehicle->name.' ('.$booking->vehicle->number_plate.')',
                 'customer' => $booking->customer->name,
                 'dates' => ($booking->pickup_datetime ? $booking->pickup_datetime->format('d/m/Y H:i') : ($booking->from_date ? $booking->from_date->format('d/m/Y') : 'N/A'))
                     .' - '
@@ -409,13 +409,13 @@ class BookingController extends Controller
         $disabledAttr = $hasInvoice ? 'disabled' : '';
 
         $buttons = '
-            <button type="button" class="btn btn-info btn-sm view-booking-btn" data-url="'.route('bookings.show', $booking).'">
+            <button type="button" class="btn btn-info btn-sm view-booking-btn" data-toggle="tooltip" title="View" data-url="'.route('bookings.show', $booking).'">
                 <i class="fas fa-eye"></i>
             </button>
-            <button type="button" class="btn '.$editClass.' btn-sm edit-booking-btn" data-id="'.$booking->id.'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
+            <button type="button" class="btn '.$editClass.' btn-sm edit-booking-btn" data-toggle="tooltip" title="Edit" data-id="'.$booking->id.'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
                 <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="btn '.$deleteClass.' btn-sm delete-booking-btn" data-id="'.$booking->id.'" data-url="'.route('bookings.destroy', $booking).'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
+            <button type="button" class="btn '.$deleteClass.' btn-sm delete-booking-btn" data-toggle="tooltip" title="Delete" data-id="'.$booking->id.'" data-url="'.route('bookings.destroy', $booking).'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
                 <i class="fas fa-trash"></i>
             </button>
         ';
@@ -424,7 +424,7 @@ class BookingController extends Controller
             $pickupStr = $booking->pickup_datetime ? $booking->pickup_datetime->format('Y-m-d H:i') : ($booking->from_date ? $booking->from_date->format('Y-m-d 00:00') : '');
             $returnStr = $booking->return_datetime ? $booking->return_datetime->format('Y-m-d H:i') : ($booking->to_date ? $booking->to_date->format('Y-m-d 00:00') : '');
             $buttons .= '
-                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'" data-pickup-datetime="'.$pickupStr.'" data-return-datetime="'.$returnStr.'">
+                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-toggle="tooltip" title="Add Invoice" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'" data-pickup-datetime="'.$pickupStr.'" data-return-datetime="'.$returnStr.'">
                     <i class="fas fa-file-invoice"></i>
                 </button>
             ';
@@ -671,7 +671,8 @@ class BookingController extends Controller
             'vehicle' => [
                 'id' => $vehicle->id,
                 'name' => $vehicle->name,
-                'registration_number' => $vehicle->registration_number,
+                'number_plate' => $vehicle->number_plate,
+                'number_code' => $vehicle->number_code,
                 'brand' => $vehicle->brand,
                 'model' => $vehicle->model,
                 'type' => $vehicle->type,
@@ -711,10 +712,46 @@ class BookingController extends Controller
         ]);
     }
 
+    /**
+     * Get available vehicles for a given date range
+     */
+    public function availableVehicles(Request $request): JsonResponse
+    {
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+            'exclude_booking_id' => 'nullable|integer|exists:bookings,id',
+        ]);
+
+        $fromDate = $request->from_date;
+        $toDate = $request->to_date;
+
+        $bookedVehicleIds = Booking::where(function ($q) use ($fromDate, $toDate) {
+            $q->whereBetween('from_date', [$fromDate, $toDate])
+                ->orWhereBetween('to_date', [$fromDate, $toDate])
+                ->orWhere(function ($q2) use ($fromDate, $toDate) {
+                    $q2->where('from_date', '<=', $fromDate)
+                        ->where('to_date', '>=', $toDate);
+                });
+        })
+            ->when($request->filled('exclude_booking_id'), function ($q) use ($request) {
+                $q->where('id', '!=', $request->exclude_booking_id);
+            })
+            ->pluck('vehicle_id')
+            ->unique();
+
+        $availableVehicles = Vehicle::whereNotIn('id', $bookedVehicleIds)
+            ->select('id', 'name', 'number_plate')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($availableVehicles);
+    }
+
     private function vehiclesForSelect(): Collection
     {
         return Vehicle::query()
-            ->select('id', 'name', 'registration_number')
+            ->select('id', 'name', 'number_plate')
             ->orderBy('name')
             ->get();
     }

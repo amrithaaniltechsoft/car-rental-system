@@ -91,17 +91,29 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="registration_number">Registration Number</label>
-                                    <input type="text" class="form-control @error('registration_number') is-invalid @enderror"
-                                           id="registration_number" name="registration_number" value="{{ old('registration_number') }}" required>
-                                    @error('registration_number')
+                                    <label for="number_plate">Number Plate</label>
+                                    <input type="text" class="form-control @error('number_plate') is-invalid @enderror"
+                                           id="number_plate" name="number_plate" value="{{ old('number_plate') }}" required>
+                                    @error('number_plate')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="number_code">Plate Code</label>
+                                    <input type="text" class="form-control @error('number_code') is-invalid @enderror"
+                                           id="number_code" name="number_code" value="{{ old('number_code') }}" required
+                                           pattern="[0-9]*" inputmode="numeric"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                    @error('number_code')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="fuel_type">Fuel Type</label>
                                     <select class="form-control @error('fuel_type') is-invalid @enderror"
@@ -116,7 +128,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="seating_capacity">Seating Capacity</label>
                                     <input type="number" class="form-control @error('seating_capacity') is-invalid @enderror"
