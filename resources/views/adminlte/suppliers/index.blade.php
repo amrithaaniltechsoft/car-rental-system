@@ -55,6 +55,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Supplier ID</th>
                                 <th>Name</th>
                                 <th>Phone</th>
                                 <th>Email</th>
@@ -190,6 +191,10 @@
                     </div>
                     <ul class="list-group list-group-unbordered mb-3">
                         <li class="list-group-item">
+                            <b><i class="fas fa-id-badge mr-1"></i> Supplier ID</b>
+                            <span class="float-right text-dark" id="show_supplier_code"></span>
+                        </li>
+                        <li class="list-group-item">
                             <b><i class="fas fa-envelope mr-1"></i> Email</b>
                             <span class="float-right text-dark" id="show_email"></span>
                         </li>
@@ -246,6 +251,7 @@
                 },
                 columns: [
                     { data: 'id', orderable: true },
+                    { data: 'supplier_code', orderable: true },
                     { data: 'name', orderable: true },
                     { data: 'phone', orderable: true },
                     { data: 'email', orderable: true },
@@ -337,6 +343,7 @@
             $.get('{{ route('suppliers.show', ':id') }}'.replace(':id', id), function(data) {
                 $('#show_name').text(data.name);
                 $('#show_phone').text(data.phone);
+                $('#show_supplier_code').text(data.supplier_code || 'N/A');
                 $('#show_email').text(data.email || 'N/A');
                 $('#show_address').text(data.address || 'N/A');
                 $('#show_created_at').text(data.created_at);

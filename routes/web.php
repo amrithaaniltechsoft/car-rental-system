@@ -49,7 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/invoices/{invoice}/bill', [InvoiceController::class, 'createBill'])->name('invoices.createBill');
 
     // Bills
-    Route::resource('bills', BillController::class)->only(['index', 'store']);
+    Route::resource('bills', BillController::class)->only(['index', 'store', 'show', 'destroy']);
     Route::get('/bills-data', [BillController::class, 'getData'])->name('bills.data');
     Route::get('/bills/next-number', [BillController::class, 'getNextBillNumber'])->name('bills.next-number');
 

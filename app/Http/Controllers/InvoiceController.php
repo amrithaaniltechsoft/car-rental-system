@@ -6,6 +6,7 @@ use App\Models\Bill;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Supplier;
 use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -23,8 +24,9 @@ class InvoiceController extends Controller
         $customers = Customer::select('id', 'name', 'company_name', 'customer_type')->orderBy('name')->get();
         $vehicles = Vehicle::select('id', 'name', 'number_plate')->orderBy('name')->get();
         $invoiceNumbers = Invoice::distinct()->orderBy('invoice_number')->pluck('invoice_number')->filter()->values();
+        $suppliers = Supplier::select('id', 'supplier_code', 'name')->orderBy('name')->get();
 
-        return view('adminlte.invoices.index', compact('customers', 'vehicles', 'invoiceNumbers'));
+        return view('adminlte.invoices.index', compact('customers', 'vehicles', 'invoiceNumbers', 'suppliers'));
     }
 
     /**
@@ -213,7 +215,7 @@ class InvoiceController extends Controller
             $billIndicator = '';
             if (! $invoice->bill()->exists()) {
                 $billIndicator = '
-                    <button type="button" class="btn btn-success btn-sm create-bill-btn" data-toggle="tooltip" title="Add Bill" data-id="'.$invoice->id.'" data-invoice-number="'.$invoice->invoice_number.'" data-amount="'.$invoice->amount.'" data-customer="'.($invoice->customer->customer_type === 'company' ? $invoice->customer->company_name : $invoice->customer->name).'">
+                    <button type="button" class="btn btn-success btn-sm create-bill-btn" data-toggle="tooltip" title="Add Bill" data-id="'.$invoice->id.'" data-invoice-number="'.$invoice->invoice_number.'" data-amount="'.$invoice->amount.'" data-subtotal="'.$invoice->subtotal.'" data-vat="'.$invoice->vat.'" data-vat-amount="'.$invoice->vat_amount.'" data-customer="'.($invoice->customer->customer_type === 'company' ? $invoice->customer->company_name : $invoice->customer->name).'">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </button>
                 ';

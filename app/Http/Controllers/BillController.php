@@ -23,6 +23,16 @@ class BillController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show(Bill $bill): View
+    {
+        $bill->load(['invoice.customer', 'invoice.booking.vehicle']);
+
+        return view('adminlte.bills.show_modal', compact('bill'));
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -88,9 +98,11 @@ class BillController extends Controller
             0 => 'id',
             1 => 'bill_number',
             2 => 'invoice_id',
-            3 => 'amount',
-            4 => 'bill_date',
-            5 => 'status',
+            3 => 'customer',
+            4 => 'amount',
+            5 => 'bill_date',
+            6 => 'status',
+            7 => 'actions',
         ];
         $orderColumn = $tableColumnsMap[$orderColumnIndex] ?? 'id';
 
@@ -128,6 +140,9 @@ class BillController extends Controller
                 ? $bill->invoice->customer->company_name
                 : $bill->invoice->customer->name;
 
+            $showUrl = route('bills.show', $bill->id);
+            $deleteUrl = route('bills.destroy', $bill->id);
+
             $data[] = [
                 'id' => $rowNum++,
                 'bill_number' => $bill->bill_number,
@@ -136,6 +151,14 @@ class BillController extends Controller
                 'amount' => number_format((float) $bill->amount, 2).' OMR',
                 'bill_date' => $bill->bill_date->format('d/m/Y'),
                 'status' => $this->getStatusBadge($bill->status),
+                'actions' => '
+                    <button type="button" class="btn btn-info btn-sm view-bill-btn" data-url="'.$showUrl.'" data-toggle="tooltip" title="View Bill">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm delete-bill-btn" data-url="'.$deleteUrl.'" data-toggle="tooltip" title="Delete Bill">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ',
             ];
         }
 
@@ -182,6 +205,24 @@ class BillController extends Controller
             ->select('id', 'invoice_number', 'customer_id', 'amount', 'invoice_date')
             ->orderByDesc('id')
             ->get();
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Bill $bill): JsonResponse|RedirectResponse
+    {
+        $bill->delete();
+
+        if (request()->ajax() || request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill deleted successfully.',
+            ]);
+        }
+
+        return redirect()->route('bills.index')
+            ->with('success', 'Bill deleted successfully.');
     }
 
     public function getNextBillNumber(): JsonResponse

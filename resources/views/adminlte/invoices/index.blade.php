@@ -107,7 +107,7 @@
 
     <!-- Create Bill Modal -->
     <div class="modal fade" id="createBillModal" tabindex="-1" role="dialog" aria-labelledby="createBillModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content" style="border: 1px solid #28a745;">
                 <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
                     <h4 class="modal-title text-center w-100" id="createBillModalLabel">Create Bill</h4>
@@ -118,38 +118,94 @@
                 <form id="createBillForm">
                     @csrf
                     <input type="hidden" id="bill_number_hidden" name="bill_number">
+                    <input type="hidden" id="bill_amount_usd" name="amount_usd">
                     <div class="modal-body">
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="bill_number">Bill #</label>
                                 <input type="text" class="form-control" id="bill_number" readonly>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label for="bill_date">Bill Date</label>
-                                <input type="text" class="form-control" id="bill_date" name="bill_date" value="{{ now()->format('Y-m-d') }}" readonly required>
+                            <div class="form-group col-md-3">
+                                <label for="bill_date_display">Bill Date</label>
+                                <input type="text" class="form-control" id="bill_date_display" value="{{ now()->format('d-M-Y') }}" readonly>
+                                <input type="hidden" id="bill_date" name="bill_date" value="{{ now()->format('Y-m-d') }}">
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="bill_invoice_number">Invoice #</label>
                                 <input type="text" class="form-control" id="bill_invoice_number" readonly>
                             </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="bill_customer">Customer</label>
-                                <input type="text" class="form-control" id="bill_customer" readonly>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="bill_amount_usd">Amount (USD)</label>
-                                <input type="number" step="0.01" min="0" class="form-control" id="bill_amount_usd" name="amount_usd" readonly required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="bill_amount_omr">Amount (OMR)</label>
-                                <input type="number" step="0.01" min="0" class="form-control" id="bill_amount_omr" readonly>
+                            <div class="form-group col-md-3">
+                                <label for="bill_invoice_amount">Invoice Amount</label>
+                                <input type="text" class="form-control" id="bill_invoice_amount" readonly>
                             </div>
                         </div>
 
+                        <hr>
+                        <h5><strong>Account Payable Billing Details</strong></h5>
 
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr class="bill-row">
+                                        <th>Suppliers</th>
+                                        <th>ID</th>
+                                        <th>Reference</th>
+                                        <th>Vat</th>
+                                        <th>Vat Amount</th>
+                                        <th>Total Payable</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bill_details_table_body">
+                                    <tr class="bill-row">
+                                        <td>
+                                            <select class="form-control select2 bill-supplier" style="width: 100%;">
+                                                <option value="">Select Supplier</option>
+                                                @foreach($suppliers as $supplier)
+                                                    <option value="{{ $supplier->id }}" data-code="{{ $supplier->supplier_code }}">{{ $supplier->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td class="bill-td-id">—</td>
+                                        <td><input type="text" class="form-control bill-ref"></td>
+                                        <td><input type="number" class="form-control bill-vat text-right" value="5" readonly></td>
+                                        <td><input type="text" class="form-control bill-vat-amount text-right" readonly></td>
+                                        <td><input type="text" class="form-control bill-total text-right"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-success btn-sm btn-add-row py-0"><i class="fas fa-plus fa-xs"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <hr>
+                        <div class="form-row justify-content-end">
+                            <div class="col-md-5">
+                                <table class="table table-bordered table-sm" style="font-size: 14px;">
+                                    <tr>
+                                        <td style="width: 130px; vertical-align: middle;" class="pl-2"><strong>Total</strong></td>
+                                        <td><span class="form-control form-control-sm text-right" id="bill_summary_total" style="border: none; background: transparent; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>VAT(%)</strong></td>
+                                        <td><input type="text" class="form-control form-control-sm text-right" id="bill_summary_vat_pct" value="5" style="border: none; background: transparent; font-weight: bold;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>VAT(Amount)</strong></td>
+                                        <td><span class="form-control form-control-sm text-right" id="bill_summary_vat_amt" style="border: none; background: transparent; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>Sub Total</strong></td>
+                                        <td><span class="form-control form-control-sm text-right" id="bill_summary_subtotal" style="border: none; background: transparent; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>Net Profit</strong></td>
+                                        <td><span class="form-control form-control-sm text-right font-weight-bold" id="bill_summary_net_profit" style="border: none; background: transparent; font-size: 16px; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Save Bill</button>
@@ -313,6 +369,16 @@
             font-size: 16px;
             font-weight: 600 !important;
         }
+        .bill-row td, .bill-row th {
+            padding: 0.4rem 0.5rem !important;
+        }
+        .bill-row td:first-child {
+            min-width: 300px;
+        }
+        .bill-row td:nth-child(4) {
+            width: 80px;
+            min-width: 80px;
+        }
         .datepicker[readonly] {
             background-color: #ffffff;
             opacity: 1;
@@ -338,14 +404,8 @@
 
         var currentInvoiceId = null;
 
-        function calculateBillOMRTotal() {
-            var amountUSD = parseFloat($('#bill_amount_usd').val()) || 0;
-            var exchangeRate = 0.3845; // Fixed exchange rate
-            var amountOMR = amountUSD * exchangeRate;
-            $('#bill_amount_omr').val(amountOMR.toFixed(2));
-        }
-
         function fmtNum(num) { return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+        function fmtNum3(num) { return num.toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
         function formatEditPricingInput(id) {
             if ($('#' + id).is('select')) {
@@ -449,9 +509,28 @@
             $(document).on('click', '.create-bill-btn', function() {
                 currentInvoiceId = $(this).data('id');
                 $('#bill_invoice_number').val($(this).data('invoice-number'));
-                $('#bill_customer').val($(this).data('customer'));
-                $('#bill_amount_usd').val(parseFloat($(this).data('amount')).toFixed(2));
-                calculateBillOMRTotal();
+                var invAmt = parseFloat($(this).data('amount')) || 0;
+                $('#bill_invoice_amount').val((invAmt * 0.3845).toFixed(3));
+                $('#bill_amount_usd').val(invAmt.toFixed(2));
+                $('#createBillForm').data('amount', invAmt.toFixed(2));
+
+                var vatPct = parseFloat($(this).data('vat')) || 0;
+                var vatAmt = parseFloat($(this).data('vat-amount')) || 0;
+                var subtotal = parseFloat($(this).data('subtotal')) || 0;
+                var totalAmt = parseFloat($(this).data('amount')) || 0;
+                var rate = 0.3845;
+
+                // Reset table to single row
+                var $tableBody = $('#bill_details_table_body');
+                $tableBody.find('.bill-row:not(:first)').remove();
+                var $firstRow = $tableBody.find('.bill-row:first');
+                $firstRow.find('.bill-supplier').val('').trigger('change');
+                $firstRow.find('.bill-td-id').text('—');
+                $firstRow.find('.bill-ref').val('');
+                $firstRow.find('.bill-vat').val('5');
+                $firstRow.find('.bill-vat-amount').val('');
+                $firstRow.find('.bill-total').val('');
+                calculateBillSummary();
                 
                 // Get next bill number from server
                 $.ajax({
@@ -468,10 +547,86 @@
                 
                 $('#createBillForm').attr('action', '{{ route('invoices.createBill', ':id') }}'.replace(':id', currentInvoiceId));
                 $('#createBillModal').modal('show');
+
+                // Initialize supplier Select2 inside the modal
+                $('#bill_details_table_body .bill-supplier').select2({
+                    theme: 'bootstrap4',
+                    placeholder: 'Select Supplier',
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
             });
 
-            // Recalculate OMR total when amount USD changes
-            $(document).on('input', '#bill_amount_usd', calculateBillOMRTotal);
+            function calculateBillSummary() {
+                var grandTotal = 0, grandVatAmt = 0;
+                $('#bill_details_table_body .bill-row').each(function() {
+                    grandTotal += parseFloat($(this).find('.bill-total').val().replace(/,/g, '')) || 0;
+                    grandVatAmt += parseFloat($(this).find('.bill-vat-amount').val().replace(/,/g, '')) || 0;
+                });
+                var invAmt = parseFloat($('#bill_invoice_amount').val().replace(/,/g, '')) || 0;
+                var vatPct = parseFloat($('#bill_summary_vat_pct').val()) || 0;
+                var subtotal = grandTotal - grandVatAmt;
+                var netProfit = invAmt - grandTotal;
+                $('#bill_summary_total').text(fmtNum3(grandTotal));
+                $('#bill_summary_vat_amt').text(fmtNum3(grandVatAmt));
+                $('#bill_summary_subtotal').text(fmtNum3(subtotal));
+                $('#bill_summary_net_profit').text(fmtNum3(netProfit));
+            }
+
+            // Format Total Payable on blur and auto-calculate Vat Amount
+            $(document).on('blur', '.bill-total', function() {
+                var $row = $(this).closest('tr');
+                var raw = $(this).val().replace(/,/g, '');
+                var total = parseFloat(raw) || 0;
+                $(this).val(fmtNum3(total));
+                var vatPct = parseFloat($row.find('.bill-vat').val()) || 0;
+                var vatAmt = total * vatPct / 100;
+                $row.find('.bill-vat-amount').val(fmtNum3(vatAmt));
+                calculateBillSummary();
+            });
+
+            // Recalculate summary when VAT(%) changes
+            $(document).on('input', '#bill_summary_vat_pct', calculateBillSummary);
+
+            // Update ID column when supplier is selected
+            $(document).on('change', '.bill-supplier', function() {
+                var code = $(this).find(':selected').data('code');
+                $(this).closest('tr').find('.bill-td-id').text(code || '—');
+            });
+
+            // Add new row
+            $(document).on('click', '.btn-add-row', function() {
+                var $tableBody = $('#bill_details_table_body');
+                var $newRow = $tableBody.find('.bill-row:first').clone();
+
+                $newRow.find('input').val('');
+                $newRow.find('.bill-td-id').text('—');
+                $newRow.find('.bill-vat').val('5');
+                $newRow.find('.btn-add-row')
+                    .removeClass('btn-success btn-add-row')
+                    .addClass('btn-danger btn-remove-row')
+                    .html('<i class="fas fa-minus"></i>');
+
+                $newRow.find('.select2-container').remove();
+                $newRow.find('select').removeClass('select2-hidden-accessible').removeAttr('aria-hidden data-select2-id');
+
+                $tableBody.append($newRow);
+
+                calculateBillSummary();
+
+                $newRow.find('.bill-supplier').select2({
+                    theme: 'bootstrap4',
+                    placeholder: 'Select Supplier',
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+            });
+
+            // Remove row
+            $(document).on('click', '.btn-remove-row', function() {
+                $(this).closest('tr').remove();
+                calculateBillSummary();
+            });
 
             // Handle edit invoice button click
             $(document).on('click', '.edit-invoice-btn', function() {

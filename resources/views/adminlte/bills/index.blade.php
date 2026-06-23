@@ -43,6 +43,7 @@
                                 <th>Amount</th>
                                 <th>Bill Date</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -53,7 +54,7 @@
     </div>
 
     <div class="modal fade" id="addBillModal" tabindex="-1" role="dialog" aria-labelledby="addBillModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content" style="border: 1px solid #28a745;">
                 <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
                     <h4 class="modal-title text-center w-100" id="addBillModalLabel">Add New Bill</h4>
@@ -130,6 +131,22 @@
             </div>
         </div>
     </div>
+    <!-- View Bill Modal -->
+    <div class="modal fade" id="viewBillModal" tabindex="-1" role="dialog" aria-labelledby="viewBillModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="viewBillModalLabel">View Bill Details</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="viewBillModalBody">
+                    <!-- Bill details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -178,7 +195,7 @@
 
 
 
-            $('#bills-table').DataTable({
+            var billTable = $('#bills-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -192,7 +209,8 @@
                     { data: 'customer', orderable: false },
                     { data: 'amount', orderable: true },
                     { data: 'bill_date', orderable: true },
-                    { data: 'status', orderable: true }
+                    { data: 'status', orderable: false },
+                    { data: 'actions', orderable: false, searchable: false }
                 ],
                 responsive: true,
                 autoWidth: false,
@@ -207,7 +225,64 @@
                     infoFiltered: '(filtered from _MAX_ total bills)',
                     zeroRecords: 'No matching bills found'
                 },
-                order: [[0, 'desc']]
+                order: [[0, 'desc']],
+                drawCallback: function() {
+                    $('[data-toggle="tooltip"]').tooltip();
+                }
+            });
+
+            // Handle delete bill button click
+            $(document).on('click', '.delete-bill-btn', function() {
+                var url = $(this).data('url');
+
+                if (confirm('Are you sure you want to delete this bill?')) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function(response) {
+                            if (response.success) {
+                                billTable.ajax.reload(null, false);
+
+                                $('.alert').remove();
+                                var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
+                                    '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+                                    '<h5><i class="icon fas fa-check"></i> Success!</h5>' +
+                                    response.message +
+                                    '</div>';
+                                $('.row').first().before(alertHtml);
+
+                                setTimeout(function() {
+                                    $('.alert-success').fadeOut('slow', function() {
+                                        $(this).remove();
+                                    });
+                                }, 5000);
+                            }
+                        },
+                        error: function() {
+                            alert('Error deleting bill. Please try again.');
+                        }
+                    });
+                }
+            });
+
+            // Handle view bill button click
+            $(document).on('click', '.view-bill-btn', function() {
+                var url = $(this).data('url');
+
+                $('#viewBillModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x text-info"></i><p class="mt-2">Loading details...</p></div>');
+                $('#viewBillModal').modal('show');
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#viewBillModalBody').html(data);
+                    },
+                    error: function() {
+                        $('#viewBillModalBody').html('<div class="alert alert-danger">Error loading bill details. Please try again.</div>');
+                    }
+                });
             });
 
             $('#invoice_id').on('change', function() {

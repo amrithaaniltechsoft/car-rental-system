@@ -18,6 +18,7 @@ class SupplierFactory extends Factory
     public function definition(): array
     {
         return [
+            'supplier_code' => 'SL'.now()->format('Ymd').str_pad((string) fake()->unique()->numberBetween(1, 999), 3, '0', STR_PAD_LEFT),
             'name' => fake()->company(),
             'phone' => fake()->phoneNumber(),
             'email' => fake()->unique()->safeEmail(),

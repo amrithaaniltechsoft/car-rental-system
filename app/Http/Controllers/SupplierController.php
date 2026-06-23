@@ -40,7 +40,23 @@ class SupplierController extends Controller
             'address' => 'nullable|string',
         ]);
 
-        Supplier::create($request->all());
+        $data = $request->all();
+
+        // Generate supplier code: SL + YYYYMMDD + 3-digit sequence
+        $today = now()->format('Ymd');
+        $prefix = 'SL'.$today;
+        $lastSupplier = Supplier::where('supplier_code', 'like', $prefix.'%')
+            ->orderBy('supplier_code', 'desc')
+            ->first();
+        if ($lastSupplier) {
+            $lastSequence = (int) substr($lastSupplier->supplier_code, -3);
+            $newSequence = $lastSequence + 1;
+        } else {
+            $newSequence = 1;
+        }
+        $data['supplier_code'] = $prefix.str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+
+        Supplier::create($data);
 
         if ($request->ajax() || $request->expectsJson()) {
             return response()->json([
@@ -60,6 +76,7 @@ class SupplierController extends Controller
     {
         if (request()->ajax() || request()->expectsJson()) {
             return response()->json([
+                'supplier_code' => $supplier->supplier_code,
                 'name' => $supplier->name,
                 'phone' => $supplier->phone,
                 'email' => $supplier->email,
@@ -139,6 +156,7 @@ class SupplierController extends Controller
     {
         $columns = [
             'id',
+            'supplier_code',
             'name',
             'phone',
             'email',
@@ -180,6 +198,7 @@ class SupplierController extends Controller
         foreach ($suppliers as $supplier) {
             $data[] = [
                 'id' => $supplier->id,
+                'supplier_code' => $supplier->supplier_code ?? 'N/A',
                 'name' => $supplier->name,
                 'phone' => $supplier->phone,
                 'email' => $supplier->email ?? 'N/A',
