@@ -51,7 +51,7 @@ Route::middleware('auth')->group(function () {
     // Bills
     Route::resource('bills', BillController::class)->only(['index', 'store', 'show', 'destroy']);
     Route::get('/bills-data', [BillController::class, 'getData'])->name('bills.data');
-    Route::get('/bills/next-number', [BillController::class, 'getNextBillNumber'])->name('bills.next-number');
+    Route::get('/get-next-bill-number', [BillController::class, 'getNextBillNumber'])->name('bills.next-number');
 
     // Expenses
     Route::resource('expenses', ExpenseController::class);
