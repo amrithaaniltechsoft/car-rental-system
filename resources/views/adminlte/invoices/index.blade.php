@@ -149,7 +149,7 @@
                                     <tr class="bill-row">
                                         <th>Suppliers</th>
                                         <th>ID</th>
-                                        <th>Reference</th>
+                                        <th>Purpose</th>
                                         <th>Vat</th>
                                         <th>Vat Amount</th>
                                         <th>Total Payable</th>
