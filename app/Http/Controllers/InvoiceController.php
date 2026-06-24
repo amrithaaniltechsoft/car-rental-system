@@ -214,6 +214,10 @@ class InvoiceController extends Controller
             $statusBadge = $this->getStatusBadge($invoice->status);
             $billIndicator = '';
             if (! $invoice->bill()->exists()) {
+                if ($invoice->status === 'billed') {
+                    $invoice->update(['status' => 'pending']);
+                    $statusBadge = $this->getStatusBadge('pending');
+                }
                 $billIndicator = '
                     <button type="button" class="btn btn-success btn-sm create-bill-btn" data-toggle="tooltip" title="Add Bill" data-id="'.$invoice->id.'" data-invoice-number="'.$invoice->invoice_number.'" data-amount="'.$invoice->amount.'" data-subtotal="'.$invoice->subtotal.'" data-vat="'.$invoice->vat.'" data-vat-amount="'.$invoice->vat_amount.'" data-customer="'.($invoice->customer->customer_type === 'company' ? $invoice->customer->company_name : $invoice->customer->name).'">
                         <i class="fas fa-file-invoice-dollar"></i>
@@ -261,7 +265,7 @@ class InvoiceController extends Controller
     private function getStatusBadge(string $status): string
     {
         $badges = [
-            'pending' => '<span class="badge badge-warning"></span>',
+            'pending' => '',
             'paid' => '<span class="badge badge-success">Paid</span>',
             'overdue' => '<span class="badge badge-danger">Overdue</span>',
             'billed' => '<span class="badge badge-info">Invoice Billed</span>',
@@ -326,6 +330,16 @@ class InvoiceController extends Controller
             'amount_usd' => 'required|numeric|min:0',
             'bill_date' => 'required|date',
             'bill_number' => 'nullable|string',
+            'supplier_id' => 'nullable|array',
+            'supplier_id.*' => 'nullable|exists:suppliers,id',
+            'purpose' => 'nullable|array',
+            'purpose.*' => 'nullable|string|max:255',
+            'vat' => 'nullable|array',
+            'vat.*' => 'nullable|numeric|min:0',
+            'vat_amount' => 'nullable|array',
+            'vat_amount.*' => 'nullable|numeric|min:0',
+            'total_payable' => 'nullable|array',
+            'total_payable.*' => 'nullable|numeric|min:0',
         ]);
 
         $exchangeRate = 0.3845; // Fixed exchange rate
@@ -360,15 +374,44 @@ class InvoiceController extends Controller
             $billNumber = $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
         }
 
+        // Build billing details from array inputs
+        $billingDetails = [];
+        $totalPayable = 0;
+        $vatAmt = 0;
+        if ($request->has('supplier_id')) {
+            foreach ($request->supplier_id as $i => $supplierId) {
+                if (! empty($supplierId)) {
+                    $tp = str_replace(',', '', $request->total_payable[$i] ?? 0);
+                    $va = str_replace(',', '', $request->vat_amount[$i] ?? 0);
+                    $billingDetails[] = [
+                        'supplier_id' => $supplierId,
+                        'purpose' => $request->purpose[$i] ?? '',
+                        'vat' => $request->vat[$i] ?? 0,
+                        'vat_amount' => $va,
+                        'total_payable' => $tp,
+                    ];
+                    $totalPayable += (float) $tp;
+                    $vatAmt += (float) $va;
+                }
+            }
+        }
+
+        // Calculate net profit
+        $invAmt = $request->amount_usd * $exchangeRate;
+        $totalPayable = round($totalPayable, 3);
+        $netProfit = round($invAmt - $totalPayable, 3);
+
         Bill::create([
             'invoice_id' => $invoice->id,
             'bill_number' => $billNumber,
-            'amount' => $request->amount_usd * $exchangeRate,
+            'amount' => $invAmt,
             'amount_usd' => $request->amount_usd,
             'exchange_rate' => $exchangeRate,
-            'amount_omr' => $request->amount_usd * $exchangeRate,
+            'amount_omr' => $invAmt,
             'bill_date' => $request->bill_date,
             'status' => 'unpaid',
+            'billing_details' => $billingDetails,
+            'net_profit' => $netProfit,
         ]);
 
         // Update invoice status to billed

@@ -20,33 +20,81 @@
                 <span class="float-right text-dark">{{ $bill->invoice->invoice_number }}</span>
             </li>
             <li class="list-group-item">
-                <b><i class="fas fa-tag mr-1"></i> Status</b>
-                <span class="float-right text-dark">{!! $bill->status === 'unpaid' ? '<span class="badge badge-warning">Unpaid</span>' : ($bill->status === 'paid' ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-danger">Overdue</span>') !!}</span>
+                <b><i class="fas fa-coins mr-1"></i> Invoice Amount</b>
+                <span class="float-right text-dark">{{ number_format($bill->invoice->amount * ($bill->exchange_rate ?? 0.3845), 3) }} OMR</span>
             </li>
         </ul>
 
-        <div class="text-left">
-            <strong><i class="fas fa-coins mr-1"></i> Amount Details</strong>
-            <table class="table table-sm table-borderless mb-0 mt-1" style="font-size: 14px;">
-                <tr>
-                    <td><strong>Amount (USD)</strong></td>
-                    <td class="text-right text-dark"><strong>{{ number_format((float) $bill->amount_usd, 2) }} USD</strong></td>
-                </tr>
-                <tr>
-                    <td><strong>Exchange Rate</strong></td>
-                    <td class="text-right text-dark"><strong>{{ number_format((float) $bill->exchange_rate, 4) }}</strong></td>
-                </tr>
-                <tr>
-                    <td><strong>Amount (OMR)</strong></td>
-                    <td class="text-right text-dark"><strong>{{ number_format((float) $bill->amount_omr, 3) }} OMR</strong></td>
-                </tr>
-                <tr class="table-active">
-                    <td><strong>Total Amount</strong></td>
-                    <td class="text-right text-dark"><strong>{{ number_format((float) $bill->amount, 3) }} OMR</strong></td>
-                </tr>
-            </table>
+            @if(!empty($bill->billing_details))
+                <hr>
+                <strong><i class="fas fa-list mr-1"></i> Account Payable Billing Details</strong>
+                <div class="table-responsive mt-1">
+                    <table class="table table-sm table-bordered" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>ID</th>
+                                <th>Purpose</th>
+                                <th>Vat</th>
+                                <th>Vat Amount</th>
+                                <th>Total Payable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $grandTotal = 0;
+                                $grandVatAmt = 0;
+                            @endphp
+                            @foreach($bill->billing_details as $detail)
+                                @php
+                                    $supplier = \App\Models\Supplier::find($detail['supplier_id']);
+                                    $tp = (float) ($detail['total_payable'] ?? 0);
+                                    $va = (float) ($detail['vat_amount'] ?? 0);
+                                    $grandTotal += $tp;
+                                    $grandVatAmt += $va;
+                                @endphp
+                                <tr>
+                                    <td>{{ $supplier->name ?? 'Unknown' }}</td>
+                                    <td>{{ $supplier->supplier_code ?? $detail['supplier_id'] }}</td>
+                                    <td>{{ $detail['purpose'] ?? '' }}</td>
+                                    <td>{{ $detail['vat'] ?? 0 }}%</td>
+                                    <td class="text-right">{{ number_format($va, 3) }}</td>
+                                    <td class="text-right">{{ number_format($tp, 3) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        @php
+                            $invAmt = round((float) ($bill->invoice->amount * ($bill->exchange_rate ?? 0.3845)), 3);
+                            $grandTotal = round($grandTotal, 3);
+                            $netProfit = round($invAmt - $grandTotal, 3);
+                            $subtotal = $grandTotal - $grandVatAmt;
+                        @endphp
+                        <tfoot>
+                            <tr class="font-weight-bold">
+                                <td colspan="5" class="text-right">Total</td>
+                                <td class="text-right">{{ number_format($grandTotal, 3) }}</td>
+                            </tr>
+                            <tr class="font-weight-bold">
+                                <td colspan="5" class="text-right">VAT(%)</td>
+                                <td class="text-right">5</td>
+                            </tr>
+                            <tr class="font-weight-bold">
+                                <td colspan="5" class="text-right">VAT(Amount)</td>
+                                <td class="text-right">{{ number_format($grandVatAmt, 3) }}</td>
+                            </tr>
+                            <tr class="font-weight-bold">
+                                <td colspan="5" class="text-right">Sub Total</td>
+                                <td class="text-right">{{ number_format($subtotal, 3) }}</td>
+                            </tr>
+                            <tr class="font-weight-bold table-success text-success">
+                                <td colspan="5" class="text-right">Net Profit</td>
+                                <td class="text-right">{{ number_format($netProfit, 3) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            @endif
         </div>
-    </div>
 
     <div class="col-md-4">
         <strong><i class="fas fa-user mr-1"></i> Customer</strong>

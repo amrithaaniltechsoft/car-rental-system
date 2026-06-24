@@ -245,6 +245,21 @@ class VehicleController extends Controller
             ->with('success', 'Vehicle deleted successfully.');
     }
 
+    public function getNames(): JsonResponse
+    {
+        return response()->json(Vehicle::distinct()->orderBy('name')->pluck('name'));
+    }
+
+    public function getPlates(): JsonResponse
+    {
+        return response()->json(Vehicle::distinct()->orderBy('number_plate')->pluck('number_plate'));
+    }
+
+    public function getCodes(): JsonResponse
+    {
+        return response()->json(Vehicle::distinct()->orderBy('number_code')->pluck('number_code'));
+    }
+
     /**
      * Get action buttons HTML
      */

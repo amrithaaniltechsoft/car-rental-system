@@ -21,8 +21,12 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     // Fleet Management
+    Route::get('/vehicles-names', [VehicleController::class, 'getNames'])->name('vehicles.names');
+    Route::get('/vehicles-plates', [VehicleController::class, 'getPlates'])->name('vehicles.plates');
+    Route::get('/vehicles-codes', [VehicleController::class, 'getCodes'])->name('vehicles.codes');
     Route::resource('vehicles', VehicleController::class);
     Route::get('/vehicles-data', [VehicleController::class, 'getData'])->name('vehicles.data');
+    Route::get('/suppliers-names', [SupplierController::class, 'getNames'])->name('suppliers.names');
     Route::resource('suppliers', SupplierController::class);
     Route::get('/suppliers-data', [SupplierController::class, 'getData'])->name('suppliers.getData');
 
@@ -49,7 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/invoices/{invoice}/bill', [InvoiceController::class, 'createBill'])->name('invoices.createBill');
 
     // Bills
-    Route::resource('bills', BillController::class)->only(['index', 'store', 'show', 'destroy']);
+    Route::resource('bills', BillController::class)->only(['index', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::get('/bills-data', [BillController::class, 'getData'])->name('bills.data');
     Route::get('/get-next-bill-number', [BillController::class, 'getNextBillNumber'])->name('bills.next-number');
 
@@ -58,6 +62,8 @@ Route::middleware('auth')->group(function () {
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/view/{bill}', [ReportController::class, 'show'])->name('reports.show');
+    Route::get('/reports-data', [ReportController::class, 'getData'])->name('reports.data');
     Route::get('/reports/customer/{customer}', [ReportController::class, 'customerReport'])->name('reports.customer');
     Route::get('/reports/vehicle/{vehicle}', [ReportController::class, 'vehicleReport'])->name('reports.vehicle');
     Route::post('/reports/generate', [ReportController::class, 'generateReport'])->name('reports.generate');

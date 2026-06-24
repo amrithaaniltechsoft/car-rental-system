@@ -159,7 +159,7 @@
                                 <tbody id="bill_details_table_body">
                                     <tr class="bill-row">
                                         <td>
-                                            <select class="form-control select2 bill-supplier" style="width: 100%;">
+                                            <select class="form-control select2 bill-supplier" name="supplier_id[]" style="width: 100%;">
                                                 <option value="">Select Supplier</option>
                                                 @foreach($suppliers as $supplier)
                                                     <option value="{{ $supplier->id }}" data-code="{{ $supplier->supplier_code }}">{{ $supplier->name }}</option>
@@ -167,10 +167,10 @@
                                             </select>
                                         </td>
                                         <td class="bill-td-id">—</td>
-                                        <td><input type="text" class="form-control bill-ref"></td>
-                                        <td><input type="number" class="form-control bill-vat text-right" value="5" readonly></td>
-                                        <td><input type="text" class="form-control bill-vat-amount text-right" readonly></td>
-                                        <td><input type="text" class="form-control bill-total text-right"></td>
+                                        <td><input type="text" class="form-control bill-ref" name="purpose[]"></td>
+                                        <td><input type="number" class="form-control bill-vat text-right" name="vat[]" value="5" readonly></td>
+                                        <td><input type="text" class="form-control bill-vat-amount text-right" name="vat_amount[]" readonly></td>
+                                        <td><input type="text" class="form-control bill-total text-right" name="total_payable[]"></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-success btn-sm btn-add-row py-0"><i class="fas fa-plus fa-xs"></i></button>
                                         </td>
@@ -571,6 +571,12 @@
                 $('#bill_summary_vat_amt').text(fmtNum3(grandVatAmt));
                 $('#bill_summary_subtotal').text(fmtNum3(subtotal));
                 $('#bill_summary_net_profit').text(fmtNum3(netProfit));
+
+                // Auto-clear zero-total error when user fixes it
+                if (grandTotal > 0) {
+                    $('#bill_summary_total').closest('td').removeClass('table-danger');
+                    $('#bill_total_error').remove();
+                }
             }
 
             // Format Total Payable on blur and auto-calculate Vat Amount
@@ -858,6 +864,31 @@
 
                 form.find('.is-invalid').removeClass('is-invalid');
                 form.find('.invalid-feedback').remove();
+
+                // Validate that Total is not zero
+                var totalText = $('#bill_summary_total').text().trim();
+                var totalValue = parseFloat(totalText) || 0;
+                if (totalValue <= 0) {
+                    form.find('#bill_summary_total').closest('td').addClass('table-danger');
+                    var $errorMsg = $('#bill_total_error');
+                    if ($errorMsg.length === 0) {
+                        $('#bill_summary_total').closest('table').after(
+                            '<p id="bill_total_error" class="text-danger mt-1 text-right"><i class="fas fa-exclamation-circle"></i> Total cannot be zero. Please enter at least one billing detail.</p>'
+                        );
+                    }
+                    return false;
+                } else {
+                    $('#bill_summary_total').closest('td').removeClass('table-danger');
+                    $('#bill_total_error').remove();
+                }
+
+                // Strip commas from formatted number fields before submission
+                form.find('.bill-total, .bill-vat-amount').each(function() {
+                    var val = $(this).val();
+                    if (val) {
+                        $(this).val(val.replace(/,/g, ''));
+                    }
+                });
 
                 submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 

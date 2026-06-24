@@ -368,14 +368,6 @@
                 minimumResultsForSearch: 0
             });
 
-            $('#filter_name').select2({
-                theme: 'bootstrap4',
-                placeholder: 'Search by Name',
-                allowClear: true,
-                width: '100%',
-                minimumResultsForSearch: 0
-            });
-
             $('#filter_plate').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Search by Plate',
@@ -390,6 +382,15 @@
                 allowClear: true,
                 width: '100%',
                 minimumResultsForSearch: 0
+            });
+
+            $('#filter_name').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Search by Name',
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0,
+                tags: true
             });
 
             $('#filter_name, #filter_brand, #filter_type, #filter_plate, #filter_code').on('change', function() {
@@ -486,6 +487,39 @@
                             
                             // Reload DataTable without losing pagination/position
                             $('#vehicles-table').DataTable().ajax.reload(null, false);
+
+                            // Refresh filter_name Select2 with updated vehicle names
+                            $.get('{{ route('vehicles.names') }}', function(names) {
+                                var $select = $('#filter_name');
+                                var selectedVal = $select.val();
+                                $select.empty().append('<option value=""></option>');
+                                $.each(names, function(i, name) {
+                                    $select.append('<option value="' + $('<span>').text(name).html() + '">' + $('<span>').text(name).html() + '</option>');
+                                });
+                                $select.val(selectedVal).trigger('change');
+                            });
+
+                            // Refresh filter_plate Select2 with updated plates
+                            $.get('{{ route('vehicles.plates') }}', function(plates) {
+                                var $select = $('#filter_plate');
+                                var selectedVal = $select.val();
+                                $select.empty().append('<option value=""></option>');
+                                $.each(plates, function(i, plate) {
+                                    $select.append('<option value="' + $('<span>').text(plate).html() + '">' + $('<span>').text(plate).html() + '</option>');
+                                });
+                                $select.val(selectedVal).trigger('change');
+                            });
+
+                            // Refresh filter_code Select2 with updated codes
+                            $.get('{{ route('vehicles.codes') }}', function(codes) {
+                                var $select = $('#filter_code');
+                                var selectedVal = $select.val();
+                                $select.empty().append('<option value=""></option>');
+                                $.each(codes, function(i, code) {
+                                    $select.append('<option value="' + $('<span>').text(code).html() + '">' + $('<span>').text(code).html() + '</option>');
+                                });
+                                $select.val(selectedVal).trigger('change');
+                            });
                             
                             // Display dynamic success alert at the top of the content
                             $('.alert').remove();

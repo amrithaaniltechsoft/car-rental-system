@@ -77,7 +77,7 @@
                                         <td><strong>Status:</strong></td>
                                         <td>
                                             @if($invoice->booking->status == 'pending')
-                                                <span class="badge badge-warning"></span>
+                                                <span class="badge badge-warning">Pending</span>
                                             @elseif($invoice->booking->status == 'confirmed')
                                                 <span class="badge badge-primary">Confirmed</span>
                                             @elseif($invoice->booking->status == 'on_hold')

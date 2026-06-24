@@ -1221,7 +1221,8 @@
                 placeholder: 'Booking ID',
                 allowClear: true,
                 width: '100%',
-                minimumResultsForSearch: 0
+                minimumResultsForSearch: 0,
+                tags: true
             });
             $('#filter_customer').select2({
                 theme: 'bootstrap4',
@@ -1297,6 +1298,9 @@
                             form[0].reset();
                             form.find('.select2').val(null).trigger('change');
                             $('#bookings-table').DataTable().ajax.reload();
+                            if (response.booking_id && !$('#filter_booking_id').find('option[value="' + response.booking_id + '"]').length) {
+                                $('#filter_booking_id').append('<option value="' + response.booking_id + '">' + response.booking_id + '</option>');
+                            }
 
                             // Display dynamic success alert at the top of the content
                             $('.alert').remove();

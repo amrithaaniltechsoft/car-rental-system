@@ -1,5 +1,6 @@
 @extends('adminlte::page')
 
+@section('plugins.Select2', true)
 @section('title', 'Bills')
 
 @section('content_header')
@@ -26,13 +27,36 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Bills List</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#addBillModal">
-                            <i class="fas fa-plus"></i> Add Bill
-                        </button>
-                    </div>
+
                 </div>
                 <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <select class="form-control select2" id="filter_bill_id" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($billNumbers as $bn)
+                                    <option value="{{ $bn }}">{{ $bn }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-control select2" id="filter_invoice_id" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($invoiceNumbers as $invNum)
+                                    <option value="{{ $invNum }}">{{ $invNum }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-control select2" id="filter_customer" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($customers as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->customer_type === 'company' ? $customer->company_name : $customer->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    </div>
                     <table id="bills-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -40,9 +64,10 @@
                                 <th>Bill #</th>
                                 <th>Invoice #</th>
                                 <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Bill Date</th>
-                                <th>Status</th>
+                                <th>Total Received</th>
+                                <th>Total</th>
+                                <th>VAT Amount</th>
+                                <th>Net Profit</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -53,84 +78,6 @@
         </div>
     </div>
 
-    <div class="modal fade" id="addBillModal" tabindex="-1" role="dialog" aria-labelledby="addBillModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content" style="border: 1px solid #28a745;">
-                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
-                    <h4 class="modal-title text-center w-100" id="addBillModalLabel">Add New Bill</h4>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form id="addBillForm" action="{{ route('bills.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="bill_number">Bill #</label>
-                                <input type="text" class="form-control" id="bill_number" readonly>
-                                <input type="hidden" id="bill_number_hidden" name="bill_number">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="bill_date">Bill Date</label>
-                                <input type="text" class="form-control @error('bill_date') is-invalid @enderror"
-                                       id="bill_date" name="bill_date" value="{{ old('bill_date', now()->format('Y-m-d')) }}" readonly required>
-                                @error('bill_date')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="invoice_id">Invoice</label>
-                                <select class="form-control @error('invoice_id') is-invalid @enderror" id="invoice_id" name="invoice_id" required>
-                                    <option value="">Select Invoice</option>
-                                    @foreach($invoices as $invoice)
-                                        @php
-                                            $customerLabel = $invoice->customer->customer_type === 'company'
-                                                ? $invoice->customer->company_name
-                                                : $invoice->customer->name;
-                                        @endphp
-                                        <option value="{{ $invoice->id }}"
-                                            data-amount="{{ $invoice->amount }}"
-                                            {{ old('invoice_id') == $invoice->id ? 'selected' : '' }}>
-                                            {{ $invoice->invoice_number }} - {{ $customerLabel }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('invoice_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="amount">Amount (OMR)</label>
-                                <input type="number" step="0.01" min="0" class="form-control @error('amount') is-invalid @enderror"
-                                       id="amount" name="amount" value="{{ old('amount') }}" required>
-                                @error('amount')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="status">Status</label>
-                                <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
-                                    <option value="unpaid" {{ old('status', 'unpaid') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                                    <option value="paid" {{ old('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                                    <option value="overdue" {{ old('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                                </select>
-                                @error('status')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Save Bill</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
     <!-- View Bill Modal -->
     <div class="modal fade" id="viewBillModal" tabindex="-1" role="dialog" aria-labelledby="viewBillModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
@@ -144,6 +91,114 @@
                 <div class="modal-body" id="viewBillModalBody">
                     <!-- Bill details will be loaded here -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Bill Modal -->
+    <div class="modal fade" id="editBillModal" tabindex="-1" role="dialog" aria-labelledby="editBillModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content" style="border: 1px solid #28a745;">
+                <div class="modal-header justify-content-center" style="background-color: #28a745; color: #ffffff; padding: 10px 10px;">
+                    <h4 class="modal-title text-center w-100" id="editBillModalLabel">Edit Bill</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="editBillForm">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="edit_bill_number">Bill #</label>
+                                <input type="text" class="form-control" id="edit_bill_number" readonly>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_invoice_number">Invoice #</label>
+                                <input type="text" class="form-control" id="edit_invoice_number" readonly>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_bill_date">Bill Date</label>
+                                <input type="text" class="form-control datepicker" id="edit_bill_date" name="bill_date" readonly style="background-color: #e9ecef;">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="edit_invoice_amount">Invoice Amount</label>
+                                <input type="text" class="form-control" id="edit_invoice_amount" readonly>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h5><strong>Account Payable Billing Details</strong></h5>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr class="bill-row">
+                                        <th>Suppliers</th>
+                                        <th>ID</th>
+                                        <th>Purpose</th>
+                                        <th>Vat</th>
+                                        <th>Vat Amount</th>
+                                        <th>Total Payable</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit_bill_details_table_body">
+                                    <tr class="bill-row">
+                                        <td>
+                                            <select class="form-control select2 edit-bill-supplier" name="supplier_id[]" style="width: 100%;">
+                                                <option value="">Select Supplier</option>
+                                                @foreach($suppliers as $supplier)
+                                                    <option value="{{ $supplier->id }}" data-code="{{ $supplier->supplier_code }}">{{ $supplier->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td class="edit-bill-td-id">—</td>
+                                        <td><input type="text" class="form-control edit-bill-ref" name="purpose[]"></td>
+                                        <td><input type="number" class="form-control edit-bill-vat text-right" name="vat[]" value="5" readonly></td>
+                                        <td><input type="text" class="form-control edit-bill-vat-amount text-right" name="vat_amount[]" readonly></td>
+                                        <td><input type="text" class="form-control edit-bill-total text-right" name="total_payable[]"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-success btn-sm edit-btn-add-row py-0"><i class="fas fa-plus fa-xs"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <hr>
+                        <div class="form-row justify-content-end">
+                            <div class="col-md-5">
+                                <table class="table table-bordered table-sm" style="font-size: 14px;">
+                                    <tr>
+                                        <td style="width: 130px; vertical-align: middle;" class="pl-2"><strong>Total</strong></td>
+                                        <td><span class="form-control form-control-sm text-right" id="edit_bill_summary_total" style="border: none; background: transparent; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>VAT(%)</strong></td>
+                                        <td><input type="text" class="form-control form-control-sm text-right" id="edit_bill_summary_vat_pct" value="5" style="border: none; background: transparent; font-weight: bold;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>VAT(Amount)</strong></td>
+                                        <td><span class="form-control form-control-sm text-right" id="edit_bill_summary_vat_amt" style="border: none; background: transparent; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>Sub Total</strong></td>
+                                        <td><span class="form-control form-control-sm text-right" id="edit_bill_summary_subtotal" style="border: none; background: transparent; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td style="vertical-align: middle;" class="pl-2"><strong>Net Profit</strong></td>
+                                        <td><span class="form-control form-control-sm text-right font-weight-bold" id="edit_bill_summary_net_profit" style="border: none; background: transparent; font-size: 16px; display: block; pointer-events: none;">0.000</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Update Bill</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -161,64 +216,72 @@
             background-color: #ffffff;
             opacity: 1;
         }
+        .dataTables_length { padding-left: 10px; }
     </style>
 @stop
 
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    @if($errors->any())
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                $('#addBillModal').modal('show');
-            });
-        </script>
-    @endif
     <script>
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
 
         $(document).ready(function() {
-            // Get next bill number when modal opens
-            $('#addBillModal').on('show.bs.modal', function() {
-                $.ajax({
-                    url: '{{ route("bills.next-number") }}',
-                    type: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            $('#bill_number').val(response.bill_number);
-                            $('#bill_number_hidden').val(response.bill_number);
-                        }
-                    }
-                });
-            });
-
-
-
             var billTable = $('#bills-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: "{{ route('bills.data') }}",
-                    type: 'GET'
+                    type: 'GET',
+                    data: function(d) {
+                        d.filter_bill_id = $('#filter_bill_id').val();
+                        d.filter_invoice_id = $('#filter_invoice_id').val();
+                        d.filter_customer = $('#filter_customer').val();
+                    }
                 },
                 columns: [
                     { data: 'id', orderable: true },
                     { data: 'bill_number', orderable: true },
                     { data: 'invoice', orderable: false },
                     { data: 'customer', orderable: false },
-                    { data: 'amount', orderable: true },
-                    { data: 'bill_date', orderable: true },
-                    { data: 'status', orderable: false },
+                    { 
+                        data: 'amount', 
+                        orderable: true, 
+                        createdCell: function (td) {
+                            $(td).addClass('text-right');
+                        } 
+                    },
+                    { 
+                        data: 'total', 
+                        orderable: false, 
+                        createdCell: function (td) {
+                            $(td).addClass('text-right');
+                        } 
+                    },
+                    { 
+                        data: 'vat_amount', 
+                        orderable: false, 
+                        createdCell: function (td) {
+                            $(td).addClass('text-right');
+                        } 
+                    },
+                    { 
+                        data: 'net_profit', 
+                        orderable: false, 
+                        createdCell: function (td) {
+                            $(td).addClass('text-right');
+                        } 
+                    },
                     { data: 'actions', orderable: false, searchable: false }
                 ],
                 responsive: true,
                 autoWidth: false,
                 pageLength: 10,
+                searching: false,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
                 language: {
                     processing: "<i class='fas fa-spinner fa-spin'></i> Loading...",
-                    search: 'Search bills:',
                     lengthMenu: 'Show _MENU_ entries',
                     info: 'Showing _START_ to _END_ of _TOTAL_ bills',
                     infoEmpty: 'No bills found',
@@ -230,6 +293,14 @@
                     $('[data-toggle="tooltip"]').tooltip();
                 }
             });
+
+            $('#filter_bill_id, #filter_invoice_id, #filter_customer').on('change', function() {
+                billTable.ajax.reload();
+            });
+
+            $('#filter_bill_id').select2({ theme: 'bootstrap4', placeholder: 'Search by Bill #', width: '100%', allowClear: true });
+            $('#filter_invoice_id').select2({ theme: 'bootstrap4', placeholder: 'Search by Invoice #', width: '100%', allowClear: true });
+            $('#filter_customer').select2({ theme: 'bootstrap4', placeholder: 'Search by Customer', width: '100%', allowClear: true });
 
             // Handle delete bill button click
             $(document).on('click', '.delete-bill-btn', function() {
@@ -266,33 +337,160 @@
                 }
             });
 
-            // Handle view bill button click
-            $(document).on('click', '.view-bill-btn', function() {
-                var url = $(this).data('url');
+            function fmtNum3(num) { return num.toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
-                $('#viewBillModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x text-info"></i><p class="mt-2">Loading details...</p></div>');
-                $('#viewBillModal').modal('show');
+            function editCalculateBillSummary() {
+                var grandTotal = 0, grandVatAmt = 0;
+                $('#edit_bill_details_table_body .bill-row').each(function() {
+                    grandTotal += parseFloat($(this).find('.edit-bill-total').val().replace(/,/g, '')) || 0;
+                    grandVatAmt += parseFloat($(this).find('.edit-bill-vat-amount').val().replace(/,/g, '')) || 0;
+                });
+                var invAmt = parseFloat($('#edit_invoice_amount').val().replace(/,/g, '')) || 0;
+                var vatPct = parseFloat($('#edit_bill_summary_vat_pct').val()) || 0;
+                var subtotal = grandTotal - grandVatAmt;
+                var netProfit = invAmt - grandTotal;
+                $('#edit_bill_summary_total').text(fmtNum3(grandTotal));
+                $('#edit_bill_summary_vat_amt').text(fmtNum3(grandVatAmt));
+                $('#edit_bill_summary_subtotal').text(fmtNum3(subtotal));
+                $('#edit_bill_summary_net_profit').text(fmtNum3(netProfit));
+            }
+
+            // Handle edit bill button click
+            $(document).on('click', '.edit-bill-btn', function() {
+                var url = $(this).data('url');
 
                 $.ajax({
                     url: url,
                     type: 'GET',
-                    success: function(data) {
-                        $('#viewBillModalBody').html(data);
+                    success: function(response) {
+                        if (response.success) {
+                            var bill = response.bill;
+                            $('#edit_bill_number').val(bill.bill_number);
+                            $('#edit_invoice_number').val(bill.invoice_number);
+                            $('#edit_bill_date').val(bill.bill_date);
+                            $('#edit_invoice_amount').val(fmtNum3(bill.invoice_amount));
+                            $('#editBillForm').attr('action', '{{ route('bills.update', ':id') }}'.replace(':id', bill.id));
+
+                            // Populate billing details
+                            var $tableBody = $('#edit_bill_details_table_body');
+                            $tableBody.find('.bill-row:not(:first)').remove();
+                            var $firstRow = $tableBody.find('.bill-row:first');
+                            $firstRow.find('.edit-bill-supplier').val('').trigger('change');
+                            $firstRow.find('.edit-bill-td-id').text('—');
+                            $firstRow.find('.edit-bill-ref').val('');
+                            $firstRow.find('.edit-bill-vat').val('5');
+                            $firstRow.find('.edit-bill-vat-amount').val('');
+                            $firstRow.find('.edit-bill-total').val('');
+
+                            if (bill.billing_details && bill.billing_details.length > 0) {
+                                var firstDetail = bill.billing_details[0];
+                                $firstRow.find('.edit-bill-supplier').val(firstDetail.supplier_id).trigger('change');
+                                $firstRow.find('.edit-bill-td-id').text($firstRow.find('.edit-bill-supplier option:selected').data('code') || '—');
+                                $firstRow.find('.edit-bill-ref').val(firstDetail.purpose || '');
+                                $firstRow.find('.edit-bill-vat').val(firstDetail.vat || 5);
+                                $firstRow.find('.edit-bill-vat-amount').val(fmtNum3(parseFloat(firstDetail.vat_amount) || 0));
+                                $firstRow.find('.edit-bill-total').val(fmtNum3(parseFloat(firstDetail.total_payable) || 0));
+
+                                for (var i = 1; i < bill.billing_details.length; i++) {
+                                    var detail = bill.billing_details[i];
+                                    var $newRow = $firstRow.clone();
+                                    $newRow.find('input').val('');
+                                    $newRow.find('.edit-bill-td-id').text('—');
+                                    $newRow.find('.edit-bill-vat').val('5');
+                                    $newRow.find('.edit-btn-add-row')
+                                        .removeClass('btn-success edit-btn-add-row')
+                                        .addClass('btn-danger edit-btn-remove-row')
+                                        .html('<i class="fas fa-minus"></i>');
+                                    $newRow.find('.select2-container').remove();
+                                    $newRow.find('select').removeClass('select2-hidden-accessible').removeAttr('aria-hidden data-select2-id');
+                                    $tableBody.append($newRow);
+
+                                    $newRow.find('.edit-bill-supplier').val(detail.supplier_id).trigger('change');
+                                    var code = $newRow.find('.edit-bill-supplier option:selected').data('code');
+                                    $newRow.find('.edit-bill-td-id').text(code || '—');
+                                    $newRow.find('.edit-bill-ref').val(detail.purpose || '');
+                                    $newRow.find('.edit-bill-vat').val(detail.vat || 5);
+                                    $newRow.find('.edit-bill-vat-amount').val(fmtNum3(parseFloat(detail.vat_amount) || 0));
+                                    $newRow.find('.edit-bill-total').val(fmtNum3(parseFloat(detail.total_payable) || 0));
+
+                                    $newRow.find('.edit-bill-supplier').select2({
+                                        theme: 'bootstrap4',
+                                        placeholder: 'Select Supplier',
+                                        width: '100%',
+                                        minimumResultsForSearch: 0
+                                    });
+                                }
+                            }
+
+                            $firstRow.find('.edit-bill-supplier').select2({
+                                theme: 'bootstrap4',
+                                placeholder: 'Select Supplier',
+                                width: '100%',
+                                minimumResultsForSearch: 0
+                            });
+
+                            editCalculateBillSummary();
+                            $('#editBillModal').modal('show');
+                        }
                     },
                     error: function() {
-                        $('#viewBillModalBody').html('<div class="alert alert-danger">Error loading bill details. Please try again.</div>');
+                        alert('Error loading bill details. Please try again.');
                     }
                 });
             });
 
-            $('#invoice_id').on('change', function() {
-                var amount = $(this).find('option:selected').data('amount');
-                if (amount !== undefined && amount !== '') {
-                    $('#amount').val(amount);
-                }
+            // Format Total Payable on blur for edit modal
+            $(document).on('blur', '.edit-bill-total', function() {
+                var $row = $(this).closest('tr');
+                var raw = $(this).val().replace(/,/g, '');
+                var total = parseFloat(raw) || 0;
+                $(this).val(fmtNum3(total));
+                var vatPct = parseFloat($row.find('.edit-bill-vat').val()) || 0;
+                var vatAmt = total * vatPct / 100;
+                $row.find('.edit-bill-vat-amount').val(fmtNum3(vatAmt));
+                editCalculateBillSummary();
             });
 
-            $('#addBillForm').on('submit', function(e) {
+            // Update ID column when supplier is selected in edit modal
+            $(document).on('change', '.edit-bill-supplier', function() {
+                var code = $(this).find(':selected').data('code');
+                $(this).closest('tr').find('.edit-bill-td-id').text(code || '—');
+            });
+
+            // Add new row in edit modal
+            $(document).on('click', '.edit-btn-add-row', function() {
+                var $tableBody = $('#edit_bill_details_table_body');
+                var $newRow = $tableBody.find('.bill-row:first').clone();
+                $newRow.find('input').val('');
+                $newRow.find('.edit-bill-td-id').text('—');
+                $newRow.find('.edit-bill-vat').val('5');
+                $newRow.find('.edit-btn-add-row')
+                    .removeClass('btn-success edit-btn-add-row')
+                    .addClass('btn-danger edit-btn-remove-row')
+                    .html('<i class="fas fa-minus"></i>');
+                $newRow.find('.select2-container').remove();
+                $newRow.find('select').removeClass('select2-hidden-accessible').removeAttr('aria-hidden data-select2-id');
+                $tableBody.append($newRow);
+                $newRow.find('.edit-bill-supplier').select2({
+                    theme: 'bootstrap4',
+                    placeholder: 'Select Supplier',
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                editCalculateBillSummary();
+            });
+
+            // Remove row in edit modal
+            $(document).on('click', '.edit-btn-remove-row', function() {
+                $(this).closest('tr').remove();
+                editCalculateBillSummary();
+            });
+
+            // Recalculate when VAT(%) changes in edit modal
+            $(document).on('input', '#edit_bill_summary_vat_pct', editCalculateBillSummary);
+
+            // Handle edit bill form submission
+            $('#editBillForm').on('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -303,11 +501,11 @@
                 form.find('.is-invalid').removeClass('is-invalid');
                 form.find('.invalid-feedback').remove();
 
-                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
 
                 $.ajax({
                     url: form.attr('action'),
-                    type: form.attr('method'),
+                    type: 'POST',
                     data: new FormData(form[0]),
                     processData: false,
                     contentType: false,
@@ -318,13 +516,9 @@
                         submitBtn.prop('disabled', false).html(originalBtnHtml);
 
                         if (response.success) {
-                            $('#addBillModal').modal('hide');
+                            $('#editBillModal').modal('hide');
                             form[0].reset();
-                            $('#invoice_id').val('');
-                            $('#status').val('unpaid');
-                            flatpickr('#bill_date').setDate('{{ now()->format('Y-m-d') }}');
-                            flatpickr('#due_date').clear();
-                            $('#bills-table').DataTable().ajax.reload(null, false);
+                            billTable.ajax.reload(null, false);
 
                             $('.alert').remove();
                             var alertHtml = '<div class="alert alert-success alert-dismissible fade show">' +
@@ -333,6 +527,12 @@
                                 response.message +
                                 '</div>';
                             $('.row').first().before(alertHtml);
+
+                            setTimeout(function() {
+                                $('.alert-success').fadeOut('slow', function() {
+                                    $(this).remove();
+                                });
+                            }, 5000);
                         }
                     },
                     error: function(xhr) {
@@ -363,6 +563,26 @@
 
                 return false;
             });
+
+            // Handle view bill button click
+            $(document).on('click', '.view-bill-btn', function() {
+                var url = $(this).data('url');
+
+                $('#viewBillModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x text-info"></i><p class="mt-2">Loading details...</p></div>');
+                $('#viewBillModal').modal('show');
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#viewBillModalBody').html(data);
+                    },
+                    error: function() {
+                        $('#viewBillModalBody').html('<div class="alert alert-danger">Error loading bill details. Please try again.</div>');
+                    }
+                });
+            });
+
         });
     </script>
 @stop

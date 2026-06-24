@@ -270,7 +270,8 @@
                 placeholder: 'Search by Name',
                 allowClear: true,
                 width: '100%',
-                minimumResultsForSearch: 0
+                minimumResultsForSearch: 0,
+                tags: true
             });
 
             $('#filter_name, #filter_email, #filter_phone').on('keyup change', function() {
@@ -293,6 +294,7 @@
                     success: function(response) {
                         $('#addSupplierModal').modal('hide');
                         table.ajax.reload();
+                        refreshSupplierFilter();
                         showNotification('success', response.message);
                     },
                     error: function(xhr) {
@@ -311,6 +313,7 @@
                     success: function(response) {
                         $('#editSupplierModal').modal('hide');
                         table.ajax.reload();
+                        refreshSupplierFilter();
                         showNotification('success', response.message);
                     },
                     error: function(xhr) {
@@ -339,6 +342,18 @@
             });
         }
 
+        function refreshSupplierFilter() {
+            $.get('{{ route('suppliers.names') }}', function(names) {
+                var $select = $('#filter_name');
+                var selectedVal = $select.val();
+                $select.empty().append('<option value=""></option>');
+                $.each(names, function(i, name) {
+                    $select.append('<option value="' + $('<span>').text(name).html() + '">' + $('<span>').text(name).html() + '</option>');
+                });
+                $select.val(selectedVal).trigger('change');
+            });
+        }
+
         function showSupplier(id) {
             $.get('{{ route('suppliers.show', ':id') }}'.replace(':id', id), function(data) {
                 $('#show_name').text(data.name);
@@ -359,6 +374,7 @@
                     data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
                     success: function(response) {
                         $('#suppliers-table').DataTable().ajax.reload();
+                        refreshSupplierFilter();
                         showNotification('success', response.message);
                     },
                     error: function(xhr) {

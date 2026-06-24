@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -136,6 +137,20 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier): RedirectResponse|JsonResponse
     {
+        $billsUsingSupplier = Bill::whereJsonContains('billing_details', ['supplier_id' => (string) $supplier->id])->count();
+
+        if ($billsUsingSupplier > 0) {
+            if (request()->ajax() || request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete this suppliers because it is in use by existing billing.',
+                ], 422);
+            }
+
+            return redirect()->route('suppliers.index')
+                ->with('error', 'Cannot delete this suppliers because it is in use by existing billing.');
+        }
+
         $supplier->delete();
 
         if (request()->ajax() || request()->expectsJson()) {
@@ -225,5 +240,10 @@ class SupplierController extends Controller
         $deleteBtn = '<button class="btn btn-sm btn-danger" onclick="deleteSupplier('.$supplier->id.')" data-toggle="tooltip" title="Delete"><i class="fas fa-trash"></i></button>';
 
         return '<div class="btn-group">'.$showBtn.' '.$editBtn.' '.$deleteBtn.'</div>';
+    }
+
+    public function getNames(): JsonResponse
+    {
+        return response()->json(Supplier::whereNotNull('name')->orderBy('name')->pluck('name'));
     }
 }

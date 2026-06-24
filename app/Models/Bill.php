@@ -18,6 +18,8 @@ class Bill extends Model
         'amount_usd',
         'exchange_rate',
         'amount_omr',
+        'billing_details',
+        'net_profit',
     ];
 
     protected $casts = [
@@ -27,6 +29,8 @@ class Bill extends Model
         'amount_usd' => 'decimal:2',
         'exchange_rate' => 'decimal:4',
         'amount_omr' => 'decimal:2',
+        'billing_details' => 'array',
+        'net_profit' => 'decimal:3',
     ];
 
     public function invoice(): BelongsTo

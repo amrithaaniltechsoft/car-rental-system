@@ -127,10 +127,10 @@ class BookingController extends Controller
         $sequence = $last ? (int) substr($last->booking_id, -3) + 1 : 1;
         $data['booking_id'] = $prefix.str_pad($sequence, 3, '0', STR_PAD_LEFT);
 
-        Booking::create($data);
+        $booking = Booking::create($data);
 
         if ($request->ajax() || $request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Booking created successfully.']);
+            return response()->json(['success' => true, 'message' => 'Booking created successfully.', 'booking_id' => $booking->booking_id]);
         }
 
         return redirect()->route('bookings.index')->with('success', 'Booking created successfully.');
