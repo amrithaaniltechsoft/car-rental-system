@@ -53,7 +53,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Phone:</strong></td>
-                                    <td>{{ $invoice->customer->phone ?? 'N/A' }}</td>
+                                    <td>{{ $invoice->customer->phone_number ?? 'N/A' }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -69,7 +69,7 @@
                                         <td style="width: 150px;"><strong>Booking ID:</strong></td>
                                         <td>#{{ $invoice->booking->id }}</td>
                                         <td style="width: 150px;"><strong>Vehicle:</strong></td>
-                                        <td>{{ $invoice->booking->vehicle->name }} ({{ $invoice->booking->vehicle->number_plate }})</td>
+                                        <td>{{ $invoice->booking->vehicle->name }} ({{ $invoice->booking->vehicle->number_plate }} - {{ $invoice->booking->vehicle->number_code }})</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Rental Period:</strong></td>
@@ -154,17 +154,17 @@
                                             </tr>
                                         @endif
                                         <tr>
-                                            <td><strong>Subtotal:</strong></td>
-                                            <td class="text-right">{{ number_format((float)$invoice->subtotal, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>VAT ({{ number_format((float)$invoice->vat, 2) }}%):</strong></td>
-                                            <td class="text-right">{{ number_format((float)$invoice->vat_amount, 2) }}</td>
-                                        </tr>
-                                        <tr class="table-active">
-                                            <td><strong>Total Amount:</strong></td>
-                                            <td class="text-right"><strong>{{ number_format((float)$invoice->total, 2) }}</strong></td>
-                                        </tr>
+                                             <td><strong>Subtotal:</strong></td>
+                                             <td class="text-right">{{ number_format((float)$invoice->subtotal * 0.3845, 2) }} OMR</td>
+                                         </tr>
+                                         <tr>
+                                             <td><strong>VAT ({{ number_format((float)$invoice->vat, 2) }}%):</strong></td>
+                                             <td class="text-right">{{ number_format((float)$invoice->vat_amount * 0.3845, 2) }} OMR</td>
+                                         </tr>
+                                         <tr class="table-active">
+                                             <td><strong>Total Amount:</strong></td>
+                                             <td class="text-right"><strong>{{ number_format((float)$invoice->amount * 0.3845, 2) }} OMR</strong></td>
+                                         </tr>
                                     </table>
                                 </div>
                             </div>

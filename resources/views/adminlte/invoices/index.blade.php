@@ -54,7 +54,7 @@
                             <select class="form-control select2" id="filter_vehicle" style="width: 100%;">
                                 <option value=""></option>
                                 @foreach($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }} - {{ $vehicle->number_code }})</option>
                                 @endforeach
                             </select>
                         </div>

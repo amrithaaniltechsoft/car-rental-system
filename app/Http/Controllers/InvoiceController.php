@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Supplier;
 use App\Models\Vehicle;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,7 @@ class InvoiceController extends Controller
     public function index(): View
     {
         $customers = Customer::select('id', 'name', 'company_name', 'customer_type')->orderBy('name')->get();
-        $vehicles = Vehicle::select('id', 'name', 'number_plate')->orderBy('name')->get();
+        $vehicles = Vehicle::select('id', 'name', 'number_plate', 'number_code')->orderBy('name')->get();
         $invoiceNumbers = Invoice::distinct()->orderBy('invoice_number')->pluck('invoice_number')->filter()->values();
         $suppliers = Supplier::select('id', 'supplier_code', 'name')->orderBy('name')->get();
 
@@ -39,6 +40,21 @@ class InvoiceController extends Controller
         }
 
         return view('adminlte.invoices.show', compact('invoice'));
+    }
+
+    public function downloadPdf(Invoice $invoice): mixed
+    {
+        $invoice->load(['customer', 'booking.vehicle']);
+
+        $pdf = Pdf::loadView('adminlte.invoices.pdf', compact('invoice'));
+
+        $filename = 'invoice-'.$invoice->invoice_number.'.pdf';
+
+        if (request()->query('download') === '1') {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
     }
 
     /**
@@ -148,7 +164,7 @@ class InvoiceController extends Controller
         ];
         $orderColumn = $tableColumnsMap[$orderColumnIndex] ?? 'id';
 
-        $query = Invoice::with(['customer', 'booking.vehicle']);
+        $query = Invoice::with(['customer', 'booking.vehicle', 'bill']);
 
         // Apply custom filters
         if ($request->filled('filter_invoice')) {
@@ -206,7 +222,7 @@ class InvoiceController extends Controller
             $bookingFromDate = '—';
             $bookingToDate = '—';
             if ($invoice->booking && $invoice->booking->vehicle) {
-                $vehicleLabel = $invoice->booking->vehicle->name.' ('.$invoice->booking->vehicle->number_plate.')';
+                $vehicleLabel = $invoice->booking->vehicle->name.' ('.$invoice->booking->vehicle->number_plate.' - '.$invoice->booking->vehicle->number_code.')';
                 $bookingFromDate = $invoice->booking->from_date->format('d/m/Y');
                 $bookingToDate = $invoice->booking->to_date->format('d/m/Y');
             }
@@ -285,7 +301,7 @@ class InvoiceController extends Controller
     private function bookingsForSelect(): Collection
     {
         return Booking::query()
-            ->with(['vehicle:id,name,number_plate'])
+            ->with(['vehicle:id,name,number_plate,number_code'])
             ->whereDoesntHave('invoice')
             ->select('id', 'customer_id', 'vehicle_id', 'from_date', 'to_date', 'total_amount')
             ->orderByDesc('id')
@@ -299,7 +315,7 @@ class InvoiceController extends Controller
         ]);
 
         $bookings = Booking::query()
-            ->with(['vehicle:id,name,number_plate'])
+            ->with(['vehicle:id,name,number_plate,number_code'])
             ->where('customer_id', $request->customer_id)
             ->whereDoesntHave('invoice')
             ->select('id', 'customer_id', 'vehicle_id', 'from_date', 'to_date', 'total_amount')
@@ -309,7 +325,7 @@ class InvoiceController extends Controller
         $bookingsData = $bookings->map(function ($booking) {
             return [
                 'id' => $booking->id,
-                'label' => '#'.$booking->id.' — '.$booking->vehicle->name.' ('.$booking->vehicle->number_plate.') — '.$booking->from_date->format('d/m/Y').' to '.$booking->to_date->format('d/m/Y'),
+                'label' => '#'.$booking->id.' — '.$booking->vehicle->name.' ('.$booking->vehicle->number_plate.' - '.$booking->vehicle->number_code.') — '.$booking->from_date->format('d/m/Y').' to '.$booking->to_date->format('d/m/Y'),
                 'amount' => $booking->total_amount,
                 'from_date' => $booking->from_date->format('Y-m-d'),
             ];
@@ -461,7 +477,7 @@ class InvoiceController extends Controller
                 'salik_toll_charges' => $invoice->salik_toll_charges,
                 'discount_amount' => $invoice->discount_amount,
                 'customer_name' => $customer ? $customer->name : '',
-                'vehicle_name' => $vehicle ? $vehicle->name : '',
+                'vehicle_name' => $vehicle ? $vehicle->name.' ('.$vehicle->number_plate.' - '.$vehicle->number_code.')' : '',
                 'pickup_datetime' => $invoice->booking?->pickup_datetime?->format('Y-m-d H:i') ?: ($invoice->booking?->from_date?->format('Y-m-d 00:00') ?: ''),
                 'return_datetime' => $invoice->booking?->return_datetime?->format('Y-m-d H:i') ?: ($invoice->booking?->to_date?->format('Y-m-d 00:00') ?: ''),
             ],
@@ -473,6 +489,13 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, Invoice $invoice): JsonResponse
     {
+        if ($invoice->bill()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot edit an invoice that has been billed.',
+            ], 422);
+        }
+
         $validated = $request->validate([
             'total' => 'required|numeric|min:0.01',
             'vat' => 'required|numeric|min:0',
@@ -540,6 +563,13 @@ class InvoiceController extends Controller
      */
     public function destroy(Invoice $invoice): JsonResponse
     {
+        if ($invoice->bill()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete an invoice that has been billed.',
+            ], 422);
+        }
+
         $invoice->delete();
 
         return response()->json([
@@ -587,14 +617,20 @@ class InvoiceController extends Controller
 
     private function getActionButtons(Invoice $invoice): string
     {
+        $hasBill = $invoice->bill()->exists();
+
+        $editClass = $hasBill ? 'btn-default' : 'btn-warning';
+        $deleteClass = $hasBill ? 'btn-default' : 'btn-danger';
+        $disabledAttr = $hasBill ? 'disabled' : '';
+
         $buttons = '
             <button type="button" class="btn btn-info btn-sm view-invoice-btn mr-1" data-toggle="tooltip" title="View" data-id="'.$invoice->id.'" data-url="'.route('invoices.show', $invoice).'">
                 <i class="fas fa-eye"></i>
             </button>
-            <button type="button" class="btn btn-warning btn-sm edit-invoice-btn mr-1" data-toggle="tooltip" title="Edit" data-id="'.$invoice->id.'" data-url="'.route('invoices.edit', $invoice).'">
+            <button type="button" class="btn '.$editClass.' btn-sm edit-invoice-btn mr-1" data-toggle="tooltip" title="Edit" data-id="'.$invoice->id.'" data-url="'.route('invoices.edit', $invoice).'" '.$disabledAttr.'>
                 <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="btn btn-danger btn-sm delete-invoice-btn" data-toggle="tooltip" title="Delete" data-id="'.$invoice->id.'" data-url="'.route('invoices.destroy', $invoice).'">
+            <button type="button" class="btn '.$deleteClass.' btn-sm delete-invoice-btn" data-toggle="tooltip" title="Delete" data-id="'.$invoice->id.'" data-url="'.route('invoices.destroy', $invoice).'" '.$disabledAttr.'>
                 <i class="fas fa-trash"></i>
             </button>
         ';

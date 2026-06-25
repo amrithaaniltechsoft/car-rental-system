@@ -357,7 +357,7 @@ class BookingController extends Controller
             $data[] = [
                 'id' => $rowNum++,
                 'booking_id' => $booking->booking_id ?: 'N/A',
-                'vehicle' => $booking->vehicle->name.' ('.$booking->vehicle->number_plate.')',
+                'vehicle' => $booking->vehicle->name.' ('.$booking->vehicle->number_plate.' - '.$booking->vehicle->number_code.')',
                 'customer' => $booking->customer->name,
                 'dates' => ($booking->pickup_datetime ? $booking->pickup_datetime->format('d/m/Y H:i') : ($booking->from_date ? $booking->from_date->format('d/m/Y') : 'N/A'))
                     .' - '
@@ -412,6 +412,18 @@ class BookingController extends Controller
             <button type="button" class="btn btn-info btn-sm view-booking-btn" data-toggle="tooltip" title="View" data-url="'.route('bookings.show', $booking).'">
                 <i class="fas fa-eye"></i>
             </button>
+        ';
+
+        if ($hasInvoice) {
+            $invoice = $booking->invoice;
+            $buttons .= '
+                <a href="'.route('invoices.pdf', $invoice).'" class="btn btn-primary btn-sm" target="_blank" data-toggle="tooltip" title="View PDF">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
+            ';
+        }
+
+        $buttons .= '
             <button type="button" class="btn '.$editClass.' btn-sm edit-booking-btn" data-toggle="tooltip" title="Edit" data-id="'.$booking->id.'" data-has-invoice="'.($hasInvoice ? 'true' : 'false').'" '.$disabledAttr.'>
                 <i class="fas fa-edit"></i>
             </button>
@@ -424,7 +436,7 @@ class BookingController extends Controller
             $pickupStr = $booking->pickup_datetime ? $booking->pickup_datetime->format('Y-m-d H:i') : ($booking->from_date ? $booking->from_date->format('Y-m-d 00:00') : '');
             $returnStr = $booking->return_datetime ? $booking->return_datetime->format('Y-m-d H:i') : ($booking->to_date ? $booking->to_date->format('Y-m-d 00:00') : '');
             $buttons .= '
-                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-toggle="tooltip" title="Add Invoice" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'" data-pickup-datetime="'.$pickupStr.'" data-return-datetime="'.$returnStr.'">
+                <button type="button" class="btn btn-success btn-sm create-invoice-btn" data-toggle="tooltip" title="Add Invoice" data-id="'.$booking->id.'" data-booking-id="'.$booking->booking_id.'" data-vehicle="'.$booking->vehicle->name.'" data-vehicle-plate="'.$booking->vehicle->number_plate.'" data-vehicle-code="'.$booking->vehicle->number_code.'" data-customer="'.$booking->customer->name.'" data-amount="'.$booking->total_amount.'" data-customer-id="'.$booking->customer_id.'" data-from-date="'.$booking->from_date->format('Y-m-d').'" data-pickup-datetime="'.$pickupStr.'" data-return-datetime="'.$returnStr.'">
                     <i class="fas fa-file-invoice"></i>
                 </button>
             ';
@@ -741,7 +753,7 @@ class BookingController extends Controller
             ->unique();
 
         $availableVehicles = Vehicle::whereNotIn('id', $bookedVehicleIds)
-            ->select('id', 'name', 'number_plate')
+            ->select('id', 'name', 'number_plate', 'number_code')
             ->orderBy('name')
             ->get();
 
@@ -751,7 +763,7 @@ class BookingController extends Controller
     private function vehiclesForSelect(): Collection
     {
         return Vehicle::query()
-            ->select('id', 'name', 'number_plate')
+            ->select('id', 'name', 'number_plate', 'number_code')
             ->orderBy('name')
             ->get();
     }

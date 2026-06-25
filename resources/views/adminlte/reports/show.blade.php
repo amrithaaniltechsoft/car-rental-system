@@ -55,7 +55,7 @@
                                 <td rowspan="{{ $rowCount ?: 1 }}">{{ $i }}</td>
                                 <td rowspan="{{ $rowCount ?: 1 }}">{{ $bill->bill_date->format('d/m/Y') }}</td>
                                 <td rowspan="{{ $rowCount ?: 1 }}">{{ $bill->invoice->invoice_number }}</td>
-                                <td rowspan="{{ $rowCount ?: 1 }}">{{ optional($bill->invoice->booking->vehicle)->name ?? '—' }}</td>
+                                <td rowspan="{{ $rowCount ?: 1 }}">{{ optional($bill->invoice->booking->vehicle)->name ? $bill->invoice->booking->vehicle->name.' ('.$bill->invoice->booking->vehicle->number_plate.' - '.$bill->invoice->booking->vehicle->number_code.')' : '—' }}</td>
                                 <td rowspan="{{ $rowCount ?: 1 }}" class="text-right">{{ number_format($invAmt, 3) }}</td>
                             @endif
                             <td>{{ $supplier->name ?? 'Unknown' }}</td>

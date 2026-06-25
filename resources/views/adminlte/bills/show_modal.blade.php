@@ -106,7 +106,8 @@
         @if($bill->invoice->booking)
             <strong><i class="fas fa-car mr-1"></i> Booking</strong>
             <p class="text-muted mt-1 mb-0">
-                {{ $bill->invoice->booking->vehicle->name ?? 'N/A' }}<br>
+                {{ $bill->invoice->booking->vehicle->name ?? 'N/A' }}
+                ({{ $bill->invoice->booking->vehicle->number_plate ?? '' }} - {{ $bill->invoice->booking->vehicle->number_code ?? '' }})<br>
                 <small>
                     From: {{ optional($bill->invoice->booking->from_date)->format('d M Y') ?: 'N/A' }}
                     | To: {{ optional($bill->invoice->booking->to_date)->format('d M Y') ?: 'N/A' }}

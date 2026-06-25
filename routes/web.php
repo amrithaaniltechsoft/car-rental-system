@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices-data', [InvoiceController::class, 'getData'])->name('invoices.data');
     Route::get('/invoices/bookings-by-customer', [InvoiceController::class, 'getBookingsByCustomer'])->name('invoices.bookings-by-customer');
     Route::post('/invoices/{invoice}/bill', [InvoiceController::class, 'createBill'])->name('invoices.createBill');
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
 
     // Bills
     Route::resource('bills', BillController::class)->only(['index', 'store', 'show', 'edit', 'update', 'destroy']);

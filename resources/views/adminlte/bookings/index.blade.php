@@ -55,7 +55,7 @@
                             <select class="form-control select2" id="filter_vehicle" style="width: 100%;">
                                 <option value=""></option>
                                 @foreach($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }} - {{ $vehicle->number_code }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -160,7 +160,7 @@
                                 <select class="form-control select2 @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" required style="width: 100%;">
                                     <option value="">Select Vehicle</option>
                                     @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }} - {{ $vehicle->number_code }})</option>
                                     @endforeach
                                 </select>
                                 @error('vehicle_id')
@@ -299,7 +299,7 @@
                                 <select class="form-control select2" id="edit_vehicle_id" name="vehicle_id" required style="width: 100%;">
                                     <option value="">Select Vehicle</option>
                                     @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }})</option>
+                                        <option value="{{ $vehicle->id }}">{{ $vehicle->name }} ({{ $vehicle->number_plate }} - {{ $vehicle->number_code }})</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -831,7 +831,7 @@
                         var currentVal = $select.val();
                         $select.empty().append('<option value="">Select Vehicle</option>');
                         $.each(vehicles, function(i, v) {
-                            $select.append('<option value="' + v.id + '">' + v.name + ' (' + v.number_plate + ')</option>');
+                            $select.append('<option value="' + v.id + '">' + v.name + ' (' + v.number_plate + ' - ' + v.number_code + ')' + '</option>');
                         });
                         $select.val(currentVal);
                         $select.select2('destroy');
@@ -872,7 +872,7 @@
                         var currentVal = $select.val();
                         $select.empty().append('<option value="">Select Vehicle</option>');
                         $.each(vehicles, function(i, v) {
-                            $select.append('<option value="' + v.id + '">' + v.name + ' (' + v.number_plate + ')</option>');
+                            $select.append('<option value="' + v.id + '">' + v.name + ' (' + v.number_plate + ' - ' + v.number_code + ')' + '</option>');
                         });
                         $select.val(currentVal);
                         $select.select2('destroy');
@@ -1770,6 +1770,8 @@
                 var bookingId = $(this).data('id');
                 var bookingIdDisplay = $(this).data('booking-id') || 'N/A';
                 var vehicle = $(this).data('vehicle');
+                var vehiclePlate = $(this).data('vehicle-plate');
+                var vehicleCode = $(this).data('vehicle-code');
                 var customer = $(this).data('customer');
                 var rate = $(this).data('amount');
                 var fromDate = $(this).data('from-date');
@@ -1783,7 +1785,7 @@
                 $('#createInvoiceForm').data('return-datetime', returnDatetime);
 
                 $('#invoice_booking_id').val(bookingIdDisplay);
-                $('#invoice_vehicle').val(vehicle);
+                $('#invoice_vehicle').val(vehicle + ' (' + vehiclePlate + ' - ' + vehicleCode + ')');
                 $('#invoice_customer').val(customer);
                 
                 // Reset all pricing fields to blank

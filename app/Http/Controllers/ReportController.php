@@ -15,7 +15,7 @@ class ReportController extends Controller
     public function index(): View
     {
         $billNumbers = Bill::orderBy('bill_number')->pluck('bill_number');
-        $vehicles = Vehicle::orderBy('name')->get(['id', 'name', 'number_plate']);
+        $vehicles = Vehicle::orderBy('name')->get(['id', 'name', 'number_plate', 'number_code']);
         $customers = Customer::orderBy('name')->get(['id', 'name', 'company_name']);
 
         return view('adminlte.reports.index', compact('billNumbers', 'vehicles', 'customers'));
@@ -97,7 +97,8 @@ class ReportController extends Controller
                 ? $bill->invoice->customer->company_name
                 : $bill->invoice->customer->name;
 
-            $vehicleName = optional($bill->invoice->booking->vehicle)->name ?? '—';
+            $vehicle = optional($bill->invoice->booking->vehicle);
+            $vehicleName = $vehicle->name ? $vehicle->name.' ('.$vehicle->number_plate.' - '.$vehicle->number_code.')' : '—';
 
             $viewUrl = route('reports.show', $bill->id);
 
