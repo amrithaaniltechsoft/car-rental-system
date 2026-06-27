@@ -246,7 +246,8 @@
                         <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label for="edit_invoice_date">From Date <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="edit_invoice_date" name="invoice_date" readonly>
+                                <input type="text" class="form-control" id="edit_invoice_date" readonly>
+                                <input type="hidden" id="edit_invoice_date_hidden" name="invoice_date">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="edit_to_date">To Date</label>
@@ -470,17 +471,19 @@
             // Total is charges total minus discount
             var total = chargesTotal - discountAmount;
             if (total < 0) total = 0;
+            // Round total to 2 decimals first
+            total = Math.round(total * 100) / 100;
 
-            // VAT Amount is calculated as percentage of total
-            var vatAmount = total * (vatPercent / 100);
+            // VAT Amount is calculated as percentage of rounded total
+            var vatAmount = Math.round((total * (vatPercent / 100)) * 100) / 100;
 
-            // Subtotal is total minus VAT Amount
+            // Subtotal is rounded total minus VAT Amount (guarantees subtotal + vat = total)
             var subtotal = total - vatAmount;
             
             $('#edit_total').val(total.toFixed(2));
-            $('#edit_total_display').text(fmtNum(total * 0.3845));
-            $('#edit_vat_amount').text(fmtNum(vatAmount * 0.3845));
-            $('#edit_subtotal').text(fmtNum(subtotal * 0.3845));
+            $('#edit_total_display').text(fmtNum(total));
+            $('#edit_vat_amount').text(fmtNum(vatAmount));
+            $('#edit_subtotal').text(fmtNum(subtotal));
         }
 
         $(document).ready(function() {
@@ -510,7 +513,7 @@
                 currentInvoiceId = $(this).data('id');
                 $('#bill_invoice_number').val($(this).data('invoice-number'));
                 var invAmt = parseFloat($(this).data('amount')) || 0;
-                $('#bill_invoice_amount').val((invAmt * 0.3845).toFixed(3));
+                $('#bill_invoice_amount').val(invAmt.toFixed(3));
                 $('#bill_amount_usd').val(invAmt.toFixed(2));
                 $('#createBillForm').data('amount', invAmt.toFixed(2));
 
@@ -518,7 +521,6 @@
                 var vatAmt = parseFloat($(this).data('vat-amount')) || 0;
                 var subtotal = parseFloat($(this).data('subtotal')) || 0;
                 var totalAmt = parseFloat($(this).data('amount')) || 0;
-                var rate = 0.3845;
 
                 // Reset table to single row
                 var $tableBody = $('#bill_details_table_body');
@@ -649,13 +651,20 @@
                         if (response.success) {
                             var invoice = response.invoice;
                             $('#edit_invoice_number').val(invoice.invoice_number);
-                            $('#edit_invoice_date').val(invoice.invoice_date);
+                            $('#edit_invoice_date_hidden').val(invoice.invoice_date);
                             $('#edit_due_date').val(invoice.due_date);
                              $('#edit_customer').val(invoice.customer_name || '');
                              $('#edit_vehicle').val(invoice.vehicle_name || '');
                              
-                             // Set to date from return_datetime
+                             // Set from date from pickup_datetime
                              var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                             if (invoice.pickup_datetime) {
+                                 var pd = new Date(invoice.pickup_datetime);
+                                 $('#edit_invoice_date').val(pd.getDate() + ' ' + months[pd.getMonth()] + ' ' + pd.getFullYear());
+                             } else {
+                                 $('#edit_invoice_date').val('');
+                             }
+                             // Set to date from return_datetime
                              if (invoice.return_datetime) {
                                  var rd = new Date(invoice.return_datetime);
                                  $('#edit_to_date').val(rd.getDate() + ' ' + months[rd.getMonth()] + ' ' + rd.getFullYear());

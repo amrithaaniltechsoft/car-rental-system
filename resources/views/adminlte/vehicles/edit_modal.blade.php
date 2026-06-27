@@ -56,7 +56,9 @@
             <div class="form-group col-md-3">
                 <label for="number_plate">Number Plate</label>
                 <input type="text" class="form-control @error('number_plate') is-invalid @enderror"
-                       id="number_plate" name="number_plate" value="{{ old('number_plate', $vehicle->number_plate) }}" required>
+                       id="number_plate" name="number_plate" value="{{ old('number_plate', $vehicle->number_plate) }}" required
+                       pattern="[0-9]*" inputmode="numeric"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 @error('number_plate')
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror
@@ -64,9 +66,7 @@
             <div class="form-group col-md-3">
                 <label for="number_code">Plate Code</label>
                 <input type="text" class="form-control @error('number_code') is-invalid @enderror"
-                       id="number_code" name="number_code" value="{{ old('number_code', $vehicle->number_code) }}" required
-                       pattern="[0-9]*" inputmode="numeric"
-                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                       id="number_code" name="number_code" value="{{ old('number_code', $vehicle->number_code) }}" required>
                 @error('number_code')
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror

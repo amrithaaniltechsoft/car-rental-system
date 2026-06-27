@@ -368,7 +368,7 @@
                             $('#edit_bill_number').val(bill.bill_number);
                             $('#edit_invoice_number').val(bill.invoice_number);
                             $('#edit_bill_date').val(bill.bill_date);
-                            $('#edit_invoice_amount').val(fmtNum3(bill.invoice_amount));
+                            $('#edit_invoice_amount').val(fmtNum3(parseFloat(bill.invoice_amount) || 0));
                             $('#editBillForm').attr('action', '{{ route('bills.update', ':id') }}'.replace(':id', bill.id));
 
                             // Populate billing details

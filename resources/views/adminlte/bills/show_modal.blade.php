@@ -21,7 +21,7 @@
             </li>
             <li class="list-group-item">
                 <b><i class="fas fa-coins mr-1"></i> Invoice Amount</b>
-                <span class="float-right text-dark">{{ number_format($bill->invoice->amount * ($bill->exchange_rate ?? 0.3845), 3) }} OMR</span>
+                <span class="float-right text-dark">{{ number_format($bill->invoice->amount, 3) }} OMR</span>
             </li>
         </ul>
 
@@ -64,7 +64,7 @@
                             @endforeach
                         </tbody>
                         @php
-                            $invAmt = round((float) ($bill->invoice->amount * ($bill->exchange_rate ?? 0.3845)), 3);
+                            $invAmt = round((float) $bill->invoice->amount, 3);
                             $grandTotal = round($grandTotal, 3);
                             $netProfit = round($invAmt - $grandTotal, 3);
                             $subtotal = $grandTotal - $grandVatAmt;

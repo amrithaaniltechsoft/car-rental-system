@@ -61,7 +61,7 @@ class BillController extends Controller
                 'vehicle_name' => $vehicleName,
                 'bill_date' => $bill->bill_date->format('Y-m-d'),
                 'status' => $bill->status,
-                'invoice_amount' => $bill->invoice->amount * 0.3845,
+                'invoice_amount' => $bill->invoice->amount,
                 'amount_usd' => $bill->amount_usd,
                 'billing_details' => $bill->billing_details ?? [],
             ],
@@ -280,7 +280,7 @@ class BillController extends Controller
                     $vatAmt += (float) ($detail['vat_amount'] ?? 0);
                 }
             }
-            $invAmt = round((float) ($bill->invoice->amount * ($bill->exchange_rate ?? 0.3845)), 3);
+            $invAmt = round((float) $bill->invoice->amount, 3);
             $totalPayable = round($totalPayable, 3);
             $netProfit = round($invAmt - $totalPayable, 3);
 
@@ -294,7 +294,7 @@ class BillController extends Controller
                 'bill_number' => $bill->bill_number,
                 'invoice' => $bill->invoice->invoice_number,
                 'customer' => $customerName,
-                'amount' => number_format((float) $bill->amount, 3),
+                'amount' => number_format((float) $bill->invoice->amount, 3),
                 'total' => number_format($totalPayable, 3),
                 'vat_amount' => number_format($vatAmt, 3),
                 'net_profit' => number_format($netProfit, 3),

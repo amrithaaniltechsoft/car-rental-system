@@ -28,7 +28,7 @@ class ReportController extends Controller
         $supplierIds = collect($bill->billing_details)->pluck('supplier_id')->filter()->unique()->toArray();
         $suppliers = Supplier::whereIn('id', $supplierIds)->get()->keyBy('id');
 
-        $invAmt = round((float) ($bill->invoice->amount * ($bill->exchange_rate ?? 0.3845)), 3);
+        $invAmt = round((float) $bill->invoice->amount, 3);
 
         return view('adminlte.reports.show', compact('bill', 'suppliers', 'invAmt'));
     }

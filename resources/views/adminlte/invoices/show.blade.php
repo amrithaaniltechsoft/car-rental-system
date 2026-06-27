@@ -155,15 +155,15 @@
                                         @endif
                                         <tr>
                                              <td><strong>Subtotal:</strong></td>
-                                             <td class="text-right">{{ number_format((float)$invoice->subtotal * 0.3845, 2) }} OMR</td>
+                                             <td class="text-right">{{ number_format((float)$invoice->subtotal, 2) }} OMR</td>
                                          </tr>
                                          <tr>
                                              <td><strong>VAT ({{ number_format((float)$invoice->vat, 2) }}%):</strong></td>
-                                             <td class="text-right">{{ number_format((float)$invoice->vat_amount * 0.3845, 2) }} OMR</td>
+                                             <td class="text-right">{{ number_format((float)$invoice->vat_amount, 2) }} OMR</td>
                                          </tr>
                                          <tr class="table-active">
                                              <td><strong>Total Amount:</strong></td>
-                                             <td class="text-right"><strong>{{ number_format((float)$invoice->amount * 0.3845, 2) }} OMR</strong></td>
+                                             <td class="text-right"><strong>{{ number_format((float)$invoice->amount, 2) }} OMR</strong></td>
                                          </tr>
                                     </table>
                                 </div>

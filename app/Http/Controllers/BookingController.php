@@ -320,6 +320,12 @@ class BookingController extends Controller
 
         $orderColumn = $columns[$orderColumnIndex] ?? 'id';
 
+        // Default to ordering by from_date descending for upcoming dates first
+        if ($orderColumn === 'id') {
+            $orderColumn = 'from_date';
+            $orderDir = 'desc';
+        }
+
         $query = Booking::with(['vehicle', 'customer', 'invoice']);
 
         if (! empty($filterBookingId)) {
@@ -511,9 +517,10 @@ class BookingController extends Controller
 
         // Total is charges total minus discount
         $total = max(0, $chargesTotal - $discountAmount);
+        $total = round($total, 2);
 
         $vatPercent = $validated['vat'] ?? 0;
-        $vatAmount = $total * ($vatPercent / 100);
+        $vatAmount = round($total * ($vatPercent / 100), 2);
         $subtotal = $total - $vatAmount;
 
         $validated['customer_id'] = $booking->customer_id;

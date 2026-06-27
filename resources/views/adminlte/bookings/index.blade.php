@@ -688,8 +688,7 @@
             $('#invoice_vat_amount').text(vatAmount.toFixed(2));
             var discount = parseFloat($('#invoice_discount_amount').val()) || 0;
             var total = subtotal + vatAmount - discount;
-            var totalOMR = total * 0.3845;
-            $('#invoice_total').text(totalOMR.toFixed(2));
+            $('#invoice_total').text(total.toFixed(2));
         }
         $('.pricing-input').on('input', function(){
             calculateInvoiceTotals();
@@ -1208,7 +1207,7 @@
                     "infoFiltered": "(filtered from _MAX_ total bookings)",
                     "zeroRecords": "No matching bookings found"
                 },
-                "order": [[0, "desc"]]
+                "order": [[4, "desc"]]
             });
 
             bookingTable.on('draw.dt', function() {
@@ -1740,20 +1739,17 @@
                 // Total is charges total minus discount
                 var total = chargesTotal - discountAmount;
                 if (total < 0) total = 0;
+                // Round total to 2 decimals first
+                total = Math.round(total * 100) / 100;
 
-                // VAT Amount is calculated as percentage of total
-                var vatAmount = total * (vatPercent / 100);
-
-                // Compute total in OMR
-                var totalOMR = total * 0.3845;
-                // Compute VAT amount in OMR
-                var vatAmountOMR = totalOMR * (vatPercent / 100);
-                // Compute subtotal in OMR
-                var subtotalOMR = totalOMR - vatAmountOMR;
-                // Update UI with OMR values
-                $('#invoice_subtotal').text(fmtNum(subtotalOMR));
-                $('#invoice_vat_amount').text(fmtNum(vatAmountOMR));
-                $('#invoice_total').text(totalOMR.toFixed(2));
+                // VAT Amount is calculated as percentage of rounded total
+                var vatAmount = Math.round((total * (vatPercent / 100)) * 100) / 100;
+                // Subtotal is rounded total minus VAT Amount
+                var subtotal = total - vatAmount;
+                // Update UI
+                $('#invoice_subtotal').text(fmtNum(subtotal));
+                $('#invoice_vat_amount').text(fmtNum(vatAmount));
+                $('#invoice_total').text(total.toFixed(2));
             }
 
             // Recalculate totals when any pricing input or VAT changes

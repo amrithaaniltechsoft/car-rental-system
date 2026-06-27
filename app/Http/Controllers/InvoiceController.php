@@ -55,6 +55,7 @@ class InvoiceController extends Controller
         }
 
         return $pdf->stream($filename);
+
     }
 
     /**
@@ -111,9 +112,10 @@ class InvoiceController extends Controller
         $validated['invoice_number'] = $this->generateInvoiceNumber();
 
         // Calculate subtotal and vat_amount from total and vat percentage
-        $validated['vat_amount'] = ($validated['total'] * $validated['vat']) / 100;
-        $validated['subtotal'] = $validated['total'] - $validated['vat_amount'];
-        $validated['amount'] = $validated['total'];
+        $total = round((float) $validated['total'], 2);
+        $validated['vat_amount'] = round($total * ($validated['vat'] / 100), 2);
+        $validated['subtotal'] = $total - $validated['vat_amount'];
+        $validated['amount'] = $total;
 
         Invoice::create($validated);
 
@@ -248,7 +250,7 @@ class InvoiceController extends Controller
                 'vehicle' => $vehicleLabel,
                 'booking_from_date' => $bookingFromDate,
                 'booking_to_date' => $bookingToDate,
-                'amount' => number_format((float) $invoice->amount * 0.3845, 2).' OMR',
+                'amount' => number_format((float) $invoice->amount, 2).' OMR',
                 'status' => $statusBadge.' '.$billIndicator,
                 'actions' => $this->getActionButtons($invoice),
             ];
@@ -358,62 +360,8 @@ class InvoiceController extends Controller
             'total_payable.*' => 'nullable|numeric|min:0',
         ]);
 
-        $exchangeRate = 0.3845; // Fixed exchange rate
-
-        if ($invoice->bill()->exists()) {
-            if ($request->ajax() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This invoice already has a bill.',
-                ], 422);
-            }
-
-            return redirect()->back()->with('error', 'This invoice already has a bill.');
-        }
-
-        // Use provided bill number if available, otherwise generate it
-        if ($request->filled('bill_number')) {
-            $billNumber = $request->bill_number;
-        } else {
-            // Generate bill number using the same format as booking ID
-            $prefix = 'BL'.now()->format('Ymd');
-            $lastBill = Bill::query()
-                ->where('bill_number', 'like', $prefix.'%')
-                ->orderByDesc('bill_number')
-                ->first();
-
-            $sequence = 1;
-            if ($lastBill) {
-                $sequence = (int) substr($lastBill->bill_number, -3) + 1;
-            }
-
-            $billNumber = $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
-        }
-
-        // Build billing details from array inputs
-        $billingDetails = [];
-        $totalPayable = 0;
-        $vatAmt = 0;
-        if ($request->has('supplier_id')) {
-            foreach ($request->supplier_id as $i => $supplierId) {
-                if (! empty($supplierId)) {
-                    $tp = str_replace(',', '', $request->total_payable[$i] ?? 0);
-                    $va = str_replace(',', '', $request->vat_amount[$i] ?? 0);
-                    $billingDetails[] = [
-                        'supplier_id' => $supplierId,
-                        'purpose' => $request->purpose[$i] ?? '',
-                        'vat' => $request->vat[$i] ?? 0,
-                        'vat_amount' => $va,
-                        'total_payable' => $tp,
-                    ];
-                    $totalPayable += (float) $tp;
-                    $vatAmt += (float) $va;
-                }
-            }
-        }
-
         // Calculate net profit
-        $invAmt = $request->amount_usd * $exchangeRate;
+        $invAmt = $request->amount_usd;
         $totalPayable = round($totalPayable, 3);
         $netProfit = round($invAmt - $totalPayable, 3);
 
@@ -422,7 +370,7 @@ class InvoiceController extends Controller
             'bill_number' => $billNumber,
             'amount' => $invAmt,
             'amount_usd' => $request->amount_usd,
-            'exchange_rate' => $exchangeRate,
+            'exchange_rate' => 1,
             'amount_omr' => $invAmt,
             'bill_date' => $request->bill_date,
             'status' => 'unpaid',
@@ -541,9 +489,10 @@ class InvoiceController extends Controller
 
         // Total is charges total minus discount
         $total = max(0, $chargesTotal - $discountAmount);
+        $total = round($total, 2);
 
         $vatPercent = $validated['vat'] ?? 0;
-        $vatAmount = $total * ($vatPercent / 100);
+        $vatAmount = round($total * ($vatPercent / 100), 2);
         $subtotal = $total - $vatAmount;
 
         $validated['vat_amount'] = $vatAmount;
