@@ -158,13 +158,13 @@
 
     @php
         $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
-        $amountInWords = ucfirst($formatter->format((float)$invoice->amount));
+        $amountInWords = ucfirst($formatter->format((float)$invoice->amount)) . ' Omani Rial Only';
     @endphp
 
     <table style="border-bottom:1px solid #D3D3D3">
         <tr style="color:#454545;">
             <td>TOTAL CHARGES IN OMR</td>
-            <td style="text-align:right;">{{ number_format((float)$invoice->amount, 2) }}</td>
+            <td style="text-align:right;">{{ number_format((float)$invoice->amount, 3) }} OMR</td>
         </tr>
     </table>
 
@@ -229,8 +229,8 @@
                         <td style="color:#212f90; text-align:right;">{{ number_format((float)$invoice->vat_amount, 2) }}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="text-align:center; font-weight:bold;color:#e60909;font-size:23px;">
-                            {{ number_format((float)$invoice->amount, 2) }}
+                        <td colspan="2" style="text-align:center; font-weight:bold;color:#e60909;font-size:23px; white-space:nowrap;">
+                            OMR {{ number_format((float)$invoice->amount, 3) }}
                         </td>
                     </tr>
                 </table>

@@ -735,7 +735,11 @@
                     time_24hr: true,
                     allowInput: false,
                     shorthandCurrentMonth: false,
-                    disable: [function(date) { return date < new Date(); }],
+                    disable: [function(date) { 
+                        var today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today; 
+                    }],
                     onChange: function(sel) {
                         calcRentalDuration($('#pickup_datetime').val(), sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', 'add_rental_duration');
                         if (sel[0] && $('#pickup_datetime').val()) fetchAvailableVehicles();
@@ -775,7 +779,11 @@
                     time_24hr: true,
                     allowInput: false,
                     shorthandCurrentMonth: false,
-                    disable: [function(date) { return date < new Date(); }],
+                    disable: [function(date) { 
+                        var today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today; 
+                    }],
                     onChange: function(sel) {
                         if (sel[0]) { returnPicker.set('minDate', sel[0]); }
                         calcRentalDuration(sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '', $('#return_datetime').val(), 'add_rental_duration');
@@ -910,6 +918,11 @@
                     time_24hr: true,
                     allowInput: false,
                     shorthandCurrentMonth: false,
+                    disable: [function(date) { 
+                        var today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today; 
+                    }],
                     defaultDate: returnVal || null,
                     onChange: function(sel) {
                         var retFormatted = sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '';
@@ -953,6 +966,11 @@
                     time_24hr: true,
                     allowInput: false,
                     shorthandCurrentMonth: false,
+                    disable: [function(date) { 
+                        var today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today; 
+                    }],
                     defaultDate: pickupVal || null,
                     onChange: function(sel) {
                         var pickFormatted = sel[0] ? flatpickr.formatDate(sel[0], 'Y-m-d H:i') : '';

@@ -360,10 +360,35 @@ class InvoiceController extends Controller
             'total_payable.*' => 'nullable|numeric|min:0',
         ]);
 
+        // Build billing details from array inputs
+        $billingDetails = [];
+        $totalPayable = 0;
+        $vatAmt = 0;
+        if ($request->has('supplier_id')) {
+            foreach ($request->supplier_id as $i => $supplierId) {
+                if (! empty($supplierId)) {
+                    $tp = str_replace(',', '', $request->total_payable[$i] ?? 0);
+                    $va = str_replace(',', '', $request->vat_amount[$i] ?? 0);
+                    $billingDetails[] = [
+                        'supplier_id' => $supplierId,
+                        'purpose' => $request->purpose[$i] ?? '',
+                        'vat' => $request->vat[$i] ?? 0,
+                        'vat_amount' => $va,
+                        'total_payable' => $tp,
+                    ];
+                    $totalPayable += (float) $tp;
+                    $vatAmt += (float) $va;
+                }
+            }
+        }
+
         // Calculate net profit
         $invAmt = $request->amount_usd;
         $totalPayable = round($totalPayable, 3);
         $netProfit = round($invAmt - $totalPayable, 3);
+
+        // Generate bill number
+        $billNumber = $request->filled('bill_number') ? $request->bill_number : $this->generateBillNumber();
 
         Bill::create([
             'invoice_id' => $invoice->id,
@@ -585,5 +610,24 @@ class InvoiceController extends Controller
         ';
 
         return $buttons;
+    }
+
+    /**
+     * Generate a unique bill number
+     */
+    private function generateBillNumber(): string
+    {
+        $prefix = 'BL'.now()->format('Ymd');
+        $lastBill = Bill::query()
+            ->where('bill_number', 'like', $prefix.'%')
+            ->orderByDesc('bill_number')
+            ->first();
+
+        $sequence = 1;
+        if ($lastBill) {
+            $sequence = (int) substr($lastBill->bill_number, -3) + 1;
+        }
+
+        return $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
     }
 }
